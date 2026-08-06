@@ -24,19 +24,22 @@ from disclosed.sources import ipeds
 
 _HEADER = (
     "UNITID,INSTNM,STABBR,CONTROL,ICLEVEL,SECTOR,INSTCAT,UGOFFER,CYACTIVE,PSET4FLG,"
-    "WEBADDR,NPRICURL,FAIDURL,ADMINURL,DISAURL"
+    "WEBADDR,NPRICURL,FAIDURL,ADMINURL,DISAURL,ATHURL"
 )
 _CAMPUS = (
     '100654,"Alabama A & M University",AL,1,1,1,2,1,1,1,'
-    "www.aamu.edu/,www.aamu.edu/npc,www.aamu.edu/aid,www.aamu.edu/admit,www.aamu.edu/disability"
+    "www.aamu.edu/,www.aamu.edu/npc,www.aamu.edu/aid,www.aamu.edu/admit,"
+    "www.aamu.edu/disability,www.aamu.edu/athletics"
 )
 # A system office: INSTCAT -2. It admits nobody, so no student-facing disclosure applies to it.
-_SYSTEM_OFFICE = '100733,"University of Alabama System Office",AL,1,-3,0,-2,1,1,1, , , , , '
+_SYSTEM_OFFICE = '100733,"University of Alabama System Office",AL,1,-3,0,-2,1,1,1, , , , , , '
 # Graduate-only: UGOFFER 2. Outside the reach of the net price calculator statute.
 _GRADUATE_ONLY = (
     '110699,"University of California-San Francisco",CA,1,1,1,1,2,1,1,'
-    "www.ucsf.edu/, ,www.ucsf.edu/aid,www.ucsf.edu/admit,www.ucsf.edu/disability"
+    "www.ucsf.edu/, ,www.ucsf.edu/aid,www.ucsf.edu/admit,www.ucsf.edu/disability, "
 )
+
+_IC_HEADER = "UNITID,ATHASSOC,SPORT1,SPORT2,SPORT3,SPORT4"
 
 
 def _archive(*rows: str, name: str = "hd2023.csv") -> bytes:
@@ -44,6 +47,23 @@ def _archive(*rows: str, name: str = "hd2023.csv") -> bytes:
     with zipfile.ZipFile(buffer, "w") as bundle:
         bundle.writestr(name, "﻿" + "\n".join((_HEADER, *rows)) + "\n")
     return buffer.getvalue()
+
+
+def _characteristics(*rows: str, name: str = "ic2023.csv") -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as bundle:
+        bundle.writestr(name, "﻿" + "\n".join((_IC_HEADER, *rows)) + "\n")
+    return buffer.getvalue()
+
+
+def _joined(directory_rows: tuple[str, ...], characteristics_rows: tuple[str, ...]) -> list[
+    dict[str, Any]
+]:
+    """A directory parsed and joined to a characteristics file, as the grader sees it."""
+    return ipeds.merge_characteristics(
+        ipeds.parse_directory(_archive(*directory_rows)),
+        ipeds.parse_characteristics(_characteristics(*characteristics_rows)),
+    )
 
 
 class TestSentinelCodes:
@@ -162,7 +182,7 @@ class TestApplicability:
         assert results["Institution web address"] is Disclosure.REPORTED
 
     def test_an_undergraduate_title_iv_campus_is_held_to_all_of_them(self) -> None:
-        record = ipeds.parse_directory(_archive(_CAMPUS))[0]
+        record = _joined((_CAMPUS,), ("100654,1,1,1,1,1",))[0]
         results = self._graded(record)
         assert all(d is Disclosure.REPORTED for d in results.values())
         assert grade_institution(record, fields=IPEDS_FIELDS).score == 1.0
@@ -180,6 +200,137 @@ class TestApplicability:
         record = ipeds.parse_directory(_archive(row))[0]
         assert record["ipeds.PSET4FLG"] == "2"
         assert self._graded(record)["Net price calculator"] is Disclosure.NOT_APPLICABLE
+
+
+class TestAthleticsApplicability:
+    """The rule that turned an ungradeable column into a finding, and its failure mode.
+
+    Graded against the directory alone, 4,469 of 6,163 institutions have no athletics address and
+    almost every one of them simply has no team. The characteristics file supplies the
+    institution's own answer about whether it competes, and that answer is the only thing allowed
+    to put anyone in this denominator.
+    """
+
+    _NO_REPORT = (_CAMPUS.replace("www.aamu.edu/athletics", " "),)
+
+    def _athletics(self, record: dict[str, Any]) -> Disclosure:
+        grade = grade_institution(record, fields=IPEDS_FIELDS)
+        return next(r.disclosure for r in grade.results if r.field.key == "ipeds.ATHURL")
+
+    def test_a_college_with_no_athletics_programme_owes_nothing(self) -> None:
+        """ATHASSOC 2 is a stated "no". It leaves the denominator rather than being marked down."""
+        record = _joined(self._NO_REPORT, ("100654,2,2,2,2,2",))[0]
+        assert self._athletics(record) is Disclosure.NOT_APPLICABLE
+
+    def test_a_competing_college_with_no_published_report_is_a_gap(self) -> None:
+        record = _joined(self._NO_REPORT, ("100654,1,1,1,1,1",))[0]
+        assert self._athletics(record) is Disclosure.MISSING
+
+    def test_an_institution_absent_from_the_characteristics_file_is_never_marked_down(self) -> None:
+        """Silence about athletics is not a claim to have any. Reading an absent join as a yes
+        would put four thousand colleges with no team into the denominator, which is the exact
+        shape of the null-versus-zero bug one level up."""
+        record = ipeds.merge_characteristics(
+            ipeds.parse_directory(_archive(*self._NO_REPORT)), {}
+        )[0]
+        assert "ipeds.ATHASSOC" not in record
+        assert self._athletics(record) is Disclosure.NOT_APPLICABLE
+
+    def test_an_unanswered_athletics_question_is_not_a_yes(self) -> None:
+        """-1 is "not reported". It is an absence of an answer, not an answer."""
+        record = _joined(self._NO_REPORT, ("100654,-1,-1,-1,-1,-1",))[0]
+        assert self._athletics(record) is Disclosure.NOT_APPLICABLE
+
+    def test_an_institution_outside_title_iv_is_outside_the_statute(self) -> None:
+        row = _CAMPUS.replace(",1,1,1,www.aamu.edu/", ",1,1,2,www.aamu.edu/").replace(
+            "www.aamu.edu/athletics", " "
+        )
+        record = _joined((row,), ("100654,1,1,1,1,1",))[0]
+        assert self._athletics(record) is Disclosure.NOT_APPLICABLE
+
+    def test_a_closed_institution_maintains_no_pages(self) -> None:
+        row = _CAMPUS.replace(",2,1,1,1,www.aamu.edu/", ",2,1,0,1,www.aamu.edu/").replace(
+            "www.aamu.edu/athletics", " "
+        )
+        record = _joined((row,), ("100654,1,1,1,1,1",))[0]
+        assert record["ipeds.CYACTIVE"] == "0"
+        assert self._athletics(record) is Disclosure.NOT_APPLICABLE
+
+
+class TestTheJoin:
+    def test_the_merge_leaves_an_unmatched_record_exactly_as_it_was(self) -> None:
+        directory = ipeds.parse_directory(_archive(_CAMPUS))
+        merged = ipeds.merge_characteristics(directory, {"999999": {"ipeds.ATHASSOC": "1"}})
+        assert merged[0] == directory[0]
+
+    def test_a_characteristics_row_with_no_unit_id_is_dropped_not_keyed_on_blank(self) -> None:
+        """Two of them would collide on "" and one would answer for the other."""
+        parsed = ipeds.parse_characteristics(_characteristics("100654,1,1,1,1,1", " ,2,2,2,2,2"))
+        assert set(parsed) == {"100654"}
+
+    def test_an_empty_characteristics_file_is_a_failure_not_zero_institutions(self) -> None:
+        with pytest.raises(ipeds.IpedsError, match="zero institutions"):
+            ipeds.parse_characteristics(_characteristics())
+
+    def test_a_characteristics_file_without_unitid_raises(self) -> None:
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as bundle:
+            bundle.writestr("ic.csv", "ATHASSOC\n1\n")
+        with pytest.raises(ipeds.IpedsError, match="UNITID"):
+            ipeds.parse_characteristics(buffer.getvalue())
+
+    def test_an_unreadable_characteristics_file_fails_the_whole_load(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Falling back to directory-only records would drop the athletics disclosure out of every
+        denominator in the country, which on the page is indistinguishable from every institution
+        in the country suddenly publishing one."""
+        cache = tmp_path / "HD.zip"
+        cache.write_bytes(_archive(_CAMPUS))
+
+        def boom(url: str, timeout: float = 0) -> Any:
+            raise urllib.error.URLError("connection reset")
+
+        monkeypatch.setattr(ipeds.urllib.request, "urlopen", boom)
+        with pytest.raises(ipeds.IpedsError, match="characteristics"):
+            ipeds.load_institutions(cache=cache)
+
+    def test_a_cached_characteristics_archive_is_used_without_the_network(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        directory = tmp_path / "HD.zip"
+        directory.write_bytes(_archive(_CAMPUS))
+        characteristics = tmp_path / "IC.zip"
+        characteristics.write_bytes(_characteristics("100654,1,1,1,1,1"))
+
+        def forbidden(url: str, timeout: float = 0) -> Any:
+            raise AssertionError("cache hit must not reach the network")
+
+        monkeypatch.setattr(ipeds.urllib.request, "urlopen", forbidden)
+        joined = ipeds.load_institutions(cache=directory, characteristics_cache=characteristics)
+        assert joined[0]["ipeds.ATHASSOC"] == "1"
+
+    def test_a_characteristics_download_populates_the_cache(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        payload = _characteristics("100654,1,1,1,1,1")
+
+        class _Response(io.BytesIO):
+            def __enter__(self) -> _Response:
+                return self
+
+            def __exit__(self, *exc: object) -> None:
+                self.close()
+
+        monkeypatch.setattr(
+            ipeds.urllib.request, "urlopen", lambda url, timeout=0: _Response(payload)
+        )
+        cache = tmp_path / "nested" / "IC2023.zip"
+        assert ipeds.load_characteristics(cache=cache)["100654"]["ipeds.ATHASSOC"] == "1"
+        assert cache.read_bytes() == payload
+
+    def test_characteristics_url_names_the_collection_year(self) -> None:
+        assert ipeds.characteristics_url(2023).endswith("/IC2023.zip")
 
 
 class TestParsing:

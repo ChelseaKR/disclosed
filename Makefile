@@ -23,7 +23,7 @@ dataset:
 	$(PYTHON) -m disclosed.cli dataset --report data/report.json --out data/dataset.csv
 
 crosscheck:
-	$(PYTHON) -m disclosed.cli crosscheck --cache data/HD2023.zip --source data/sample.json --out data/crosscheck.json
+	$(PYTHON) -m disclosed.cli crosscheck --cache data/HD2023.zip --characteristics data/IC2023.zip --source data/sample.json --out data/crosscheck.json
 
 snapshot:
 	$(PYTHON) -m disclosed.cli snapshot --taken $(TAKEN) --out data/snapshots/$(TAKEN).json

@@ -244,16 +244,46 @@ def _owes_a_net_price_calculator(record: Mapping[str, object]) -> bool:
     )
 
 
+def _has_an_intercollegiate_athletic_program(record: Mapping[str, object]) -> bool:
+    """Whether the Equity in Athletics disclosure reaches this institution.
+
+    20 U.S.C. 1092(g) requires a coeducational institution that participates in Title IV and has
+    an intercollegiate athletic program to prepare an annual report on that programme and make it
+    available. Title IV participation is ``PSET4FLG``; the athletic programme is the institution's
+    own answer to whether it belongs to a national athletic association, which IPEDS collects as
+    ``ATHASSOC`` in the characteristics file.
+
+    The condition is a positive ``1`` and nothing else. An institution that answered "no", that
+    was never asked, or that has no characteristics row at all has not told anyone it fields
+    intercollegiate teams, and reading any of those silences as a yes would put four thousand
+    colleges with no athletics programme into a denominator they do not belong in. That is why
+    this column went ungraded until the second file arrived: the directory alone shows 4,469 blank
+    athletics addresses, and almost every one of them is a school that simply has no team.
+
+    ``ATHASSOC`` rather than the four ``SPORT`` columns, because every institution reporting a
+    team also reports an association: the sports columns identify 1,334 institutions and are a
+    strict subset of the 2,008 this rule finds, so using them would excuse 674 institutions that
+    told IPEDS they compete.
+    """
+    return (
+        _is_an_institution(record)
+        and _code(record, "ipeds.PSET4FLG") == "1"
+        and _code(record, "ipeds.ATHASSOC") == "1"
+    )
+
+
 # Public disclosures IPEDS records that the College Scorecard does not carry. These are graded on
 # whether a URL was published at all, never on whether the page behind it is any good: this
 # project reads what a publisher declared and does not fetch anything.
 #
-# Two obvious candidates are deliberately absent, and their absence is the point. ATHURL is the
-# Equity in Athletics disclosure, required only of institutions with intercollegiate athletics;
-# 4,469 of 6,163 rows are blank and nearly all of those institutions simply have no athletics
-# program. VETURL is blank for 2,377 and there is no universal requirement behind it. Grading
-# either would produce a large, confident, and completely fabricated finding, which is exactly
-# the failure this project was built to avoid committing itself.
+# One obvious candidate is still deliberately absent, and its absence is the point. VETURL, the
+# veterans information page, is blank for 2,377 institutions, and the characteristics file now
+# tells us which institutions run veterans programmes (VET1 through VET9), so the applicability
+# rule that was missing for the athletics disclosure could be written for this one too. It is
+# still not graded, because applicability was never the obstacle here: there is no universal
+# requirement that an institution publish a veterans page at all, so a rule saying who it applies
+# to would be a rule about a duty that does not exist. Knowing who would owe a disclosure is not
+# the same as there being one to owe.
 IPEDS_FIELDS: Final[tuple[Field, ...]] = (
     Field(
         key="ipeds.NPRICURL",
@@ -281,6 +311,36 @@ IPEDS_FIELDS: Final[tuple[Field, ...]] = (
             "is never fetched and is not graded."
         ),
         weight=1.5,
+    ),
+    Field(
+        key="ipeds.ATHURL",
+        label="Equity in athletics disclosure",
+        credible_min=None,
+        credible_max=None,
+        zero_is_credible=True,
+        text_is_a_value=True,
+        sentinels=IPEDS_SENTINELS,
+        applies_when=_has_an_intercollegiate_athletic_program,
+        rationale=(
+            "20 U.S.C. 1092(g), the Equity in Athletics Disclosure Act, requires a coeducational "
+            "Title IV institution with an intercollegiate athletic program to prepare an annual "
+            "report on participation, staffing and spending by sex, and to make it available to "
+            "students, prospective students and the public. It does not require the report to be "
+            "posted on the web, and an institution that supplies it on request has complied. So "
+            "an absent address here is graded as a disclosure gap and not as a violation: what it "
+            "establishes is that the report is not where a prospective athlete would look for it, "
+            "which is a weaker claim than the net price calculator finding makes and is "
+            "deliberately stated as weaker. Applicability comes from the institution's own answer "
+            "to IPEDS about membership of a national athletic association, never from an "
+            "inference about its size or sector, and it moves the denominator from 6,163 to "
+            "1,998. Two distortions remain and pull in opposite directions: the statute reaches "
+            "only coeducational institutions and neither IPEDS file carries that flag, so the "
+            "handful of single-sex colleges with teams are counted when they should not be; and "
+            "an institution that never answered the athletics question is left out entirely "
+            "rather than guessed at, so some that owe the disclosure are missing from the count. "
+            "Both are small, and both are stated instead of being quietly resolved in the "
+            "direction that makes the finding bigger."
+        ),
     ),
     Field(
         key="ipeds.FAIDURL",

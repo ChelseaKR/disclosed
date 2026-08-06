@@ -78,9 +78,32 @@ Getting to 34 rather than 62 is the applicability rule doing its job: graduate-o
 system offices, closures, and institutions taking no federal aid are outside the statute and leave
 the denominator instead of being marked down.
 
+### The rule is the hard part, not the threshold
+
+The Equity in Athletics disclosure went ungraded in an earlier pass. It is blank for **4,469 of
+6,163** directory rows, and almost every one of those is a college with no athletics programme, so
+grading it against the directory alone would have manufactured four thousand violations. What was
+missing was not a better threshold. It was a way to know who the rule applied to.
+
+The IPEDS institutional characteristics file supplies it: each institution's own answer about
+whether it belongs to a national athletic association. That moves the denominator from 6,163 to
+**1,998**, of which **812 give the federal record no athletics address**.
+[20 U.S.C. §1092(g)](https://www.law.cornell.edu/uscode/text/20/1092) requires those institutions
+to prepare the report and make it available; it does not require them to post it, so this is
+graded as a disclosure gap and stated as weaker than the net price calculator finding, not louder.
+
+The veterans page is still not graded, and the same file would now supply a rule for it. There is
+no universal requirement to publish one, and a rule about who a duty reaches is worthless when the
+duty does not exist.
+
 ```
-disclosed crosscheck --source data/sample.json --out data/crosscheck.json
+disclosed crosscheck --cache data/HD2023.zip --characteristics data/IC2023.zip \
+  --source data/sample.json --out data/crosscheck.json
 ```
+
+Both IPEDS files are required. If the characteristics file cannot be read the load fails rather
+than returning directory-only records, because a field that silently stops being graded looks on
+the page exactly like a field everybody suddenly started reporting.
 
 ## Use the data
 

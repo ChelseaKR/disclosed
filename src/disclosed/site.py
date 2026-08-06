@@ -428,11 +428,19 @@ measurement.</p>
 <p>IPEDS records public disclosures the Scorecard does not carry, and states absence three
 different ways, all of them negative integers: -1 not reported, -2 not applicable, -3 not
 available. They are not interchangeable, and only the first counts against an institution.</p>
-<p>Two obvious candidates are deliberately not graded, and their absence is the point. The Equity
-in Athletics disclosure is required only of institutions with intercollegiate athletics and is
-blank for 4,469 of 6,163 rows, nearly all of them schools with no athletics programme. The
-veterans information page has no universal requirement behind it. Grading either would produce a
-large, confident, entirely fabricated finding.</p>
+<p>The athletics disclosure below was ungraded until a second IPEDS file arrived, and the reason is
+worth stating. It is blank for 4,469 of 6,163 directory rows, and almost every one of those is a
+college with no athletics programme, so grading the column against the directory alone would have
+produced four thousand confident and entirely fabricated violations. The institutional
+characteristics file carries each institution's own answer about whether it competes, and that
+answer moves the denominator from 6,163 to 1,998. The finding did not need a better threshold. It
+needed to know who the rule applied to.</p>
+<p>One candidate is still deliberately not graded. The veterans information page is blank for 2,377
+institutions, and the same characteristics file would now supply an applicability rule for it. It
+stays ungraded because applicability was never the obstacle here: no universal requirement obliges
+an institution to publish a veterans page, so a rule about who it applied to would be a rule about
+a duty that does not exist. Knowing who would owe a disclosure is not the same as there being one
+to owe.</p>
 {ipeds_sections}
 
 <h2>If this is wrong about your institution</h2>

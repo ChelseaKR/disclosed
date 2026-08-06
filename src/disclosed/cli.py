@@ -216,8 +216,10 @@ def _cmd_dataset(args: argparse.Namespace) -> int:
 def _cmd_crosscheck(args: argparse.Namespace) -> int:
     """Grade IPEDS's own disclosures and report where it disagrees with the Scorecard."""
     try:
-        directory = ipeds.load_directory(
-            year=args.year, cache=Path(args.cache) if args.cache else None
+        directory = ipeds.load_institutions(
+            year=args.year,
+            cache=Path(args.cache) if args.cache else None,
+            characteristics_cache=Path(args.characteristics) if args.characteristics else None,
         )
     except ipeds.IpedsError as exc:
         print(f"IPEDS unreadable, nothing written: {exc}", file=sys.stderr)
@@ -315,7 +317,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_cross.add_argument("--year", type=int, default=ipeds.DEFAULT_YEAR)
     p_cross.add_argument(
-        "--cache", default=None, help="path to hold the downloaded IPEDS archive"
+        "--cache", default=None, help="path to hold the downloaded IPEDS directory archive"
+    )
+    p_cross.add_argument(
+        "--characteristics",
+        default=None,
+        help="path to hold the downloaded IPEDS institutional characteristics archive",
     )
     p_cross.add_argument(
         "--source",
