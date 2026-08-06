@@ -1,9 +1,13 @@
 cff-version: 1.2.0
 title: "disclosed: grading US higher-education institutions on what they disclose"
 message: >-
-  If you use this dataset or its findings, please cite it. Please also carry the coverage
-  caveat with the numbers: the committed capture is 600 institutions across 13 states, not a
-  national sample, and shares computed from it are not national figures.
+  If you use this dataset or its findings, please cite it, and please carry the coverage with the
+  numbers. There are two corpora and they are not interchangeable. The College Scorecard capture
+  is 600 institutions across 13 states, not a national sample, and shares computed from it are not
+  national figures. The IPEDS corpus in data/national.json is the complete institutional
+  directory, so shares computed from it are national, and only for the six public disclosure
+  addresses IPEDS carries. Every payload states which it is in its own "scope" block; if you are
+  quoting a percentage, quote that alongside it.
 type: software
 authors:
   - family-names: Kelly-Reif

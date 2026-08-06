@@ -1,13 +1,19 @@
 """Command line entry point.
 
-Four verbs: ``grade`` runs the checks and writes a report, ``snapshot`` reduces a report to
-per-field counts for later comparison, ``drift`` compares two snapshots, and ``site`` renders a
-report as static HTML. Splitting snapshot out from grade keeps the drift history small enough to
-commit, so the record of what stopped being published lives in git rather than in a bucket someone
-has to trust.
+``grade`` runs the checks against the College Scorecard and writes a report. ``crosscheck`` does
+the same against the whole IPEDS directory and reports where the two federal sources disagree.
+``snapshot`` reduces either to per-field counts, ``drift`` compares two of those, ``national``
+reduces a population-wide run to the artifact the site's national claims rest on, ``dataset``
+exports CSV, and ``site`` renders a report as static HTML.
 
-``site`` reads the report rather than regrading, so the published pages cannot claim anything the
-published dataset does not contain.
+The reductions exist because the full runs are large and regenerable while the claims made about
+them are small and worth committing. A snapshot is a few hundred bytes, so the record of what
+stopped being published lives in git rather than in a bucket someone has to trust; the national
+artifact is 100 KB against a 2.5 MB run.
+
+``site`` reads the reports rather than regrading, so the published pages cannot claim anything the
+published data does not contain. Every run records its own coverage, and the page prints that
+rather than a constant, so a sample can never be rendered through a template that says national.
 """
 
 from __future__ import annotations
