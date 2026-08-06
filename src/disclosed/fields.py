@@ -58,6 +58,17 @@ class Field:
     weight: float = 1.0
     """Relative contribution to the institution's disclosure grade."""
 
+    statute: str = ""
+    """The published requirement behind this field, cited so a reader can go and check it.
+
+    Empty for most fields, and the emptiness is load-bearing. A field with a statute is one an
+    institution can be measured against a rule somebody else wrote; a field without one is this
+    project's opinion about what a college ought to publish. The two are not the same kind of
+    finding and are not published the same way: institutions failing a statute-backed disclosure
+    are named, and institutions failing an ordinary one are counted. Naming a college for falling
+    short of a standard nobody enacted is closer to a pillory than to a scorecard.
+    """
+
     sentinels: Mapping[str, Disclosure] = dataclass_field(default_factory=dict)
     """The source's own missing-data codes for this field. See :data:`IPEDS_SENTINELS`."""
 
@@ -294,6 +305,7 @@ IPEDS_FIELDS: Final[tuple[Field, ...]] = (
         text_is_a_value=True,
         sentinels=IPEDS_SENTINELS,
         applies_when=_owes_a_net_price_calculator,
+        statute="20 U.S.C. 1015a(h)(3)",
         rationale=(
             "A net price calculator is required by 20 U.S.C. 1015a(h)(3) of institutions that "
             "participate in Title IV and enrol first-time, full-time undergraduates, and IPEDS "
@@ -321,6 +333,7 @@ IPEDS_FIELDS: Final[tuple[Field, ...]] = (
         text_is_a_value=True,
         sentinels=IPEDS_SENTINELS,
         applies_when=_has_an_intercollegiate_athletic_program,
+        statute="20 U.S.C. 1092(g)",
         rationale=(
             "20 U.S.C. 1092(g), the Equity in Athletics Disclosure Act, requires a coeducational "
             "Title IV institution with an intercollegiate athletic program to prepare an annual "

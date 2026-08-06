@@ -147,13 +147,36 @@ institution. They are matched on the raw value rather than the normalized token,
 normalization strips the minus sign and `-2` would otherwise collide with a real measurement of
 two.
 
-## What this sample is not
+## What is a sample and what is national
 
-The committed capture is **600 institutions across 13 states**, out of roughly 6,300. It is the
-first records the API returned, which arrive grouped by state, so California is 51% of it and most
-states are absent entirely. Percentages computed from it describe these 600 institutions and are
-not national figures. A project about undisclosed information should not be coy about the coverage
-of its own sample, so the generated site says this on its front page too.
+Two corpora, and they are never mixed.
+
+| | Corpus | Coverage | Fields |
+| --- | --- | --- | --- |
+| **Sample** | College Scorecard | 600 institutions, 13 states, California 51% | earnings, completion, admission, debt, tuition, enrollment |
+| **National** | IPEDS directory + characteristics | every institution there is, 6,163 | the six public disclosure addresses |
+
+The Scorecard is a paged API, and a run that stops early is a slice. IPEDS publishes a file, so
+grading it grades the population — which is what makes national claims possible at all, and only
+for the fields IPEDS carries.
+
+Coverage travels *inside* the report rather than in a paragraph on the page. Every payload carries
+a `scope` block, the site prints its sentence rather than a constant, and `disclosed national`
+**refuses to build** from a run that did not cover the population: there is no correct way to
+relabel a sample, so the only safe answer is to fail.
+
+```
+disclosed national --report data/crosscheck.json --out data/national.json
+disclosed site --report data/report.json --national data/national.json --out site --generated 2026-08-05
+```
+
+`data/national.json` is 100 KB and committed; the 2.5 MB run it reduces is not, because it is
+regenerable in a minute from two public archives that need no key. Without `--national` the site
+builds with no national page and makes no national claim anywhere, which is the right default: a
+missing corpus should show up as missing figures, not as sample figures with the qualifier
+quietly dropped.
+
+A run recorded before `scope` existed says so on the page rather than being assumed complete.
 
 ## Development
 

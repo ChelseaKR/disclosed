@@ -1,0 +1,4332 @@
+{
+  "contradictions": [
+    {
+      "field_label": "Sector",
+      "ipeds_value": "private for-profit (3)",
+      "name": "Grand Canyon University",
+      "note": "Sector decides which rules an institution answers to and which peer group it is compared against, here and in most other analyses of federal education data. Two arms of the Department of Education classifying the same school differently is a fact about the data, not a rounding difference.",
+      "scorecard_value": "private nonprofit (2)",
+      "unit_id": "104717"
+    }
+  ],
+  "fields": [
+    {
+      "applicable": 5535,
+      "implausible": 0,
+      "key": "ipeds.NPRICURL",
+      "label": "Net price calculator",
+      "missing": 34,
+      "not_applicable": 628,
+      "reported": 5501,
+      "share_reported": 0.9938572719060524,
+      "statute": "20 U.S.C. 1015a(h)(3)",
+      "suppressed": 0
+    },
+    {
+      "applicable": 1998,
+      "implausible": 0,
+      "key": "ipeds.ATHURL",
+      "label": "Equity in athletics disclosure",
+      "missing": 812,
+      "not_applicable": 4165,
+      "reported": 1186,
+      "share_reported": 0.5935935935935935,
+      "statute": "20 U.S.C. 1092(g)",
+      "suppressed": 0
+    },
+    {
+      "applicable": 5988,
+      "implausible": 0,
+      "key": "ipeds.FAIDURL",
+      "label": "Financial aid information",
+      "missing": 736,
+      "not_applicable": 175,
+      "reported": 5252,
+      "share_reported": 0.8770875083500334,
+      "statute": "",
+      "suppressed": 0
+    },
+    {
+      "applicable": 5988,
+      "implausible": 0,
+      "key": "ipeds.DISAURL",
+      "label": "Disability services information",
+      "missing": 7,
+      "not_applicable": 175,
+      "reported": 5981,
+      "share_reported": 0.9988309953239813,
+      "statute": "",
+      "suppressed": 0
+    },
+    {
+      "applicable": 5988,
+      "implausible": 0,
+      "key": "ipeds.ADMINURL",
+      "label": "Admissions information",
+      "missing": 730,
+      "not_applicable": 175,
+      "reported": 5258,
+      "share_reported": 0.8780895123580494,
+      "statute": "",
+      "suppressed": 0
+    },
+    {
+      "applicable": 5988,
+      "implausible": 0,
+      "key": "ipeds.WEBADDR",
+      "label": "Institution web address",
+      "missing": 3,
+      "not_applicable": 175,
+      "reported": 5985,
+      "share_reported": 0.999498997995992,
+      "statute": "",
+      "suppressed": 0
+    }
+  ],
+  "gaps": {
+    "Equity in athletics disclosure": [
+      {
+        "name": "Alabama A & M University",
+        "state": "AL",
+        "unit_id": "100654"
+      },
+      {
+        "name": "George C Wallace State Community College-Selma",
+        "state": "AL",
+        "unit_id": "101301"
+      },
+      {
+        "name": "Huntingdon College",
+        "state": "AL",
+        "unit_id": "101435"
+      },
+      {
+        "name": "Jefferson State Community College",
+        "state": "AL",
+        "unit_id": "101505"
+      },
+      {
+        "name": "Lawson State Community College",
+        "state": "AL",
+        "unit_id": "101569"
+      },
+      {
+        "name": "University of Mobile",
+        "state": "AL",
+        "unit_id": "101693"
+      },
+      {
+        "name": "Northwest Shoals Community College",
+        "state": "AL",
+        "unit_id": "101736"
+      },
+      {
+        "name": "Reid State Technical College",
+        "state": "AL",
+        "unit_id": "101994"
+      },
+      {
+        "name": "Bishop State Community College",
+        "state": "AL",
+        "unit_id": "102030"
+      },
+      {
+        "name": "Stillman College",
+        "state": "AL",
+        "unit_id": "102270"
+      },
+      {
+        "name": "Talladega College",
+        "state": "AL",
+        "unit_id": "102298"
+      },
+      {
+        "name": "University of Alaska Fairbanks",
+        "state": "AK",
+        "unit_id": "102614"
+      },
+      {
+        "name": "Cossatot Community College of the University of Arkansas",
+        "state": "AR",
+        "unit_id": "106795"
+      },
+      {
+        "name": "Crowley's Ridge College",
+        "state": "AR",
+        "unit_id": "106810"
+      },
+      {
+        "name": "Arkansas State University Three Rivers",
+        "state": "AR",
+        "unit_id": "107521"
+      },
+      {
+        "name": "University of the Ozarks",
+        "state": "AR",
+        "unit_id": "107558"
+      },
+      {
+        "name": "Southeast Arkansas College",
+        "state": "AR",
+        "unit_id": "107637"
+      },
+      {
+        "name": "Shorter College",
+        "state": "AR",
+        "unit_id": "107840"
+      },
+      {
+        "name": "Williams Baptist University",
+        "state": "AR",
+        "unit_id": "107877"
+      },
+      {
+        "name": "South Arkansas College",
+        "state": "AR",
+        "unit_id": "107974"
+      },
+      {
+        "name": "Southern Arkansas University Main Campus",
+        "state": "AR",
+        "unit_id": "107983"
+      },
+      {
+        "name": "Southern Arkansas University Tech",
+        "state": "AR",
+        "unit_id": "107992"
+      },
+      {
+        "name": "Academy of Art University",
+        "state": "CA",
+        "unit_id": "108232"
+      },
+      {
+        "name": "Barstow Community College",
+        "state": "CA",
+        "unit_id": "109907"
+      },
+      {
+        "name": "California Institute of Technology",
+        "state": "CA",
+        "unit_id": "110404"
+      },
+      {
+        "name": "California Lutheran University",
+        "state": "CA",
+        "unit_id": "110413"
+      },
+      {
+        "name": "California State University-Chico",
+        "state": "CA",
+        "unit_id": "110538"
+      },
+      {
+        "name": "California State University-Dominguez Hills",
+        "state": "CA",
+        "unit_id": "110547"
+      },
+      {
+        "name": "California State University-Sacramento",
+        "state": "CA",
+        "unit_id": "110617"
+      },
+      {
+        "name": "California State University Maritime Academy",
+        "state": "CA",
+        "unit_id": "111188"
+      },
+      {
+        "name": "Chapman University",
+        "state": "CA",
+        "unit_id": "111948"
+      },
+      {
+        "name": "Citrus College",
+        "state": "CA",
+        "unit_id": "112172"
+      },
+      {
+        "name": "Crafton Hills College",
+        "state": "CA",
+        "unit_id": "113111"
+      },
+      {
+        "name": "Cuesta College",
+        "state": "CA",
+        "unit_id": "113193"
+      },
+      {
+        "name": "Cypress College",
+        "state": "CA",
+        "unit_id": "113236"
+      },
+      {
+        "name": "College of the Desert",
+        "state": "CA",
+        "unit_id": "113573"
+      },
+      {
+        "name": "Gavilan College",
+        "state": "CA",
+        "unit_id": "114938"
+      },
+      {
+        "name": "Harvey Mudd College",
+        "state": "CA",
+        "unit_id": "115409"
+      },
+      {
+        "name": "Imperial Valley College",
+        "state": "CA",
+        "unit_id": "115861"
+      },
+      {
+        "name": "Irvine Valley College",
+        "state": "CA",
+        "unit_id": "116439"
+      },
+      {
+        "name": "Los Angeles Trade Technical College",
+        "state": "CA",
+        "unit_id": "117724"
+      },
+      {
+        "name": "Mendocino College",
+        "state": "CA",
+        "unit_id": "118684"
+      },
+      {
+        "name": "Mission College",
+        "state": "CA",
+        "unit_id": "118930"
+      },
+      {
+        "name": "Monterey Peninsula College",
+        "state": "CA",
+        "unit_id": "119067"
+      },
+      {
+        "name": "Mt San Antonio College",
+        "state": "CA",
+        "unit_id": "119164"
+      },
+      {
+        "name": "Occidental College",
+        "state": "CA",
+        "unit_id": "120254"
+      },
+      {
+        "name": "Ohlone College",
+        "state": "CA",
+        "unit_id": "120290"
+      },
+      {
+        "name": "Pacific Union College",
+        "state": "CA",
+        "unit_id": "120865"
+      },
+      {
+        "name": "Pitzer College",
+        "state": "CA",
+        "unit_id": "121257"
+      },
+      {
+        "name": "Pomona College",
+        "state": "CA",
+        "unit_id": "121345"
+      },
+      {
+        "name": "University of Redlands",
+        "state": "CA",
+        "unit_id": "121691"
+      },
+      {
+        "name": "Riverside City College",
+        "state": "CA",
+        "unit_id": "121901"
+      },
+      {
+        "name": "Saddleback College",
+        "state": "CA",
+        "unit_id": "122205"
+      },
+      {
+        "name": "San Diego City College",
+        "state": "CA",
+        "unit_id": "122339"
+      },
+      {
+        "name": "San Diego Mesa College",
+        "state": "CA",
+        "unit_id": "122375"
+      },
+      {
+        "name": "San Diego Miramar College",
+        "state": "CA",
+        "unit_id": "122384"
+      },
+      {
+        "name": "San Jose City College",
+        "state": "CA",
+        "unit_id": "122746"
+      },
+      {
+        "name": "San Jose State University",
+        "state": "CA",
+        "unit_id": "122755"
+      },
+      {
+        "name": "Santa Rosa Junior College",
+        "state": "CA",
+        "unit_id": "123013"
+      },
+      {
+        "name": "Sierra College",
+        "state": "CA",
+        "unit_id": "123341"
+      },
+      {
+        "name": "Skyline College",
+        "state": "CA",
+        "unit_id": "123509"
+      },
+      {
+        "name": "Solano Community College",
+        "state": "CA",
+        "unit_id": "123563"
+      },
+      {
+        "name": "University of Southern California",
+        "state": "CA",
+        "unit_id": "123961"
+      },
+      {
+        "name": "West Valley College",
+        "state": "CA",
+        "unit_id": "125499"
+      },
+      {
+        "name": "Whittier College",
+        "state": "CA",
+        "unit_id": "125763"
+      },
+      {
+        "name": "Yuba College",
+        "state": "CA",
+        "unit_id": "126119"
+      },
+      {
+        "name": "Lamar Community College",
+        "state": "CO",
+        "unit_id": "127389"
+      },
+      {
+        "name": "United States Air Force Academy",
+        "state": "CO",
+        "unit_id": "128328"
+      },
+      {
+        "name": "Albertus Magnus College",
+        "state": "CT",
+        "unit_id": "128498"
+      },
+      {
+        "name": "University of Bridgeport",
+        "state": "CT",
+        "unit_id": "128744"
+      },
+      {
+        "name": "Connecticut College",
+        "state": "CT",
+        "unit_id": "128902"
+      },
+      {
+        "name": "Connecticut State Community College",
+        "state": "CT",
+        "unit_id": "129367"
+      },
+      {
+        "name": "Mitchell College",
+        "state": "CT",
+        "unit_id": "129774"
+      },
+      {
+        "name": "University of Saint Joseph",
+        "state": "CT",
+        "unit_id": "130314"
+      },
+      {
+        "name": "Trinity College",
+        "state": "CT",
+        "unit_id": "130590"
+      },
+      {
+        "name": "United States Coast Guard Academy",
+        "state": "CT",
+        "unit_id": "130624"
+      },
+      {
+        "name": "Wesleyan University",
+        "state": "CT",
+        "unit_id": "130697"
+      },
+      {
+        "name": "Western Connecticut State University",
+        "state": "CT",
+        "unit_id": "130776"
+      },
+      {
+        "name": "Delaware Technical Community College-Terry",
+        "state": "DE",
+        "unit_id": "130907"
+      },
+      {
+        "name": "The Catholic University of America",
+        "state": "DC",
+        "unit_id": "131283"
+      },
+      {
+        "name": "University of the District of Columbia",
+        "state": "DC",
+        "unit_id": "131399"
+      },
+      {
+        "name": "Gallaudet University",
+        "state": "DC",
+        "unit_id": "131450"
+      },
+      {
+        "name": "Georgetown University",
+        "state": "DC",
+        "unit_id": "131496"
+      },
+      {
+        "name": "Trinity Washington University",
+        "state": "DC",
+        "unit_id": "131876"
+      },
+      {
+        "name": "Johnson University Florida",
+        "state": "FL",
+        "unit_id": "132879"
+      },
+      {
+        "name": "Florida SouthWestern State College",
+        "state": "FL",
+        "unit_id": "133508"
+      },
+      {
+        "name": "Edward Waters University",
+        "state": "FL",
+        "unit_id": "133526"
+      },
+      {
+        "name": "Florida Atlantic University",
+        "state": "FL",
+        "unit_id": "133669"
+      },
+      {
+        "name": "Florida College",
+        "state": "FL",
+        "unit_id": "133809"
+      },
+      {
+        "name": "The College of the Florida Keys",
+        "state": "FL",
+        "unit_id": "133960"
+      },
+      {
+        "name": "Florida Memorial University",
+        "state": "FL",
+        "unit_id": "133979"
+      },
+      {
+        "name": "Florida State University",
+        "state": "FL",
+        "unit_id": "134097"
+      },
+      {
+        "name": "Indian River State College",
+        "state": "FL",
+        "unit_id": "134608"
+      },
+      {
+        "name": "Keiser University-Ft Lauderdale",
+        "state": "FL",
+        "unit_id": "135081"
+      },
+      {
+        "name": "Palm Beach State College",
+        "state": "FL",
+        "unit_id": "136358"
+      },
+      {
+        "name": "Polk State College",
+        "state": "FL",
+        "unit_id": "136516"
+      },
+      {
+        "name": "Saint Johns River State College",
+        "state": "FL",
+        "unit_id": "137281"
+      },
+      {
+        "name": "Stetson University",
+        "state": "FL",
+        "unit_id": "137546"
+      },
+      {
+        "name": "Tallahassee Community College",
+        "state": "FL",
+        "unit_id": "137759"
+      },
+      {
+        "name": "Trinity Baptist College",
+        "state": "FL",
+        "unit_id": "137953"
+      },
+      {
+        "name": "Trinity College of Florida",
+        "state": "FL",
+        "unit_id": "137962"
+      },
+      {
+        "name": "Warner University",
+        "state": "FL",
+        "unit_id": "138275"
+      },
+      {
+        "name": "Webber International University",
+        "state": "FL",
+        "unit_id": "138293"
+      },
+      {
+        "name": "Abraham Baldwin Agricultural College",
+        "state": "GA",
+        "unit_id": "138558"
+      },
+      {
+        "name": "Agnes Scott College",
+        "state": "GA",
+        "unit_id": "138600"
+      },
+      {
+        "name": "Albany Technical College",
+        "state": "GA",
+        "unit_id": "138682"
+      },
+      {
+        "name": "Albany State University",
+        "state": "GA",
+        "unit_id": "138716"
+      },
+      {
+        "name": "Point University",
+        "state": "GA",
+        "unit_id": "138868"
+      },
+      {
+        "name": "Clark Atlanta University",
+        "state": "GA",
+        "unit_id": "138947"
+      },
+      {
+        "name": "Berry College",
+        "state": "GA",
+        "unit_id": "139144"
+      },
+      {
+        "name": "Brenau University",
+        "state": "GA",
+        "unit_id": "139199"
+      },
+      {
+        "name": "Brewton-Parker College",
+        "state": "GA",
+        "unit_id": "139205"
+      },
+      {
+        "name": "Clayton  State University",
+        "state": "GA",
+        "unit_id": "139311"
+      },
+      {
+        "name": "Columbus State University",
+        "state": "GA",
+        "unit_id": "139366"
+      },
+      {
+        "name": "Dalton State College",
+        "state": "GA",
+        "unit_id": "139463"
+      },
+      {
+        "name": "East Georgia State College",
+        "state": "GA",
+        "unit_id": "139621"
+      },
+      {
+        "name": "Emory University",
+        "state": "GA",
+        "unit_id": "139658"
+      },
+      {
+        "name": "Georgia Highlands College",
+        "state": "GA",
+        "unit_id": "139700"
+      },
+      {
+        "name": "Georgia State University",
+        "state": "GA",
+        "unit_id": "139940"
+      },
+      {
+        "name": "University of Georgia",
+        "state": "GA",
+        "unit_id": "139959"
+      },
+      {
+        "name": "Gordon State College",
+        "state": "GA",
+        "unit_id": "139968"
+      },
+      {
+        "name": "Southern Crescent Technical College",
+        "state": "GA",
+        "unit_id": "139986"
+      },
+      {
+        "name": "Oglethorpe University",
+        "state": "GA",
+        "unit_id": "140696"
+      },
+      {
+        "name": "Paine College",
+        "state": "GA",
+        "unit_id": "140720"
+      },
+      {
+        "name": "Piedmont University",
+        "state": "GA",
+        "unit_id": "140818"
+      },
+      {
+        "name": "Reinhardt University",
+        "state": "GA",
+        "unit_id": "140872"
+      },
+      {
+        "name": "Savannah State University",
+        "state": "GA",
+        "unit_id": "140960"
+      },
+      {
+        "name": "Shorter University",
+        "state": "GA",
+        "unit_id": "140988"
+      },
+      {
+        "name": "South Georgia Technical College",
+        "state": "GA",
+        "unit_id": "141006"
+      },
+      {
+        "name": "Thomas University",
+        "state": "GA",
+        "unit_id": "141167"
+      },
+      {
+        "name": "Toccoa Falls College",
+        "state": "GA",
+        "unit_id": "141185"
+      },
+      {
+        "name": "Truett McConnell University",
+        "state": "GA",
+        "unit_id": "141237"
+      },
+      {
+        "name": "Valdosta State University",
+        "state": "GA",
+        "unit_id": "141264"
+      },
+      {
+        "name": "Wesleyan College",
+        "state": "GA",
+        "unit_id": "141325"
+      },
+      {
+        "name": "Chaminade University of Honolulu",
+        "state": "HI",
+        "unit_id": "141486"
+      },
+      {
+        "name": "The College of Idaho",
+        "state": "ID",
+        "unit_id": "142294"
+      },
+      {
+        "name": "Lewis-Clark State College",
+        "state": "ID",
+        "unit_id": "142328"
+      },
+      {
+        "name": "Aurora University",
+        "state": "IL",
+        "unit_id": "143118"
+      },
+      {
+        "name": "Black Hawk College",
+        "state": "IL",
+        "unit_id": "143279"
+      },
+      {
+        "name": "Blackburn College",
+        "state": "IL",
+        "unit_id": "143288"
+      },
+      {
+        "name": "Chicago State University",
+        "state": "IL",
+        "unit_id": "144005"
+      },
+      {
+        "name": "University of Chicago",
+        "state": "IL",
+        "unit_id": "144050"
+      },
+      {
+        "name": "Concordia University-Chicago",
+        "state": "IL",
+        "unit_id": "144351"
+      },
+      {
+        "name": "DePaul University",
+        "state": "IL",
+        "unit_id": "144740"
+      },
+      {
+        "name": "College of DuPage",
+        "state": "IL",
+        "unit_id": "144865"
+      },
+      {
+        "name": "Elmhurst University",
+        "state": "IL",
+        "unit_id": "144962"
+      },
+      {
+        "name": "Eureka College",
+        "state": "IL",
+        "unit_id": "144971"
+      },
+      {
+        "name": "Benedictine University",
+        "state": "IL",
+        "unit_id": "145619"
+      },
+      {
+        "name": "University of Illinois Urbana-Champaign",
+        "state": "IL",
+        "unit_id": "145637"
+      },
+      {
+        "name": "Illinois Central College",
+        "state": "IL",
+        "unit_id": "145682"
+      },
+      {
+        "name": "Judson University",
+        "state": "IL",
+        "unit_id": "146339"
+      },
+      {
+        "name": "Kankakee Community College",
+        "state": "IL",
+        "unit_id": "146348"
+      },
+      {
+        "name": "Knox College",
+        "state": "IL",
+        "unit_id": "146427"
+      },
+      {
+        "name": "Lake Forest College",
+        "state": "IL",
+        "unit_id": "146481"
+      },
+      {
+        "name": "Lincoln Land Community College",
+        "state": "IL",
+        "unit_id": "146685"
+      },
+      {
+        "name": "Moody Bible Institute",
+        "state": "IL",
+        "unit_id": "147369"
+      },
+      {
+        "name": "North Central College",
+        "state": "IL",
+        "unit_id": "147660"
+      },
+      {
+        "name": "North Park University",
+        "state": "IL",
+        "unit_id": "147679"
+      },
+      {
+        "name": "Quincy University",
+        "state": "IL",
+        "unit_id": "148131"
+      },
+      {
+        "name": "Spoon River College",
+        "state": "IL",
+        "unit_id": "148991"
+      },
+      {
+        "name": "Triton College",
+        "state": "IL",
+        "unit_id": "149532"
+      },
+      {
+        "name": "Wheaton College",
+        "state": "IL",
+        "unit_id": "149781"
+      },
+      {
+        "name": "Calumet College of Saint Joseph",
+        "state": "IN",
+        "unit_id": "150172"
+      },
+      {
+        "name": "Franklin College",
+        "state": "IN",
+        "unit_id": "150604"
+      },
+      {
+        "name": "Hanover College",
+        "state": "IN",
+        "unit_id": "150756"
+      },
+      {
+        "name": "Holy Cross College",
+        "state": "IN",
+        "unit_id": "150774"
+      },
+      {
+        "name": "Manchester University",
+        "state": "IN",
+        "unit_id": "151777"
+      },
+      {
+        "name": "Rose-Hulman Institute of Technology",
+        "state": "IN",
+        "unit_id": "152318"
+      },
+      {
+        "name": "Saint Mary-of-the-Woods College",
+        "state": "IN",
+        "unit_id": "152381"
+      },
+      {
+        "name": "Saint Mary's College",
+        "state": "IN",
+        "unit_id": "152390"
+      },
+      {
+        "name": "Trine University",
+        "state": "IN",
+        "unit_id": "152567"
+      },
+      {
+        "name": "Wabash College",
+        "state": "IN",
+        "unit_id": "152673"
+      },
+      {
+        "name": "Briar Cliff University",
+        "state": "IA",
+        "unit_id": "152992"
+      },
+      {
+        "name": "Buena Vista University",
+        "state": "IA",
+        "unit_id": "153001"
+      },
+      {
+        "name": "Clarke University",
+        "state": "IA",
+        "unit_id": "153126"
+      },
+      {
+        "name": "Coe College",
+        "state": "IA",
+        "unit_id": "153144"
+      },
+      {
+        "name": "Cornell College",
+        "state": "IA",
+        "unit_id": "153162"
+      },
+      {
+        "name": "University of Dubuque",
+        "state": "IA",
+        "unit_id": "153278"
+      },
+      {
+        "name": "Emmaus Bible College",
+        "state": "IA",
+        "unit_id": "153302"
+      },
+      {
+        "name": "Faith Baptist Bible College and Theological Seminary",
+        "state": "IA",
+        "unit_id": "153320"
+      },
+      {
+        "name": "Grinnell College",
+        "state": "IA",
+        "unit_id": "153384"
+      },
+      {
+        "name": "Iowa Central Community College",
+        "state": "IA",
+        "unit_id": "153524"
+      },
+      {
+        "name": "Loras College",
+        "state": "IA",
+        "unit_id": "153825"
+      },
+      {
+        "name": "Northwest Iowa Community College",
+        "state": "IA",
+        "unit_id": "154129"
+      },
+      {
+        "name": "Simpson College",
+        "state": "IA",
+        "unit_id": "154350"
+      },
+      {
+        "name": "Waldorf University",
+        "state": "IA",
+        "unit_id": "154518"
+      },
+      {
+        "name": "Western Iowa Tech Community College",
+        "state": "IA",
+        "unit_id": "154572"
+      },
+      {
+        "name": "Allen County Community College",
+        "state": "KS",
+        "unit_id": "154642"
+      },
+      {
+        "name": "Cloud County Community College",
+        "state": "KS",
+        "unit_id": "154907"
+      },
+      {
+        "name": "Coffeyville Community College",
+        "state": "KS",
+        "unit_id": "154925"
+      },
+      {
+        "name": "Dodge City Community College",
+        "state": "KS",
+        "unit_id": "154998"
+      },
+      {
+        "name": "Barclay College",
+        "state": "KS",
+        "unit_id": "155070"
+      },
+      {
+        "name": "Friends University",
+        "state": "KS",
+        "unit_id": "155089"
+      },
+      {
+        "name": "Fort Scott Community College",
+        "state": "KS",
+        "unit_id": "155098"
+      },
+      {
+        "name": "Hesston College",
+        "state": "KS",
+        "unit_id": "155177"
+      },
+      {
+        "name": "Highland Community College",
+        "state": "KS",
+        "unit_id": "155186"
+      },
+      {
+        "name": "Kansas City Kansas Community College",
+        "state": "KS",
+        "unit_id": "155292"
+      },
+      {
+        "name": "Kansas Christian College",
+        "state": "KS",
+        "unit_id": "155308"
+      },
+      {
+        "name": "Newman University",
+        "state": "KS",
+        "unit_id": "155335"
+      },
+      {
+        "name": "Manhattan Christian College",
+        "state": "KS",
+        "unit_id": "155496"
+      },
+      {
+        "name": "Neosho County Community College",
+        "state": "KS",
+        "unit_id": "155566"
+      },
+      {
+        "name": "Wichita State University",
+        "state": "KS",
+        "unit_id": "156125"
+      },
+      {
+        "name": "Asbury University",
+        "state": "KY",
+        "unit_id": "156213"
+      },
+      {
+        "name": "Brescia University",
+        "state": "KY",
+        "unit_id": "156356"
+      },
+      {
+        "name": "Centre College",
+        "state": "KY",
+        "unit_id": "156408"
+      },
+      {
+        "name": "University of the Cumberlands",
+        "state": "KY",
+        "unit_id": "156541"
+      },
+      {
+        "name": "Eastern Kentucky University",
+        "state": "KY",
+        "unit_id": "156620"
+      },
+      {
+        "name": "Georgetown College",
+        "state": "KY",
+        "unit_id": "156745"
+      },
+      {
+        "name": "Kentucky Christian University",
+        "state": "KY",
+        "unit_id": "157100"
+      },
+      {
+        "name": "Lindsey Wilson College",
+        "state": "KY",
+        "unit_id": "157216"
+      },
+      {
+        "name": "Spalding University",
+        "state": "KY",
+        "unit_id": "157757"
+      },
+      {
+        "name": "Thomas More University",
+        "state": "KY",
+        "unit_id": "157809"
+      },
+      {
+        "name": "Union College",
+        "state": "KY",
+        "unit_id": "157863"
+      },
+      {
+        "name": "Centenary College of Louisiana",
+        "state": "LA",
+        "unit_id": "158477"
+      },
+      {
+        "name": "Delgado Community College",
+        "state": "LA",
+        "unit_id": "158662"
+      },
+      {
+        "name": "Dillard University",
+        "state": "LA",
+        "unit_id": "158802"
+      },
+      {
+        "name": "Nunez Community College",
+        "state": "LA",
+        "unit_id": "158884"
+      },
+      {
+        "name": "Louisiana State University and Agricultural & Mechanical College",
+        "state": "LA",
+        "unit_id": "159391"
+      },
+      {
+        "name": "Louisiana State University-Eunice",
+        "state": "LA",
+        "unit_id": "159407"
+      },
+      {
+        "name": "Louisiana State University-Shreveport",
+        "state": "LA",
+        "unit_id": "159416"
+      },
+      {
+        "name": "McNeese State University",
+        "state": "LA",
+        "unit_id": "159717"
+      },
+      {
+        "name": "University of New Orleans",
+        "state": "LA",
+        "unit_id": "159939"
+      },
+      {
+        "name": "Southern University at New Orleans",
+        "state": "LA",
+        "unit_id": "160630"
+      },
+      {
+        "name": "Southern University at Shreveport",
+        "state": "LA",
+        "unit_id": "160649"
+      },
+      {
+        "name": "Bates College",
+        "state": "ME",
+        "unit_id": "160977"
+      },
+      {
+        "name": "Bowdoin College",
+        "state": "ME",
+        "unit_id": "161004"
+      },
+      {
+        "name": "University of Maine at Augusta",
+        "state": "ME",
+        "unit_id": "161217"
+      },
+      {
+        "name": "University of Maine at Farmington",
+        "state": "ME",
+        "unit_id": "161226"
+      },
+      {
+        "name": "Maine Maritime Academy",
+        "state": "ME",
+        "unit_id": "161299"
+      },
+      {
+        "name": "University of Maine at Presque Isle",
+        "state": "ME",
+        "unit_id": "161341"
+      },
+      {
+        "name": "University of New England",
+        "state": "ME",
+        "unit_id": "161457"
+      },
+      {
+        "name": "Saint Joseph's College of Maine",
+        "state": "ME",
+        "unit_id": "161518"
+      },
+      {
+        "name": "Southern Maine Community College",
+        "state": "ME",
+        "unit_id": "161545"
+      },
+      {
+        "name": "University of Southern Maine",
+        "state": "ME",
+        "unit_id": "161554"
+      },
+      {
+        "name": "Thomas College",
+        "state": "ME",
+        "unit_id": "161563"
+      },
+      {
+        "name": "Washington County Community College",
+        "state": "ME",
+        "unit_id": "161581"
+      },
+      {
+        "name": "Allegany College of Maryland",
+        "state": "MD",
+        "unit_id": "161688"
+      },
+      {
+        "name": "Baltimore City Community College",
+        "state": "MD",
+        "unit_id": "161864"
+      },
+      {
+        "name": "Cecil College",
+        "state": "MD",
+        "unit_id": "162104"
+      },
+      {
+        "name": "Frostburg State University",
+        "state": "MD",
+        "unit_id": "162584"
+      },
+      {
+        "name": "Prince George's Community College",
+        "state": "MD",
+        "unit_id": "163657"
+      },
+      {
+        "name": "Washington College",
+        "state": "MD",
+        "unit_id": "164216"
+      },
+      {
+        "name": "Amherst College",
+        "state": "MA",
+        "unit_id": "164465"
+      },
+      {
+        "name": "Anna Maria College",
+        "state": "MA",
+        "unit_id": "164492"
+      },
+      {
+        "name": "Bay Path University",
+        "state": "MA",
+        "unit_id": "164632"
+      },
+      {
+        "name": "Bentley University",
+        "state": "MA",
+        "unit_id": "164739"
+      },
+      {
+        "name": "Berkshire Community College",
+        "state": "MA",
+        "unit_id": "164775"
+      },
+      {
+        "name": "Boston College",
+        "state": "MA",
+        "unit_id": "164924"
+      },
+      {
+        "name": "Boston University",
+        "state": "MA",
+        "unit_id": "164988"
+      },
+      {
+        "name": "Bristol Community College",
+        "state": "MA",
+        "unit_id": "165033"
+      },
+      {
+        "name": "Bunker Hill Community College",
+        "state": "MA",
+        "unit_id": "165112"
+      },
+      {
+        "name": "Clark University",
+        "state": "MA",
+        "unit_id": "165334"
+      },
+      {
+        "name": "Curry College",
+        "state": "MA",
+        "unit_id": "165529"
+      },
+      {
+        "name": "Dean College",
+        "state": "MA",
+        "unit_id": "165574"
+      },
+      {
+        "name": "Emerson College",
+        "state": "MA",
+        "unit_id": "165662"
+      },
+      {
+        "name": "Emmanuel College",
+        "state": "MA",
+        "unit_id": "165671"
+      },
+      {
+        "name": "Endicott College",
+        "state": "MA",
+        "unit_id": "165699"
+      },
+      {
+        "name": "Fisher College",
+        "state": "MA",
+        "unit_id": "165802"
+      },
+      {
+        "name": "Fitchburg State University",
+        "state": "MA",
+        "unit_id": "165820"
+      },
+      {
+        "name": "Framingham State University",
+        "state": "MA",
+        "unit_id": "165866"
+      },
+      {
+        "name": "Gordon College",
+        "state": "MA",
+        "unit_id": "165936"
+      },
+      {
+        "name": "Hampshire College",
+        "state": "MA",
+        "unit_id": "166018"
+      },
+      {
+        "name": "Lasell University",
+        "state": "MA",
+        "unit_id": "166391"
+      },
+      {
+        "name": "Lesley University",
+        "state": "MA",
+        "unit_id": "166452"
+      },
+      {
+        "name": "Massachusetts Bay Community College",
+        "state": "MA",
+        "unit_id": "166647"
+      },
+      {
+        "name": "Massachusetts Institute of Technology",
+        "state": "MA",
+        "unit_id": "166683"
+      },
+      {
+        "name": "Massachusetts Maritime Academy",
+        "state": "MA",
+        "unit_id": "166692"
+      },
+      {
+        "name": "Massasoit Community College",
+        "state": "MA",
+        "unit_id": "166823"
+      },
+      {
+        "name": "Mount Holyoke College",
+        "state": "MA",
+        "unit_id": "166939"
+      },
+      {
+        "name": "Nichols College",
+        "state": "MA",
+        "unit_id": "167260"
+      },
+      {
+        "name": "Massachusetts College of Liberal Arts",
+        "state": "MA",
+        "unit_id": "167288"
+      },
+      {
+        "name": "Northern Essex Community College",
+        "state": "MA",
+        "unit_id": "167376"
+      },
+      {
+        "name": "College of Our Lady of the Elms",
+        "state": "MA",
+        "unit_id": "167394"
+      },
+      {
+        "name": "Quincy College",
+        "state": "MA",
+        "unit_id": "167525"
+      },
+      {
+        "name": "Quinsigamond Community College",
+        "state": "MA",
+        "unit_id": "167534"
+      },
+      {
+        "name": "Regis College",
+        "state": "MA",
+        "unit_id": "167598"
+      },
+      {
+        "name": "Roxbury Community College",
+        "state": "MA",
+        "unit_id": "167631"
+      },
+      {
+        "name": "Salem State University",
+        "state": "MA",
+        "unit_id": "167729"
+      },
+      {
+        "name": "Simmons University",
+        "state": "MA",
+        "unit_id": "167783"
+      },
+      {
+        "name": "Tufts University",
+        "state": "MA",
+        "unit_id": "168148"
+      },
+      {
+        "name": "Wentworth Institute of Technology",
+        "state": "MA",
+        "unit_id": "168227"
+      },
+      {
+        "name": "Western New England University",
+        "state": "MA",
+        "unit_id": "168254"
+      },
+      {
+        "name": "Westfield State University",
+        "state": "MA",
+        "unit_id": "168263"
+      },
+      {
+        "name": "Wheaton College (Massachusetts)",
+        "state": "MA",
+        "unit_id": "168281"
+      },
+      {
+        "name": "Williams College",
+        "state": "MA",
+        "unit_id": "168342"
+      },
+      {
+        "name": "Worcester Polytechnic Institute",
+        "state": "MA",
+        "unit_id": "168421"
+      },
+      {
+        "name": "Worcester State University",
+        "state": "MA",
+        "unit_id": "168430"
+      },
+      {
+        "name": "Adrian College",
+        "state": "MI",
+        "unit_id": "168528"
+      },
+      {
+        "name": "Albion College",
+        "state": "MI",
+        "unit_id": "168546"
+      },
+      {
+        "name": "Alma College",
+        "state": "MI",
+        "unit_id": "168591"
+      },
+      {
+        "name": "Aquinas College",
+        "state": "MI",
+        "unit_id": "168786"
+      },
+      {
+        "name": "Calvin University",
+        "state": "MI",
+        "unit_id": "169080"
+      },
+      {
+        "name": "Mott Community College",
+        "state": "MI",
+        "unit_id": "169275"
+      },
+      {
+        "name": "Cleary University",
+        "state": "MI",
+        "unit_id": "169327"
+      },
+      {
+        "name": "Concordia University Ann Arbor",
+        "state": "MI",
+        "unit_id": "169363"
+      },
+      {
+        "name": "Grace Christian University",
+        "state": "MI",
+        "unit_id": "170000"
+      },
+      {
+        "name": "Grand Rapids Community College",
+        "state": "MI",
+        "unit_id": "170055"
+      },
+      {
+        "name": "Hope College",
+        "state": "MI",
+        "unit_id": "170301"
+      },
+      {
+        "name": "Kalamazoo College",
+        "state": "MI",
+        "unit_id": "170532"
+      },
+      {
+        "name": "Lake Michigan College",
+        "state": "MI",
+        "unit_id": "170620"
+      },
+      {
+        "name": "Lake Superior State University",
+        "state": "MI",
+        "unit_id": "170639"
+      },
+      {
+        "name": "Madonna University",
+        "state": "MI",
+        "unit_id": "170806"
+      },
+      {
+        "name": "Montcalm Community College",
+        "state": "MI",
+        "unit_id": "171234"
+      },
+      {
+        "name": "Muskegon Community College",
+        "state": "MI",
+        "unit_id": "171304"
+      },
+      {
+        "name": "North Central Michigan College",
+        "state": "MI",
+        "unit_id": "171395"
+      },
+      {
+        "name": "Northwood University",
+        "state": "MI",
+        "unit_id": "171492"
+      },
+      {
+        "name": "Oakland University",
+        "state": "MI",
+        "unit_id": "171571"
+      },
+      {
+        "name": "Kuyper College",
+        "state": "MI",
+        "unit_id": "171881"
+      },
+      {
+        "name": "Southwestern Michigan College",
+        "state": "MI",
+        "unit_id": "172307"
+      },
+      {
+        "name": "Western Michigan University",
+        "state": "MI",
+        "unit_id": "172699"
+      },
+      {
+        "name": "Anoka-Ramsey Community College",
+        "state": "MN",
+        "unit_id": "172963"
+      },
+      {
+        "name": "Augsburg University",
+        "state": "MN",
+        "unit_id": "173045"
+      },
+      {
+        "name": "Riverland Community College",
+        "state": "MN",
+        "unit_id": "173063"
+      },
+      {
+        "name": "Bethany Lutheran College",
+        "state": "MN",
+        "unit_id": "173142"
+      },
+      {
+        "name": "Bethel University",
+        "state": "MN",
+        "unit_id": "173160"
+      },
+      {
+        "name": "Central Lakes College-Brainerd",
+        "state": "MN",
+        "unit_id": "173203"
+      },
+      {
+        "name": "Carleton College",
+        "state": "MN",
+        "unit_id": "173258"
+      },
+      {
+        "name": "Dakota County Technical College",
+        "state": "MN",
+        "unit_id": "173416"
+      },
+      {
+        "name": "Lake Superior College",
+        "state": "MN",
+        "unit_id": "173461"
+      },
+      {
+        "name": "Minnesota State Community and Technical College",
+        "state": "MN",
+        "unit_id": "173559"
+      },
+      {
+        "name": "Minnesota West Community and Technical College",
+        "state": "MN",
+        "unit_id": "173638"
+      },
+      {
+        "name": "Gustavus Adolphus College",
+        "state": "MN",
+        "unit_id": "173647"
+      },
+      {
+        "name": "Hamline University",
+        "state": "MN",
+        "unit_id": "173665"
+      },
+      {
+        "name": "Minnesota North College",
+        "state": "MN",
+        "unit_id": "173735"
+      },
+      {
+        "name": "Macalester College",
+        "state": "MN",
+        "unit_id": "173902"
+      },
+      {
+        "name": "North Central University",
+        "state": "MN",
+        "unit_id": "174437"
+      },
+      {
+        "name": "Northland Community and Technical College",
+        "state": "MN",
+        "unit_id": "174473"
+      },
+      {
+        "name": "Oak Hills Christian College",
+        "state": "MN",
+        "unit_id": "174525"
+      },
+      {
+        "name": "College of Saint Benedict",
+        "state": "MN",
+        "unit_id": "174747"
+      },
+      {
+        "name": "St Cloud Technical and Community College",
+        "state": "MN",
+        "unit_id": "174756"
+      },
+      {
+        "name": "Saint Cloud State University",
+        "state": "MN",
+        "unit_id": "174783"
+      },
+      {
+        "name": "Saint Johns University",
+        "state": "MN",
+        "unit_id": "174792"
+      },
+      {
+        "name": "Saint Mary's University of Minnesota",
+        "state": "MN",
+        "unit_id": "174817"
+      },
+      {
+        "name": "St Olaf College",
+        "state": "MN",
+        "unit_id": "174844"
+      },
+      {
+        "name": "Crown College",
+        "state": "MN",
+        "unit_id": "174862"
+      },
+      {
+        "name": "The College of Saint Scholastica",
+        "state": "MN",
+        "unit_id": "174899"
+      },
+      {
+        "name": "St Catherine University",
+        "state": "MN",
+        "unit_id": "175005"
+      },
+      {
+        "name": "Southwest Minnesota State University",
+        "state": "MN",
+        "unit_id": "175078"
+      },
+      {
+        "name": "Century College",
+        "state": "MN",
+        "unit_id": "175315"
+      },
+      {
+        "name": "Alcorn State University",
+        "state": "MS",
+        "unit_id": "175342"
+      },
+      {
+        "name": "Jackson State University",
+        "state": "MS",
+        "unit_id": "175856"
+      },
+      {
+        "name": "Jones County Junior College",
+        "state": "MS",
+        "unit_id": "175883"
+      },
+      {
+        "name": "Meridian Community College",
+        "state": "MS",
+        "unit_id": "175935"
+      },
+      {
+        "name": "Millsaps College",
+        "state": "MS",
+        "unit_id": "175980"
+      },
+      {
+        "name": "Mississippi Delta Community College",
+        "state": "MS",
+        "unit_id": "176008"
+      },
+      {
+        "name": "Mississippi Valley State University",
+        "state": "MS",
+        "unit_id": "176044"
+      },
+      {
+        "name": "Northeast Mississippi Community College",
+        "state": "MS",
+        "unit_id": "176169"
+      },
+      {
+        "name": "Northwest Mississippi Community College",
+        "state": "MS",
+        "unit_id": "176178"
+      },
+      {
+        "name": "Rust College",
+        "state": "MS",
+        "unit_id": "176318"
+      },
+      {
+        "name": "Southeastern Baptist College",
+        "state": "MS",
+        "unit_id": "176336"
+      },
+      {
+        "name": "Southwest Mississippi Community College",
+        "state": "MS",
+        "unit_id": "176354"
+      },
+      {
+        "name": "Tougaloo College",
+        "state": "MS",
+        "unit_id": "176406"
+      },
+      {
+        "name": "Mission University",
+        "state": "MO",
+        "unit_id": "176664"
+      },
+      {
+        "name": "Calvary University",
+        "state": "MO",
+        "unit_id": "176789"
+      },
+      {
+        "name": "Central Christian College of the Bible",
+        "state": "MO",
+        "unit_id": "176910"
+      },
+      {
+        "name": "Crowder College",
+        "state": "MO",
+        "unit_id": "177135"
+      },
+      {
+        "name": "Evangel University",
+        "state": "MO",
+        "unit_id": "177339"
+      },
+      {
+        "name": "Fontbonne University",
+        "state": "MO",
+        "unit_id": "177418"
+      },
+      {
+        "name": "Ozarks Technical Community College",
+        "state": "MO",
+        "unit_id": "177472"
+      },
+      {
+        "name": "Harris-Stowe State University",
+        "state": "MO",
+        "unit_id": "177551"
+      },
+      {
+        "name": "Midwestern Baptist Theological Seminary",
+        "state": "MO",
+        "unit_id": "178208"
+      },
+      {
+        "name": "Missouri Baptist University",
+        "state": "MO",
+        "unit_id": "178244"
+      },
+      {
+        "name": "Missouri Valley College",
+        "state": "MO",
+        "unit_id": "178369"
+      },
+      {
+        "name": "University of Missouri-Columbia",
+        "state": "MO",
+        "unit_id": "178396"
+      },
+      {
+        "name": "University of Missouri-Kansas City",
+        "state": "MO",
+        "unit_id": "178402"
+      },
+      {
+        "name": "Missouri University of Science and Technology",
+        "state": "MO",
+        "unit_id": "178411"
+      },
+      {
+        "name": "University of Missouri-St Louis",
+        "state": "MO",
+        "unit_id": "178420"
+      },
+      {
+        "name": "Saint Louis University",
+        "state": "MO",
+        "unit_id": "179159"
+      },
+      {
+        "name": "University of Health Sciences and Pharmacy in St. Louis",
+        "state": "MO",
+        "unit_id": "179265"
+      },
+      {
+        "name": "Stephens College",
+        "state": "MO",
+        "unit_id": "179548"
+      },
+      {
+        "name": "Washington University in St Louis",
+        "state": "MO",
+        "unit_id": "179867"
+      },
+      {
+        "name": "Webster University",
+        "state": "MO",
+        "unit_id": "179894"
+      },
+      {
+        "name": "University of Providence",
+        "state": "MT",
+        "unit_id": "180258"
+      },
+      {
+        "name": "Little Big Horn College",
+        "state": "MT",
+        "unit_id": "180328"
+      },
+      {
+        "name": "Miles Community College",
+        "state": "MT",
+        "unit_id": "180373"
+      },
+      {
+        "name": "Montana State University-Northern",
+        "state": "MT",
+        "unit_id": "180522"
+      },
+      {
+        "name": "Union Adventist University",
+        "state": "NE",
+        "unit_id": "181738"
+      },
+      {
+        "name": "Colby-Sawyer College",
+        "state": "NH",
+        "unit_id": "182634"
+      },
+      {
+        "name": "New England College",
+        "state": "NH",
+        "unit_id": "182980"
+      },
+      {
+        "name": "Keene State College",
+        "state": "NH",
+        "unit_id": "183062"
+      },
+      {
+        "name": "Plymouth State University",
+        "state": "NH",
+        "unit_id": "183080"
+      },
+      {
+        "name": "NHTI-Concord's Community College",
+        "state": "NH",
+        "unit_id": "183099"
+      },
+      {
+        "name": "Great Bay Community College",
+        "state": "NH",
+        "unit_id": "183150"
+      },
+      {
+        "name": "Rivier University",
+        "state": "NH",
+        "unit_id": "183211"
+      },
+      {
+        "name": "Atlantic Cape Community College",
+        "state": "NJ",
+        "unit_id": "183655"
+      },
+      {
+        "name": "Berkeley College-Woodland Park",
+        "state": "NJ",
+        "unit_id": "183789"
+      },
+      {
+        "name": "Bloomfield College",
+        "state": "NJ",
+        "unit_id": "183822"
+      },
+      {
+        "name": "Brookdale Community College",
+        "state": "NJ",
+        "unit_id": "183859"
+      },
+      {
+        "name": "Camden County College",
+        "state": "NJ",
+        "unit_id": "183938"
+      },
+      {
+        "name": "Centenary University",
+        "state": "NJ",
+        "unit_id": "183974"
+      },
+      {
+        "name": "County College of Morris",
+        "state": "NJ",
+        "unit_id": "184180"
+      },
+      {
+        "name": "Rowan College of South Jersey-Cumberland Campus",
+        "state": "NJ",
+        "unit_id": "184205"
+      },
+      {
+        "name": "Drew University",
+        "state": "NJ",
+        "unit_id": "184348"
+      },
+      {
+        "name": "Essex County College",
+        "state": "NJ",
+        "unit_id": "184481"
+      },
+      {
+        "name": "Rowan College of South Jersey-Gloucester Campus",
+        "state": "NJ",
+        "unit_id": "184791"
+      },
+      {
+        "name": "New Jersey City University",
+        "state": "NJ",
+        "unit_id": "185129"
+      },
+      {
+        "name": "Kean University",
+        "state": "NJ",
+        "unit_id": "185262"
+      },
+      {
+        "name": "Middlesex College",
+        "state": "NJ",
+        "unit_id": "185536"
+      },
+      {
+        "name": "Montclair State University",
+        "state": "NJ",
+        "unit_id": "185590"
+      },
+      {
+        "name": "Ocean County College",
+        "state": "NJ",
+        "unit_id": "185873"
+      },
+      {
+        "name": "Passaic County Community College",
+        "state": "NJ",
+        "unit_id": "186034"
+      },
+      {
+        "name": "Saint Peter's University",
+        "state": "NJ",
+        "unit_id": "186432"
+      },
+      {
+        "name": "Salem Community College",
+        "state": "NJ",
+        "unit_id": "186469"
+      },
+      {
+        "name": "Saint Elizabeth University",
+        "state": "NJ",
+        "unit_id": "186618"
+      },
+      {
+        "name": "Raritan Valley Community College",
+        "state": "NJ",
+        "unit_id": "186645"
+      },
+      {
+        "name": "Stockton University",
+        "state": "NJ",
+        "unit_id": "186876"
+      },
+      {
+        "name": "William Paterson University of New Jersey",
+        "state": "NJ",
+        "unit_id": "187444"
+      },
+      {
+        "name": "Navajo Technical University",
+        "state": "NM",
+        "unit_id": "187596"
+      },
+      {
+        "name": "University of the Southwest",
+        "state": "NM",
+        "unit_id": "188182"
+      },
+      {
+        "name": "Mesalands Community College",
+        "state": "NM",
+        "unit_id": "188261"
+      },
+      {
+        "name": "Vaughn College of Aeronautics and Technology",
+        "state": "NY",
+        "unit_id": "188340"
+      },
+      {
+        "name": "Bard College",
+        "state": "NY",
+        "unit_id": "189088"
+      },
+      {
+        "name": "Barnard College",
+        "state": "NY",
+        "unit_id": "189097"
+      },
+      {
+        "name": "Berkeley College-New York",
+        "state": "NY",
+        "unit_id": "189228"
+      },
+      {
+        "name": "SUNY Broome Community College",
+        "state": "NY",
+        "unit_id": "189547"
+      },
+      {
+        "name": "Cayuga County Community College",
+        "state": "NY",
+        "unit_id": "189839"
+      },
+      {
+        "name": "Columbia University in the City of New York",
+        "state": "NY",
+        "unit_id": "190150"
+      },
+      {
+        "name": "Columbia-Greene Community College",
+        "state": "NY",
+        "unit_id": "190169"
+      },
+      {
+        "name": "Cornell University",
+        "state": "NY",
+        "unit_id": "190415"
+      },
+      {
+        "name": "SUNY Corning Community College",
+        "state": "NY",
+        "unit_id": "190442"
+      },
+      {
+        "name": "CUNY Borough of Manhattan Community College",
+        "state": "NY",
+        "unit_id": "190521"
+      },
+      {
+        "name": "CUNY Bronx Community College",
+        "state": "NY",
+        "unit_id": "190530"
+      },
+      {
+        "name": "CUNY Brooklyn College",
+        "state": "NY",
+        "unit_id": "190549"
+      },
+      {
+        "name": "CUNY City College",
+        "state": "NY",
+        "unit_id": "190567"
+      },
+      {
+        "name": "CUNY Hostos Community College",
+        "state": "NY",
+        "unit_id": "190585"
+      },
+      {
+        "name": "CUNY Hunter College",
+        "state": "NY",
+        "unit_id": "190594"
+      },
+      {
+        "name": "CUNY John Jay College of Criminal Justice",
+        "state": "NY",
+        "unit_id": "190600"
+      },
+      {
+        "name": "CUNY Lehman College",
+        "state": "NY",
+        "unit_id": "190637"
+      },
+      {
+        "name": "CUNY Medgar Evers College",
+        "state": "NY",
+        "unit_id": "190646"
+      },
+      {
+        "name": "CUNY New York City College of Technology",
+        "state": "NY",
+        "unit_id": "190655"
+      },
+      {
+        "name": "CUNY Queensborough Community College",
+        "state": "NY",
+        "unit_id": "190673"
+      },
+      {
+        "name": "CUNY York College",
+        "state": "NY",
+        "unit_id": "190691"
+      },
+      {
+        "name": "Dutchess Community College",
+        "state": "NY",
+        "unit_id": "190840"
+      },
+      {
+        "name": "Fashion Institute of Technology",
+        "state": "NY",
+        "unit_id": "191126"
+      },
+      {
+        "name": "Finger Lakes Community College",
+        "state": "NY",
+        "unit_id": "191199"
+      },
+      {
+        "name": "Five Towns College",
+        "state": "NY",
+        "unit_id": "191205"
+      },
+      {
+        "name": "Fulton-Montgomery Community College",
+        "state": "NY",
+        "unit_id": "191302"
+      },
+      {
+        "name": "Hamilton College",
+        "state": "NY",
+        "unit_id": "191515"
+      },
+      {
+        "name": "Herkimer County Community College",
+        "state": "NY",
+        "unit_id": "191612"
+      },
+      {
+        "name": "Hilbert College",
+        "state": "NY",
+        "unit_id": "191621"
+      },
+      {
+        "name": "Hobart William Smith Colleges",
+        "state": "NY",
+        "unit_id": "191630"
+      },
+      {
+        "name": "Hudson Valley Community College",
+        "state": "NY",
+        "unit_id": "191719"
+      },
+      {
+        "name": "Ithaca College",
+        "state": "NY",
+        "unit_id": "191968"
+      },
+      {
+        "name": "Jefferson Community College",
+        "state": "NY",
+        "unit_id": "192022"
+      },
+      {
+        "name": "Manhattanville College",
+        "state": "NY",
+        "unit_id": "192749"
+      },
+      {
+        "name": "Mohawk Valley Community College",
+        "state": "NY",
+        "unit_id": "193283"
+      },
+      {
+        "name": "Mount Saint Mary College",
+        "state": "NY",
+        "unit_id": "193353"
+      },
+      {
+        "name": "University of Mount Saint Vincent",
+        "state": "NY",
+        "unit_id": "193399"
+      },
+      {
+        "name": "Nassau Community College",
+        "state": "NY",
+        "unit_id": "193478"
+      },
+      {
+        "name": "New York University",
+        "state": "NY",
+        "unit_id": "193900"
+      },
+      {
+        "name": "Niagara County Community College",
+        "state": "NY",
+        "unit_id": "193946"
+      },
+      {
+        "name": "Onondaga Community College",
+        "state": "NY",
+        "unit_id": "194222"
+      },
+      {
+        "name": "Orange County Community College",
+        "state": "NY",
+        "unit_id": "194240"
+      },
+      {
+        "name": "Pratt Institute-Main",
+        "state": "NY",
+        "unit_id": "194578"
+      },
+      {
+        "name": "University of Rochester",
+        "state": "NY",
+        "unit_id": "195030"
+      },
+      {
+        "name": "Rockland Community College",
+        "state": "NY",
+        "unit_id": "195058"
+      },
+      {
+        "name": "Russell Sage College",
+        "state": "NY",
+        "unit_id": "195128"
+      },
+      {
+        "name": "Sarah Lawrence College",
+        "state": "NY",
+        "unit_id": "195304"
+      },
+      {
+        "name": "Schenectady County Community College",
+        "state": "NY",
+        "unit_id": "195322"
+      },
+      {
+        "name": "St. Joseph's University-New York",
+        "state": "NY",
+        "unit_id": "195544"
+      },
+      {
+        "name": "St. John Fisher University",
+        "state": "NY",
+        "unit_id": "195720"
+      },
+      {
+        "name": "Sullivan County Community College",
+        "state": "NY",
+        "unit_id": "195988"
+      },
+      {
+        "name": "SUNY College of Technology at Alfred",
+        "state": "NY",
+        "unit_id": "196006"
+      },
+      {
+        "name": "SUNY College of Technology at Delhi",
+        "state": "NY",
+        "unit_id": "196024"
+      },
+      {
+        "name": "SUNY College of Agriculture and Technology at Cobleskill",
+        "state": "NY",
+        "unit_id": "196033"
+      },
+      {
+        "name": "Farmingdale State College",
+        "state": "NY",
+        "unit_id": "196042"
+      },
+      {
+        "name": "SUNY Morrisville",
+        "state": "NY",
+        "unit_id": "196051"
+      },
+      {
+        "name": "University at Albany",
+        "state": "NY",
+        "unit_id": "196060"
+      },
+      {
+        "name": "SUNY College of Environmental Science and Forestry",
+        "state": "NY",
+        "unit_id": "196103"
+      },
+      {
+        "name": "SUNY Brockport",
+        "state": "NY",
+        "unit_id": "196121"
+      },
+      {
+        "name": "State University of New York at Cortland",
+        "state": "NY",
+        "unit_id": "196149"
+      },
+      {
+        "name": "State University of New York at New Paltz",
+        "state": "NY",
+        "unit_id": "196176"
+      },
+      {
+        "name": "State University of New York at Oswego",
+        "state": "NY",
+        "unit_id": "196194"
+      },
+      {
+        "name": "SUNY College at Potsdam",
+        "state": "NY",
+        "unit_id": "196200"
+      },
+      {
+        "name": "SUNY at Purchase College",
+        "state": "NY",
+        "unit_id": "196219"
+      },
+      {
+        "name": "SUNY Maritime College",
+        "state": "NY",
+        "unit_id": "196291"
+      },
+      {
+        "name": "Tompkins Cortland Community College",
+        "state": "NY",
+        "unit_id": "196565"
+      },
+      {
+        "name": "Union College",
+        "state": "NY",
+        "unit_id": "196866"
+      },
+      {
+        "name": "United States Merchant Marine Academy",
+        "state": "NY",
+        "unit_id": "197027"
+      },
+      {
+        "name": "United States Military Academy",
+        "state": "NY",
+        "unit_id": "197036"
+      },
+      {
+        "name": "Villa Maria College",
+        "state": "NY",
+        "unit_id": "197142"
+      },
+      {
+        "name": "Wagner College",
+        "state": "NY",
+        "unit_id": "197197"
+      },
+      {
+        "name": "Yeshiva University",
+        "state": "NY",
+        "unit_id": "197708"
+      },
+      {
+        "name": "Brunswick Community College",
+        "state": "NC",
+        "unit_id": "198084"
+      },
+      {
+        "name": "Caldwell Community College and Technical Institute",
+        "state": "NC",
+        "unit_id": "198118"
+      },
+      {
+        "name": "Cape Fear Community College",
+        "state": "NC",
+        "unit_id": "198154"
+      },
+      {
+        "name": "Catawba Valley Community College",
+        "state": "NC",
+        "unit_id": "198233"
+      },
+      {
+        "name": "Central Carolina Community College",
+        "state": "NC",
+        "unit_id": "198251"
+      },
+      {
+        "name": "Cleveland Community College",
+        "state": "NC",
+        "unit_id": "198321"
+      },
+      {
+        "name": "Fayetteville State University",
+        "state": "NC",
+        "unit_id": "198543"
+      },
+      {
+        "name": "Gardner-Webb University",
+        "state": "NC",
+        "unit_id": "198561"
+      },
+      {
+        "name": "Guilford College",
+        "state": "NC",
+        "unit_id": "198613"
+      },
+      {
+        "name": "Lenoir Community College",
+        "state": "NC",
+        "unit_id": "198817"
+      },
+      {
+        "name": "Louisburg College",
+        "state": "NC",
+        "unit_id": "198871"
+      },
+      {
+        "name": "Mayland Community College",
+        "state": "NC",
+        "unit_id": "198914"
+      },
+      {
+        "name": "Montreat College",
+        "state": "NC",
+        "unit_id": "199032"
+      },
+      {
+        "name": "University of North Carolina at Charlotte",
+        "state": "NC",
+        "unit_id": "199139"
+      },
+      {
+        "name": "University of North Carolina at Greensboro",
+        "state": "NC",
+        "unit_id": "199148"
+      },
+      {
+        "name": "North Carolina Central University",
+        "state": "NC",
+        "unit_id": "199157"
+      },
+      {
+        "name": "North Carolina Wesleyan University",
+        "state": "NC",
+        "unit_id": "199209"
+      },
+      {
+        "name": "William Peace University",
+        "state": "NC",
+        "unit_id": "199272"
+      },
+      {
+        "name": "Pitt Community College",
+        "state": "NC",
+        "unit_id": "199333"
+      },
+      {
+        "name": "Mid-Atlantic Christian University",
+        "state": "NC",
+        "unit_id": "199458"
+      },
+      {
+        "name": "Salem College",
+        "state": "NC",
+        "unit_id": "199607"
+      },
+      {
+        "name": "St. Andrews University",
+        "state": "NC",
+        "unit_id": "199698"
+      },
+      {
+        "name": "Southeastern Community College",
+        "state": "NC",
+        "unit_id": "199722"
+      },
+      {
+        "name": "Wake Technical Community College",
+        "state": "NC",
+        "unit_id": "199856"
+      },
+      {
+        "name": "Warren Wilson College",
+        "state": "NC",
+        "unit_id": "199865"
+      },
+      {
+        "name": "Carolina Christian College",
+        "state": "NC",
+        "unit_id": "199971"
+      },
+      {
+        "name": "Western Carolina University",
+        "state": "NC",
+        "unit_id": "200004"
+      },
+      {
+        "name": "Minot State University",
+        "state": "ND",
+        "unit_id": "200253"
+      },
+      {
+        "name": "Dakota College at Bottineau",
+        "state": "ND",
+        "unit_id": "200314"
+      },
+      {
+        "name": "North Dakota State University-Main Campus",
+        "state": "ND",
+        "unit_id": "200332"
+      },
+      {
+        "name": "Trinity Bible College and Graduate School",
+        "state": "ND",
+        "unit_id": "200484"
+      },
+      {
+        "name": "Turtle Mountain Community College",
+        "state": "ND",
+        "unit_id": "200527"
+      },
+      {
+        "name": "United Tribes Technical College",
+        "state": "ND",
+        "unit_id": "200554"
+      },
+      {
+        "name": "Baldwin Wallace University",
+        "state": "OH",
+        "unit_id": "201195"
+      },
+      {
+        "name": "Bowling Green State University-Main Campus",
+        "state": "OH",
+        "unit_id": "201441"
+      },
+      {
+        "name": "Capital University",
+        "state": "OH",
+        "unit_id": "201548"
+      },
+      {
+        "name": "Case Western Reserve University",
+        "state": "OH",
+        "unit_id": "201645"
+      },
+      {
+        "name": "Clark State College",
+        "state": "OH",
+        "unit_id": "201973"
+      },
+      {
+        "name": "Cuyahoga Community College District",
+        "state": "OH",
+        "unit_id": "202356"
+      },
+      {
+        "name": "Defiance College",
+        "state": "OH",
+        "unit_id": "202514"
+      },
+      {
+        "name": "Hiram College",
+        "state": "OH",
+        "unit_id": "203128"
+      },
+      {
+        "name": "John Carroll University",
+        "state": "OH",
+        "unit_id": "203368"
+      },
+      {
+        "name": "Kent State University at Tuscarawas",
+        "state": "OH",
+        "unit_id": "203483"
+      },
+      {
+        "name": "Kent State University at Kent",
+        "state": "OH",
+        "unit_id": "203517"
+      },
+      {
+        "name": "Lakeland Community College",
+        "state": "OH",
+        "unit_id": "203599"
+      },
+      {
+        "name": "Lorain County Community College",
+        "state": "OH",
+        "unit_id": "203748"
+      },
+      {
+        "name": "Muskingum University",
+        "state": "OH",
+        "unit_id": "204264"
+      },
+      {
+        "name": "Oberlin College",
+        "state": "OH",
+        "unit_id": "204501"
+      },
+      {
+        "name": "Terra State Community College",
+        "state": "OH",
+        "unit_id": "206011"
+      },
+      {
+        "name": "Walsh University",
+        "state": "OH",
+        "unit_id": "206437"
+      },
+      {
+        "name": "Wittenberg University",
+        "state": "OH",
+        "unit_id": "206525"
+      },
+      {
+        "name": "The College of Wooster",
+        "state": "OH",
+        "unit_id": "206589"
+      },
+      {
+        "name": "Wright State University-Lake Campus",
+        "state": "OH",
+        "unit_id": "206613"
+      },
+      {
+        "name": "Youngstown State University",
+        "state": "OH",
+        "unit_id": "206695"
+      },
+      {
+        "name": "Northeastern State University",
+        "state": "OK",
+        "unit_id": "207263"
+      },
+      {
+        "name": "Northern Oklahoma College",
+        "state": "OK",
+        "unit_id": "207281"
+      },
+      {
+        "name": "Northwestern Oklahoma State University",
+        "state": "OK",
+        "unit_id": "207306"
+      },
+      {
+        "name": "Oklahoma Panhandle State University",
+        "state": "OK",
+        "unit_id": "207351"
+      },
+      {
+        "name": "Oklahoma State University-Main Campus",
+        "state": "OK",
+        "unit_id": "207388"
+      },
+      {
+        "name": "Oklahoma Baptist University",
+        "state": "OK",
+        "unit_id": "207403"
+      },
+      {
+        "name": "University of Oklahoma-Norman Campus",
+        "state": "OK",
+        "unit_id": "207500"
+      },
+      {
+        "name": "George Fox University",
+        "state": "OR",
+        "unit_id": "208822"
+      },
+      {
+        "name": "Lane Community College",
+        "state": "OR",
+        "unit_id": "209038"
+      },
+      {
+        "name": "Lewis & Clark College",
+        "state": "OR",
+        "unit_id": "209056"
+      },
+      {
+        "name": "Multnomah University",
+        "state": "OR",
+        "unit_id": "209287"
+      },
+      {
+        "name": "Bushnell University",
+        "state": "OR",
+        "unit_id": "209409"
+      },
+      {
+        "name": "Pacific Northwest College of Art",
+        "state": "OR",
+        "unit_id": "209603"
+      },
+      {
+        "name": "Pacific University",
+        "state": "OR",
+        "unit_id": "209612"
+      },
+      {
+        "name": "Portland State University",
+        "state": "OR",
+        "unit_id": "209807"
+      },
+      {
+        "name": "Southern Oregon University",
+        "state": "OR",
+        "unit_id": "210146"
+      },
+      {
+        "name": "Willamette University",
+        "state": "OR",
+        "unit_id": "210401"
+      },
+      {
+        "name": "Bryn Athyn College of the New Church",
+        "state": "PA",
+        "unit_id": "210492"
+      },
+      {
+        "name": "Albright College",
+        "state": "PA",
+        "unit_id": "210571"
+      },
+      {
+        "name": "Community College of Allegheny County",
+        "state": "PA",
+        "unit_id": "210605"
+      },
+      {
+        "name": "Allegheny College",
+        "state": "PA",
+        "unit_id": "210669"
+      },
+      {
+        "name": "DeSales University",
+        "state": "PA",
+        "unit_id": "210739"
+      },
+      {
+        "name": "Alvernia University",
+        "state": "PA",
+        "unit_id": "210775"
+      },
+      {
+        "name": "Clarks Summit University",
+        "state": "PA",
+        "unit_id": "211024"
+      },
+      {
+        "name": "Community College of Beaver County",
+        "state": "PA",
+        "unit_id": "211079"
+      },
+      {
+        "name": "Bucks County Community College",
+        "state": "PA",
+        "unit_id": "211307"
+      },
+      {
+        "name": "Butler County Community College",
+        "state": "PA",
+        "unit_id": "211343"
+      },
+      {
+        "name": "Cabrini University",
+        "state": "PA",
+        "unit_id": "211352"
+      },
+      {
+        "name": "Carnegie Mellon University",
+        "state": "PA",
+        "unit_id": "211440"
+      },
+      {
+        "name": "Cedar Crest College",
+        "state": "PA",
+        "unit_id": "211468"
+      },
+      {
+        "name": "Central Penn College",
+        "state": "PA",
+        "unit_id": "211477"
+      },
+      {
+        "name": "Chatham University",
+        "state": "PA",
+        "unit_id": "211556"
+      },
+      {
+        "name": "Delaware Valley University",
+        "state": "PA",
+        "unit_id": "211981"
+      },
+      {
+        "name": "Eastern University",
+        "state": "PA",
+        "unit_id": "212133"
+      },
+      {
+        "name": "Elizabethtown College",
+        "state": "PA",
+        "unit_id": "212197"
+      },
+      {
+        "name": "Franklin and Marshall College",
+        "state": "PA",
+        "unit_id": "212577"
+      },
+      {
+        "name": "Harcum College",
+        "state": "PA",
+        "unit_id": "212869"
+      },
+      {
+        "name": "Harrisburg Area Community College",
+        "state": "PA",
+        "unit_id": "212878"
+      },
+      {
+        "name": "Haverford College",
+        "state": "PA",
+        "unit_id": "212911"
+      },
+      {
+        "name": "Immaculata University",
+        "state": "PA",
+        "unit_id": "213011"
+      },
+      {
+        "name": "Juniata College",
+        "state": "PA",
+        "unit_id": "213251"
+      },
+      {
+        "name": "King's College",
+        "state": "PA",
+        "unit_id": "213321"
+      },
+      {
+        "name": "Kutztown University of Pennsylvania",
+        "state": "PA",
+        "unit_id": "213349"
+      },
+      {
+        "name": "La Roche University",
+        "state": "PA",
+        "unit_id": "213358"
+      },
+      {
+        "name": "Lancaster Bible College",
+        "state": "PA",
+        "unit_id": "213400"
+      },
+      {
+        "name": "Lehigh Carbon Community College",
+        "state": "PA",
+        "unit_id": "213525"
+      },
+      {
+        "name": "Luzerne County Community College",
+        "state": "PA",
+        "unit_id": "213659"
+      },
+      {
+        "name": "Lycoming College",
+        "state": "PA",
+        "unit_id": "213668"
+      },
+      {
+        "name": "Manor College",
+        "state": "PA",
+        "unit_id": "213774"
+      },
+      {
+        "name": "Marywood University",
+        "state": "PA",
+        "unit_id": "213826"
+      },
+      {
+        "name": "Messiah University",
+        "state": "PA",
+        "unit_id": "213996"
+      },
+      {
+        "name": "Misericordia University",
+        "state": "PA",
+        "unit_id": "214069"
+      },
+      {
+        "name": "Montgomery County Community College",
+        "state": "PA",
+        "unit_id": "214111"
+      },
+      {
+        "name": "Mount Aloysius College",
+        "state": "PA",
+        "unit_id": "214166"
+      },
+      {
+        "name": "Muhlenberg College",
+        "state": "PA",
+        "unit_id": "214175"
+      },
+      {
+        "name": "Northampton County Area Community College",
+        "state": "PA",
+        "unit_id": "214379"
+      },
+      {
+        "name": "Pennsylvania State University-Penn State Schuylkill",
+        "state": "PA",
+        "unit_id": "214810"
+      },
+      {
+        "name": "Cairn University-Langhorne",
+        "state": "PA",
+        "unit_id": "215114"
+      },
+      {
+        "name": "Community College of Philadelphia",
+        "state": "PA",
+        "unit_id": "215239"
+      },
+      {
+        "name": "University of Pittsburgh-Bradford",
+        "state": "PA",
+        "unit_id": "215266"
+      },
+      {
+        "name": "University of Pittsburgh-Greensburg",
+        "state": "PA",
+        "unit_id": "215275"
+      },
+      {
+        "name": "Rosemont College",
+        "state": "PA",
+        "unit_id": "215691"
+      },
+      {
+        "name": "Susquehanna University",
+        "state": "PA",
+        "unit_id": "216278"
+      },
+      {
+        "name": "Thaddeus Stevens College of Technology",
+        "state": "PA",
+        "unit_id": "216296"
+      },
+      {
+        "name": "Thiel College",
+        "state": "PA",
+        "unit_id": "216357"
+      },
+      {
+        "name": "Ursinus College",
+        "state": "PA",
+        "unit_id": "216524"
+      },
+      {
+        "name": "University of Valley Forge",
+        "state": "PA",
+        "unit_id": "216542"
+      },
+      {
+        "name": "Washington & Jefferson College",
+        "state": "PA",
+        "unit_id": "216667"
+      },
+      {
+        "name": "Widener University",
+        "state": "PA",
+        "unit_id": "216852"
+      },
+      {
+        "name": "Wilkes University",
+        "state": "PA",
+        "unit_id": "216931"
+      },
+      {
+        "name": "Williamson College of the Trades",
+        "state": "PA",
+        "unit_id": "216940"
+      },
+      {
+        "name": "Wilson College",
+        "state": "PA",
+        "unit_id": "217013"
+      },
+      {
+        "name": "York College of Pennsylvania",
+        "state": "PA",
+        "unit_id": "217059"
+      },
+      {
+        "name": "Brown University",
+        "state": "RI",
+        "unit_id": "217156"
+      },
+      {
+        "name": "Johnson & Wales University-Providence",
+        "state": "RI",
+        "unit_id": "217235"
+      },
+      {
+        "name": "Rhode Island College",
+        "state": "RI",
+        "unit_id": "217420"
+      },
+      {
+        "name": "Roger Williams University",
+        "state": "RI",
+        "unit_id": "217518"
+      },
+      {
+        "name": "Northpoint Bible College",
+        "state": "MA",
+        "unit_id": "217606"
+      },
+      {
+        "name": "Charleston Southern University",
+        "state": "SC",
+        "unit_id": "217688"
+      },
+      {
+        "name": "Benedict College",
+        "state": "SC",
+        "unit_id": "217721"
+      },
+      {
+        "name": "Northeastern Technical College",
+        "state": "SC",
+        "unit_id": "217837"
+      },
+      {
+        "name": "Claflin University",
+        "state": "SC",
+        "unit_id": "217873"
+      },
+      {
+        "name": "Columbia College",
+        "state": "SC",
+        "unit_id": "217934"
+      },
+      {
+        "name": "Denmark Technical College",
+        "state": "SC",
+        "unit_id": "217989"
+      },
+      {
+        "name": "Florence-Darlington Technical College",
+        "state": "SC",
+        "unit_id": "218025"
+      },
+      {
+        "name": "Furman University",
+        "state": "SC",
+        "unit_id": "218070"
+      },
+      {
+        "name": "Morris College",
+        "state": "SC",
+        "unit_id": "218399"
+      },
+      {
+        "name": "University of South Carolina Beaufort",
+        "state": "SC",
+        "unit_id": "218654"
+      },
+      {
+        "name": "University of South Carolina-Lancaster",
+        "state": "SC",
+        "unit_id": "218672"
+      },
+      {
+        "name": "University of South Carolina-Salkehatchie",
+        "state": "SC",
+        "unit_id": "218681"
+      },
+      {
+        "name": "University of South Carolina-Sumter",
+        "state": "SC",
+        "unit_id": "218690"
+      },
+      {
+        "name": "University of South Carolina-Union",
+        "state": "SC",
+        "unit_id": "218706"
+      },
+      {
+        "name": "University of South Carolina-Upstate",
+        "state": "SC",
+        "unit_id": "218742"
+      },
+      {
+        "name": "Spartanburg Methodist College",
+        "state": "SC",
+        "unit_id": "218821"
+      },
+      {
+        "name": "Wofford College",
+        "state": "SC",
+        "unit_id": "218973"
+      },
+      {
+        "name": "Lake Area Technical College",
+        "state": "SD",
+        "unit_id": "219143"
+      },
+      {
+        "name": "Sisseton Wahpeton College",
+        "state": "SD",
+        "unit_id": "219408"
+      },
+      {
+        "name": "University of South Dakota",
+        "state": "SD",
+        "unit_id": "219471"
+      },
+      {
+        "name": "Austin Peay State University",
+        "state": "TN",
+        "unit_id": "219602"
+      },
+      {
+        "name": "Bryan College-Dayton",
+        "state": "TN",
+        "unit_id": "219790"
+      },
+      {
+        "name": "Lipscomb University",
+        "state": "TN",
+        "unit_id": "219976"
+      },
+      {
+        "name": "East Tennessee State University",
+        "state": "TN",
+        "unit_id": "220075"
+      },
+      {
+        "name": "Fisk University",
+        "state": "TN",
+        "unit_id": "220181"
+      },
+      {
+        "name": "Freed-Hardeman University",
+        "state": "TN",
+        "unit_id": "220215"
+      },
+      {
+        "name": "Jackson State Community College",
+        "state": "TN",
+        "unit_id": "220400"
+      },
+      {
+        "name": "Johnson University",
+        "state": "TN",
+        "unit_id": "220473"
+      },
+      {
+        "name": "Lincoln Memorial University",
+        "state": "TN",
+        "unit_id": "220631"
+      },
+      {
+        "name": "Motlow State Community College",
+        "state": "TN",
+        "unit_id": "221096"
+      },
+      {
+        "name": "Rhodes College",
+        "state": "TN",
+        "unit_id": "221351"
+      },
+      {
+        "name": "Southwest Tennessee Community College",
+        "state": "TN",
+        "unit_id": "221485"
+      },
+      {
+        "name": "The University of the South",
+        "state": "TN",
+        "unit_id": "221519"
+      },
+      {
+        "name": "Pellissippi State Community College",
+        "state": "TN",
+        "unit_id": "221643"
+      },
+      {
+        "name": "Tennessee Technological University",
+        "state": "TN",
+        "unit_id": "221847"
+      },
+      {
+        "name": "Amarillo College",
+        "state": "TX",
+        "unit_id": "222576"
+      },
+      {
+        "name": "Angelina College",
+        "state": "TX",
+        "unit_id": "222822"
+      },
+      {
+        "name": "Arlington Baptist University",
+        "state": "TX",
+        "unit_id": "222877"
+      },
+      {
+        "name": "Austin College",
+        "state": "TX",
+        "unit_id": "222983"
+      },
+      {
+        "name": "Coastal Bend College",
+        "state": "TX",
+        "unit_id": "223320"
+      },
+      {
+        "name": "Clarendon College",
+        "state": "TX",
+        "unit_id": "223922"
+      },
+      {
+        "name": "Concordia University Texas",
+        "state": "TX",
+        "unit_id": "224004"
+      },
+      {
+        "name": "North Central Texas College",
+        "state": "TX",
+        "unit_id": "224110"
+      },
+      {
+        "name": "Dallas Christian College",
+        "state": "TX",
+        "unit_id": "224244"
+      },
+      {
+        "name": "Texas A&M University-Texarkana",
+        "state": "TX",
+        "unit_id": "224545"
+      },
+      {
+        "name": "Dallas College",
+        "state": "TX",
+        "unit_id": "224615"
+      },
+      {
+        "name": "Galveston College",
+        "state": "TX",
+        "unit_id": "224961"
+      },
+      {
+        "name": "Hardin-Simmons University",
+        "state": "TX",
+        "unit_id": "225247"
+      },
+      {
+        "name": "University of Houston-Victoria",
+        "state": "TX",
+        "unit_id": "225502"
+      },
+      {
+        "name": "Howard Payne University",
+        "state": "TX",
+        "unit_id": "225548"
+      },
+      {
+        "name": "Jacksonville College-Main Campus",
+        "state": "TX",
+        "unit_id": "225876"
+      },
+      {
+        "name": "Jarvis Christian University",
+        "state": "TX",
+        "unit_id": "225885"
+      },
+      {
+        "name": "Lamar University",
+        "state": "TX",
+        "unit_id": "226091"
+      },
+      {
+        "name": "Lee College",
+        "state": "TX",
+        "unit_id": "226204"
+      },
+      {
+        "name": "LeTourneau University",
+        "state": "TX",
+        "unit_id": "226231"
+      },
+      {
+        "name": "McMurry University",
+        "state": "TX",
+        "unit_id": "226587"
+      },
+      {
+        "name": "Midland College",
+        "state": "TX",
+        "unit_id": "226806"
+      },
+      {
+        "name": "Navarro College",
+        "state": "TX",
+        "unit_id": "227146"
+      },
+      {
+        "name": "Northeast Texas Community College",
+        "state": "TX",
+        "unit_id": "227225"
+      },
+      {
+        "name": "Odessa College",
+        "state": "TX",
+        "unit_id": "227304"
+      },
+      {
+        "name": "The University of Texas Rio Grande Valley",
+        "state": "TX",
+        "unit_id": "227368"
+      },
+      {
+        "name": "Texas Southmost College",
+        "state": "TX",
+        "unit_id": "227377"
+      },
+      {
+        "name": "Panola College",
+        "state": "TX",
+        "unit_id": "227386"
+      },
+      {
+        "name": "Prairie View A & M University",
+        "state": "TX",
+        "unit_id": "227526"
+      },
+      {
+        "name": "Ranger College",
+        "state": "TX",
+        "unit_id": "227687"
+      },
+      {
+        "name": "San Jacinto Community College",
+        "state": "TX",
+        "unit_id": "227979"
+      },
+      {
+        "name": "Southwest Texas Junior College",
+        "state": "TX",
+        "unit_id": "228316"
+      },
+      {
+        "name": "Stephen F Austin State University",
+        "state": "TX",
+        "unit_id": "228431"
+      },
+      {
+        "name": "Southwestern Adventist University",
+        "state": "TX",
+        "unit_id": "228468"
+      },
+      {
+        "name": "Southwestern Christian College",
+        "state": "TX",
+        "unit_id": "228486"
+      },
+      {
+        "name": "Sul Ross State University",
+        "state": "TX",
+        "unit_id": "228501"
+      },
+      {
+        "name": "The University of Texas at Dallas",
+        "state": "TX",
+        "unit_id": "228787"
+      },
+      {
+        "name": "Texas College",
+        "state": "TX",
+        "unit_id": "228884"
+      },
+      {
+        "name": "Texas Lutheran University",
+        "state": "TX",
+        "unit_id": "228981"
+      },
+      {
+        "name": "Trinity University",
+        "state": "TX",
+        "unit_id": "229267"
+      },
+      {
+        "name": "Victoria College",
+        "state": "TX",
+        "unit_id": "229540"
+      },
+      {
+        "name": "Western Texas College",
+        "state": "TX",
+        "unit_id": "229832"
+      },
+      {
+        "name": "Wiley University",
+        "state": "TX",
+        "unit_id": "229887"
+      },
+      {
+        "name": "Brigham Young University",
+        "state": "UT",
+        "unit_id": "230038"
+      },
+      {
+        "name": "Snow College",
+        "state": "UT",
+        "unit_id": "230597"
+      },
+      {
+        "name": "Salt Lake Community College",
+        "state": "UT",
+        "unit_id": "230746"
+      },
+      {
+        "name": "Middlebury College",
+        "state": "VT",
+        "unit_id": "230959"
+      },
+      {
+        "name": "Sterling College",
+        "state": "VT",
+        "unit_id": "231095"
+      },
+      {
+        "name": "Vermont State University",
+        "state": "VT",
+        "unit_id": "231165"
+      },
+      {
+        "name": "Averett University",
+        "state": "VA",
+        "unit_id": "231420"
+      },
+      {
+        "name": "Bridgewater College",
+        "state": "VA",
+        "unit_id": "231581"
+      },
+      {
+        "name": "Christopher Newport University",
+        "state": "VA",
+        "unit_id": "231712"
+      },
+      {
+        "name": "Mountain Gateway Community College",
+        "state": "VA",
+        "unit_id": "231873"
+      },
+      {
+        "name": "Emory & Henry University",
+        "state": "VA",
+        "unit_id": "232025"
+      },
+      {
+        "name": "Eastern Mennonite University",
+        "state": "VA",
+        "unit_id": "232043"
+      },
+      {
+        "name": "Hampden-Sydney College",
+        "state": "VA",
+        "unit_id": "232256"
+      },
+      {
+        "name": "Hollins University",
+        "state": "VA",
+        "unit_id": "232308"
+      },
+      {
+        "name": "University of Lynchburg",
+        "state": "VA",
+        "unit_id": "232609"
+      },
+      {
+        "name": "University of Mary Washington",
+        "state": "VA",
+        "unit_id": "232681"
+      },
+      {
+        "name": "Marymount University",
+        "state": "VA",
+        "unit_id": "232706"
+      },
+      {
+        "name": "Northern Virginia Community College",
+        "state": "VA",
+        "unit_id": "232946"
+      },
+      {
+        "name": "Patrick & Henry Community College",
+        "state": "VA",
+        "unit_id": "233019"
+      },
+      {
+        "name": "Paul D Camp Community College",
+        "state": "VA",
+        "unit_id": "233037"
+      },
+      {
+        "name": "Randolph-Macon College",
+        "state": "VA",
+        "unit_id": "233295"
+      },
+      {
+        "name": "Richard Bland College",
+        "state": "VA",
+        "unit_id": "233338"
+      },
+      {
+        "name": "Roanoke College",
+        "state": "VA",
+        "unit_id": "233426"
+      },
+      {
+        "name": "Shenandoah University",
+        "state": "VA",
+        "unit_id": "233541"
+      },
+      {
+        "name": "Southside Virginia Community College",
+        "state": "VA",
+        "unit_id": "233639"
+      },
+      {
+        "name": "Southwest Virginia Community College",
+        "state": "VA",
+        "unit_id": "233648"
+      },
+      {
+        "name": "Sweet Briar College",
+        "state": "VA",
+        "unit_id": "233718"
+      },
+      {
+        "name": "Virginia Peninsula Community College",
+        "state": "VA",
+        "unit_id": "233754"
+      },
+      {
+        "name": "University of Virginia's College at Wise",
+        "state": "VA",
+        "unit_id": "233897"
+      },
+      {
+        "name": "University of Virginia-Main Campus",
+        "state": "VA",
+        "unit_id": "234076"
+      },
+      {
+        "name": "Virginia University of Lynchburg",
+        "state": "VA",
+        "unit_id": "234137"
+      },
+      {
+        "name": "Virginia Wesleyan University",
+        "state": "VA",
+        "unit_id": "234173"
+      },
+      {
+        "name": "Washington and Lee University",
+        "state": "VA",
+        "unit_id": "234207"
+      },
+      {
+        "name": "Bellevue College",
+        "state": "WA",
+        "unit_id": "234669"
+      },
+      {
+        "name": "Pacific Lutheran University",
+        "state": "WA",
+        "unit_id": "236230"
+      },
+      {
+        "name": "Peninsula College",
+        "state": "WA",
+        "unit_id": "236258"
+      },
+      {
+        "name": "University of Puget Sound",
+        "state": "WA",
+        "unit_id": "236328"
+      },
+      {
+        "name": "Seattle University",
+        "state": "WA",
+        "unit_id": "236595"
+      },
+      {
+        "name": "Shoreline Community College",
+        "state": "WA",
+        "unit_id": "236610"
+      },
+      {
+        "name": "Walla Walla University",
+        "state": "WA",
+        "unit_id": "236896"
+      },
+      {
+        "name": "Whitman College",
+        "state": "WA",
+        "unit_id": "237057"
+      },
+      {
+        "name": "Whitworth University",
+        "state": "WA",
+        "unit_id": "237066"
+      },
+      {
+        "name": "Appalachian Bible College",
+        "state": "WV",
+        "unit_id": "237136"
+      },
+      {
+        "name": "Glenville State University",
+        "state": "WV",
+        "unit_id": "237385"
+      },
+      {
+        "name": "Potomac State College of West Virginia University",
+        "state": "WV",
+        "unit_id": "237701"
+      },
+      {
+        "name": "West Liberty University",
+        "state": "WV",
+        "unit_id": "237932"
+      },
+      {
+        "name": "West Virginia University Institute of Technology",
+        "state": "WV",
+        "unit_id": "237950"
+      },
+      {
+        "name": "West Virginia University",
+        "state": "WV",
+        "unit_id": "238032"
+      },
+      {
+        "name": "Wheeling University",
+        "state": "WV",
+        "unit_id": "238078"
+      },
+      {
+        "name": "Alverno College",
+        "state": "WI",
+        "unit_id": "238193"
+      },
+      {
+        "name": "Concordia University-Wisconsin",
+        "state": "WI",
+        "unit_id": "238616"
+      },
+      {
+        "name": "Lawrence University",
+        "state": "WI",
+        "unit_id": "239017"
+      },
+      {
+        "name": "Maranatha Baptist University",
+        "state": "WI",
+        "unit_id": "239071"
+      },
+      {
+        "name": "Milwaukee Area Technical College",
+        "state": "WI",
+        "unit_id": "239248"
+      },
+      {
+        "name": "Milwaukee School of Engineering",
+        "state": "WI",
+        "unit_id": "239318"
+      },
+      {
+        "name": "Mount Mary University",
+        "state": "WI",
+        "unit_id": "239390"
+      },
+      {
+        "name": "Northcentral Technical College",
+        "state": "WI",
+        "unit_id": "239460"
+      },
+      {
+        "name": "Northland College",
+        "state": "WI",
+        "unit_id": "239512"
+      },
+      {
+        "name": "Ripon College",
+        "state": "WI",
+        "unit_id": "239628"
+      },
+      {
+        "name": "Saint Norbert College",
+        "state": "WI",
+        "unit_id": "239716"
+      },
+      {
+        "name": "Southwest Wisconsin Technical College",
+        "state": "WI",
+        "unit_id": "239910"
+      },
+      {
+        "name": "University of Wisconsin-Whitewater",
+        "state": "WI",
+        "unit_id": "240189"
+      },
+      {
+        "name": "University of Wisconsin-Eau Claire",
+        "state": "WI",
+        "unit_id": "240268"
+      },
+      {
+        "name": "University of Wisconsin-Green Bay",
+        "state": "WI",
+        "unit_id": "240277"
+      },
+      {
+        "name": "University of Wisconsin-La Crosse",
+        "state": "WI",
+        "unit_id": "240329"
+      },
+      {
+        "name": "Wisconsin Lutheran College",
+        "state": "WI",
+        "unit_id": "240338"
+      },
+      {
+        "name": "University of Wisconsin-Oshkosh",
+        "state": "WI",
+        "unit_id": "240365"
+      },
+      {
+        "name": "University of Wisconsin-Platteville",
+        "state": "WI",
+        "unit_id": "240462"
+      },
+      {
+        "name": "University of Wisconsin-Stevens Point",
+        "state": "WI",
+        "unit_id": "240480"
+      },
+      {
+        "name": "Pontifical Catholic University of Puerto Rico-Ponce",
+        "state": "PR",
+        "unit_id": "241410"
+      },
+      {
+        "name": "Universidad Ana G. Mendez-Cupey Campus",
+        "state": "PR",
+        "unit_id": "241739"
+      },
+      {
+        "name": "Inter American University of Puerto Rico-San German",
+        "state": "PR",
+        "unit_id": "242617"
+      },
+      {
+        "name": "Inter American University of Puerto Rico-Aguadilla",
+        "state": "PR",
+        "unit_id": "242626"
+      },
+      {
+        "name": "Inter American University of Puerto Rico-Arecibo",
+        "state": "PR",
+        "unit_id": "242635"
+      },
+      {
+        "name": "Inter American University of Puerto Rico-Barranquitas",
+        "state": "PR",
+        "unit_id": "242644"
+      },
+      {
+        "name": "Inter American University of Puerto Rico-Ponce",
+        "state": "PR",
+        "unit_id": "242662"
+      },
+      {
+        "name": "Inter American University of Puerto Rico-Fajardo",
+        "state": "PR",
+        "unit_id": "242680"
+      },
+      {
+        "name": "Inter American University of Puerto Rico-Guayama",
+        "state": "PR",
+        "unit_id": "242699"
+      },
+      {
+        "name": "Inter American University of Puerto Rico-Bayamon",
+        "state": "PR",
+        "unit_id": "242705"
+      },
+      {
+        "name": "University of Puerto Rico-Carolina",
+        "state": "PR",
+        "unit_id": "243142"
+      },
+      {
+        "name": "Universidad Ana G. Mendez-Carolina Campus",
+        "state": "PR",
+        "unit_id": "243346"
+      },
+      {
+        "name": "Universidad Ana G. Mendez-Gurabo Campus",
+        "state": "PR",
+        "unit_id": "243601"
+      },
+      {
+        "name": "University of the Virgin Islands",
+        "state": "VI",
+        "unit_id": "243665"
+      },
+      {
+        "name": "Lac Courte Oreilles Ojibwe University",
+        "state": "WI",
+        "unit_id": "260372"
+      },
+      {
+        "name": "Luna Community College",
+        "state": "NM",
+        "unit_id": "363633"
+      },
+      {
+        "name": "Pennsylvania College of Technology",
+        "state": "PA",
+        "unit_id": "366252"
+      },
+      {
+        "name": "Suffolk County Community College",
+        "state": "NY",
+        "unit_id": "366395"
+      },
+      {
+        "name": "NorthWest Arkansas Community College",
+        "state": "AR",
+        "unit_id": "367459"
+      },
+      {
+        "name": "Beacon College",
+        "state": "FL",
+        "unit_id": "384254"
+      },
+      {
+        "name": "Heartland Community College",
+        "state": "IL",
+        "unit_id": "384342"
+      },
+      {
+        "name": "Copper Mountain Community College",
+        "state": "CA",
+        "unit_id": "395362"
+      },
+      {
+        "name": "Soka University of America",
+        "state": "CA",
+        "unit_id": "399911"
+      },
+      {
+        "name": "Florida National University-Main Campus",
+        "state": "FL",
+        "unit_id": "408844"
+      },
+      {
+        "name": "California State University-Monterey Bay",
+        "state": "CA",
+        "unit_id": "409698"
+      },
+      {
+        "name": "Leech Lake Tribal College",
+        "state": "MN",
+        "unit_id": "413626"
+      },
+      {
+        "name": "Pennsylvania Highlands Community College",
+        "state": "PA",
+        "unit_id": "414911"
+      },
+      {
+        "name": "York County Community College",
+        "state": "ME",
+        "unit_id": "420440"
+      },
+      {
+        "name": "Arkansas State University-Mountain Home",
+        "state": "AR",
+        "unit_id": "420538"
+      },
+      {
+        "name": "Florida Gulf Coast University",
+        "state": "FL",
+        "unit_id": "433660"
+      },
+      {
+        "name": "Arkansas State University-Newport",
+        "state": "AR",
+        "unit_id": "440402"
+      },
+      {
+        "name": "Tohono O'odham Community College",
+        "state": "AZ",
+        "unit_id": "442781"
+      },
+      {
+        "name": "Johnson & Wales University-Charlotte",
+        "state": "NC",
+        "unit_id": "445708"
+      },
+      {
+        "name": "Ave Maria University",
+        "state": "FL",
+        "unit_id": "446048"
+      },
+      {
+        "name": "Ecclesia College",
+        "state": "AR",
+        "unit_id": "446233"
+      },
+      {
+        "name": "Harrisburg University of Science and Technology",
+        "state": "PA",
+        "unit_id": "446640"
+      },
+      {
+        "name": "Georgia Gwinnett College",
+        "state": "GA",
+        "unit_id": "447689"
+      },
+      {
+        "name": "Providence Christian College",
+        "state": "CA",
+        "unit_id": "455770"
+      },
+      {
+        "name": "University of Fort Lauderdale",
+        "state": "FL",
+        "unit_id": "457402"
+      },
+      {
+        "name": "Texas A&M University-San Antonio",
+        "state": "TX",
+        "unit_id": "459949"
+      },
+      {
+        "name": "Norco College",
+        "state": "CA",
+        "unit_id": "460464"
+      },
+      {
+        "name": "Middle Georgia State University",
+        "state": "GA",
+        "unit_id": "482158"
+      },
+      {
+        "name": "University of North Texas at Dallas",
+        "state": "TX",
+        "unit_id": "484905"
+      },
+      {
+        "name": "Emory University-Oxford College",
+        "state": "GA",
+        "unit_id": "487092"
+      },
+      {
+        "name": "Husson University",
+        "state": "ME",
+        "unit_id": "487524"
+      },
+      {
+        "name": "University of Saint Katherine",
+        "state": "CA",
+        "unit_id": "488785"
+      },
+      {
+        "name": "Carolina University",
+        "state": "NC",
+        "unit_id": "489937"
+      },
+      {
+        "name": "Westcliff University",
+        "state": "CA",
+        "unit_id": "490133"
+      },
+      {
+        "name": "Champion Christian College",
+        "state": "AR",
+        "unit_id": "492069"
+      },
+      {
+        "name": "Abilene Christian University-Undergraduate Online",
+        "state": "TX",
+        "unit_id": "497037"
+      }
+    ],
+    "Net price calculator": [
+      {
+        "name": "Athens State University",
+        "state": "AL",
+        "unit_id": "100812"
+      },
+      {
+        "name": "Jefferson Regional School of Nursing",
+        "state": "AR",
+        "unit_id": "107123"
+      },
+      {
+        "name": "Los Angeles County College of Nursing and Allied Health",
+        "state": "CA",
+        "unit_id": "117803"
+      },
+      {
+        "name": "Palo Alto University",
+        "state": "CA",
+        "unit_id": "120698"
+      },
+      {
+        "name": "Samuel Merritt University",
+        "state": "CA",
+        "unit_id": "122296"
+      },
+      {
+        "name": "Lakeview College of Nursing",
+        "state": "IL",
+        "unit_id": "146533"
+      },
+      {
+        "name": "Rush University",
+        "state": "IL",
+        "unit_id": "148511"
+      },
+      {
+        "name": "UnityPoint Health-Des Moines School of Radiologic Technology",
+        "state": "IA",
+        "unit_id": "153542"
+      },
+      {
+        "name": "Palmer College of Chiropractic",
+        "state": "IA",
+        "unit_id": "154174"
+      },
+      {
+        "name": "LaSalle Tech",
+        "state": "LA",
+        "unit_id": "160472"
+      },
+      {
+        "name": "Bancroft School of Massage Therapy",
+        "state": "MA",
+        "unit_id": "164599"
+      },
+      {
+        "name": "William James College",
+        "state": "MA",
+        "unit_id": "166717"
+      },
+      {
+        "name": "Mayo Clinic College of Medicine and Science",
+        "state": "MN",
+        "unit_id": "173957"
+      },
+      {
+        "name": "CHI Health School of Radiologic Technology",
+        "state": "NE",
+        "unit_id": "181145"
+      },
+      {
+        "name": "Beth Medrash Govoha",
+        "state": "NJ",
+        "unit_id": "183804"
+      },
+      {
+        "name": "Capital Health School of Radiologic Technology",
+        "state": "NJ",
+        "unit_id": "186405"
+      },
+      {
+        "name": "Capital Health School of Nursing",
+        "state": "NJ",
+        "unit_id": "186423"
+      },
+      {
+        "name": "Firelands Regional Medical Center School of Nursing",
+        "state": "OH",
+        "unit_id": "205090"
+      },
+      {
+        "name": "East West College of the Healing Arts",
+        "state": "OR",
+        "unit_id": "208637"
+      },
+      {
+        "name": "Oregon Health & Science University",
+        "state": "OR",
+        "unit_id": "209490"
+      },
+      {
+        "name": "St Lukes Hospital School of Nursing",
+        "state": "PA",
+        "unit_id": "216162"
+      },
+      {
+        "name": "The University of Texas Health Science Center at Houston",
+        "state": "TX",
+        "unit_id": "229300"
+      },
+      {
+        "name": "Sovah School of Health Professions",
+        "state": "VA",
+        "unit_id": "232724"
+      },
+      {
+        "name": "Sentara College of Health Sciences",
+        "state": "VA",
+        "unit_id": "232885"
+      },
+      {
+        "name": "Antioch University-Seattle",
+        "state": "WA",
+        "unit_id": "245883"
+      },
+      {
+        "name": "Antioch University",
+        "state": "OH",
+        "unit_id": "245892"
+      },
+      {
+        "name": "Ecumenical Theological Seminary",
+        "state": "MI",
+        "unit_id": "247162"
+      },
+      {
+        "name": "The University of Texas MD Anderson Cancer Center",
+        "state": "TX",
+        "unit_id": "416801"
+      },
+      {
+        "name": "Atlantic Institute of Oriental Medicine",
+        "state": "FL",
+        "unit_id": "439446"
+      },
+      {
+        "name": "Lakewood School of Therapeutic Massage",
+        "state": "MI",
+        "unit_id": "451291"
+      },
+      {
+        "name": "Blackstone Valley Vocational Regional School District",
+        "state": "MA",
+        "unit_id": "457615"
+      },
+      {
+        "name": "Northern Virginia School of Therapeutic Massage",
+        "state": "VA",
+        "unit_id": "461412"
+      },
+      {
+        "name": "World A Cuts Barber Institute",
+        "state": "PA",
+        "unit_id": "481067"
+      },
+      {
+        "name": "Maine Media College",
+        "state": "ME",
+        "unit_id": "490753"
+      }
+    ]
+  },
+  "scope": {
+    "coverage": 1.0,
+    "institutions": 6163,
+    "kind": "national",
+    "note": "The complete IPEDS institutional directory for 2023, joined to the institutional characteristics file for the same collection year. Both are downloaded whole rather than paged, so this is the population and not a sample of it.",
+    "source": "IPEDS directory",
+    "states": 59,
+    "universe": 6163
+  },
+  "ungradeable": 175
+}

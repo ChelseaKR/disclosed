@@ -17,16 +17,30 @@ import json
 import sys
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
-from . import crosswalk, dataset, site
+from . import crosswalk, dataset, national, site
 from .drift import Snapshot, compare
 from .fields import IPEDS_FIELDS
 from .grading import InstitutionGrade, grade_institution, summarize
 from .peers import peer_context
+from .scope import NATIONAL, SAMPLE, Scope
 from .sources import college_scorecard, ipeds
 
 __all__ = ["main"]
+
+# The College Scorecard's full universe, stated as an approximation because the count moves as
+# institutions open and close and quoting it to the digit would imply a precision nobody has.
+SCORECARD_UNIVERSE: Final[int] = 6_300
+
+
+def _states_in(grades: list[InstitutionGrade]) -> int:
+    """How many distinct states a run touched, not counting the institutions it could not place.
+
+    A record with no state is not a fourteenth state. Counting it as one would inflate the
+    coverage claim using an absence, which is the error this project is about.
+    """
+    return len({g.state for g in grades if g.state})
 
 
 def _implausible_findings(
@@ -76,14 +90,50 @@ def _implausible_findings(
     return findings
 
 
+def _scorecard_scope(grades: list[InstitutionGrade], *, walked_the_api: bool) -> Scope:
+    """Describe what a College Scorecard run covered.
+
+    ``walked_the_api`` is passed in by the caller rather than guessed from the row count. A run is
+    national because the fetch paged the API to exhaustion, not because it came back large; a
+    replay of a capture cannot know what the capture was and is a sample until somebody proves
+    otherwise. Inferring from size would eventually promote a big sample to a national claim.
+    """
+    if walked_the_api:
+        return Scope(
+            kind=NATIONAL,
+            source="College Scorecard",
+            institutions=len(grades),
+            states=_states_in(grades),
+            universe=len(grades),
+            note=(
+                "The API was paged to exhaustion, so this is every institution the College "
+                "Scorecard publishes rather than a slice of it."
+            ),
+        )
+    return Scope(
+        kind=SAMPLE,
+        source="College Scorecard",
+        institutions=len(grades),
+        states=_states_in(grades),
+        universe=SCORECARD_UNIVERSE,
+        note=(
+            "The first records the API returned, which arrive grouped by state, so some states "
+            "are represented heavily and most not at all. This is a slice and not a random one, "
+            "and percentages computed from it describe these institutions rather than the "
+            "country."
+        ),
+    )
+
+
 def _grade_payload(
-    grades: list[InstitutionGrade], corpus: list[dict[str, Any]]
+    grades: list[InstitutionGrade], corpus: list[dict[str, Any]], *, scope: Scope
 ) -> dict[str, Any]:
     by_state: dict[str, list[InstitutionGrade]] = {}
     for grade in grades:
         by_state.setdefault(grade.state or "unknown", []).append(grade)
 
     return {
+        "scope": scope.as_dict(),
         "institutions": len(grades),
         "ungradeable": sum(1 for g in grades if g.score is None),
         "overall": asdict(summarize(grades, label="all institutions")),
@@ -138,12 +188,14 @@ def _cmd_grade(args: argparse.Namespace) -> int:
         print("no institutions returned; refusing to write an empty report", file=sys.stderr)
         return 1
     grades = [grade_institution(r) for r in records]
-    payload = _grade_payload(grades, records)
+    scope = _scorecard_scope(grades, walked_the_api=not args.source and not args.limit)
+    payload = _grade_payload(grades, records, scope=scope)
     Path(args.out).write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
     overall = payload["overall"]
     mean = overall["mean_score"]
     print(f"graded {payload['institutions']} institutions -> {args.out}")
+    print(f"  coverage         {scope.kind}: {scope.sentence}")
     print(f"  mean disclosure  {mean:.1%}" if mean is not None else "  mean disclosure  n/a")
     print(f"  ungradeable      {payload['ungradeable']}")
     print(f"  implausible      {len(payload['implausible'])}")
@@ -230,7 +282,23 @@ def _cmd_crosscheck(args: argparse.Namespace) -> int:
     overall = summarize(grades, label="all institutions")
     found = crosswalk.contradictions(scorecard, directory) if scorecard else []
 
+    # The directory is a file, not a page of a file. Grading it grades every institution IPEDS
+    # publishes, which is what makes national claims possible for the fields it carries, and it is
+    # the one place in this project where a percentage describes the country.
+    scope = Scope(
+        kind=NATIONAL,
+        source="IPEDS directory",
+        institutions=len(grades),
+        states=_states_in(grades),
+        universe=len(grades),
+        note=(
+            f"The complete IPEDS institutional directory for {args.year}, joined to the "
+            "institutional characteristics file for the same collection year. Both are downloaded "
+            "whole rather than paged, so this is the population and not a sample of it."
+        ),
+    )
     payload = {
+        "scope": scope.as_dict(),
         "institutions": len(grades),
         "ungradeable": sum(1 for g in grades if g.score is None),
         "overall": asdict(overall),
@@ -265,6 +333,33 @@ def _cmd_crosscheck(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_national(args: argparse.Namespace) -> int:
+    """Reduce a national run to the committable artifact the site's national claims rest on.
+
+    Split out from ``crosscheck`` for the same reason ``snapshot`` is split out from ``grade``:
+    the full payload is megabytes and regenerable from two public archives, while the claims made
+    about it are a few tens of kilobytes and belong in git where anyone can diff them.
+    """
+    report = json.loads(Path(args.report).read_text(encoding="utf-8"))
+    try:
+        payload = national.build(report)
+    except ValueError as exc:
+        print(f"{exc}", file=sys.stderr)
+        return 1
+    Path(args.out).write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    print(f"national coverage for {payload['scope']['institutions']} institutions -> {args.out}")
+    for coverage in payload["fields"]:
+        share = coverage["share_reported"]
+        # An unmeasured share prints as words. Formatting None through a percent format is how it
+        # would have become "0%", and a field nobody had to answer is not a field everybody failed.
+        rendered = "no applicable institutions" if share is None else f"{share:.1%} reported"
+        print(
+            f"  {coverage['label']:34} {coverage['applicable']:>5} applicable, "
+            f"{coverage['missing']:>4} absent, {rendered}"
+        )
+    return 0
+
+
 def _cmd_site(args: argparse.Namespace) -> int:
     report = json.loads(Path(args.report).read_text(encoding="utf-8"))
     if not report.get("grades"):
@@ -272,8 +367,17 @@ def _cmd_site(args: argparse.Namespace) -> int:
         # education, it is a broken build, and publishing it would look like one.
         print(f"{args.report} contains no graded institutions; refusing to build", file=sys.stderr)
         return 1
+    national_payload = (
+        json.loads(Path(args.national).read_text(encoding="utf-8")) if args.national else None
+    )
     out = Path(args.out)
-    pages = site.build(report, out, origin=args.origin, generated=args.generated)
+    pages = site.build(
+        report,
+        out,
+        origin=args.origin,
+        generated=args.generated,
+        national=national_payload,
+    )
     print(f"built {len(pages)} pages -> {out}")
     return 0
 
@@ -333,8 +437,23 @@ def main(argv: list[str] | None = None) -> int:
     p_cross.add_argument("--out", default="data/crosscheck.json")
     p_cross.set_defaults(func=_cmd_crosscheck)
 
+    p_nat = sub.add_parser(
+        "national", help="reduce a national run to per-field counts and named findings"
+    )
+    p_nat.add_argument("--report", default="data/crosscheck.json")
+    p_nat.add_argument("--out", default="data/national.json")
+    p_nat.set_defaults(func=_cmd_national)
+
     p_site = sub.add_parser("site", help="render a report as static HTML")
     p_site.add_argument("--report", default="data/report.json")
+    p_site.add_argument(
+        "--national",
+        default=None,
+        help=(
+            "national artifact from `disclosed national`. Without it the site publishes only the "
+            "sample-scoped pages, and makes no national claim at all"
+        ),
+    )
     p_site.add_argument("--out", default="site")
     p_site.add_argument("--origin", default=site.DEFAULT_ORIGIN)
     p_site.add_argument(

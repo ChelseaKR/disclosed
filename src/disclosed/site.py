@@ -31,15 +31,11 @@ from typing import Any, Final
 
 from .disclosure import Disclosure
 from .fields import FIELDS, IPEDS_FIELDS, Field, field_by_label
+from .scope import Scope, scope_from_payload
 
 __all__ = ["Page", "build", "slug"]
 
 DEFAULT_ORIGIN: Final[str] = "https://chelseakr.github.io/disclosed"
-
-# The College Scorecard's full universe, used only to describe how much of it a given report
-# covers. Stated as an approximation because the count moves as institutions open and close, and
-# quoting it to the digit would imply a precision this project does not have.
-SCORECARD_UNIVERSE: Final[int] = 6_300
 
 # What each classification means to a reader, and whether the institution is answerable for it.
 # Written for a person who has just been told their college scored badly and wants to know why.
@@ -461,7 +457,116 @@ can be checked.</p>
     )
 
 
-def home_page(report: dict[str, Any]) -> Page:
+def _share(numerator: int, denominator: int) -> str:
+    """A percentage, or words when there is nothing to divide by.
+
+    ``0%`` is a real answer to "what share reported this" and must not also be the answer to
+    "there was nobody to ask". A denominator of zero returns the sentence rather than the number.
+    """
+    if denominator <= 0:
+        return "no applicable institutions"
+    return f"{numerator / denominator:.0%}"
+
+
+def national_page(payload: dict[str, Any]) -> Page:
+    """The one page whose percentages describe the country rather than a slice of it.
+
+    Kept as its own page rather than merged into the home page, because the two rest on different
+    corpora and a reader who lands halfway down a page must never be able to carry a national
+    figure back up to a sample one or the other way round. The scope sentence is printed from the
+    artifact, not from this template, so a page rendered from a different run says what that run
+    covered rather than what this paragraph was written believing.
+    """
+    scope = scope_from_payload(payload)
+    fields: list[dict[str, Any]] = list(payload.get("fields", []))
+    gaps: dict[str, Any] = payload.get("gaps", {}) or {}
+
+    rows = "".join(
+        f"<tr><td>{_rationale_link(str(f.get('label', '')), str(f.get('label', '')), depth=1)}</td>"
+        f"<td>{int(f.get('applicable', 0)):,}</td>"
+        f"<td>{int(f.get('missing', 0)):,}</td>"
+        f"<td>{html.escape(_share(int(f.get('reported', 0)), int(f.get('applicable', 0))))}</td>"
+        f"<td>{html.escape(str(f.get('statute')) or 'no statute')}</td></tr>"
+        for f in fields
+    )
+
+    sections = []
+    for field in fields:
+        label = str(field.get("label", ""))
+        listed = gaps.get(label)
+        if not isinstance(listed, list) or not listed:
+            continue
+        items = "".join(
+            f"<li>{html.escape(str(row.get('name') or 'Unnamed institution'))}"
+            f"{html.escape(' (' + str(row.get('state')) + ')') if row.get('state') else ''}"
+            f"{'' if row.get('unit_id') else ' <span class=\"tag\">no unit id published</span>'}"
+            "</li>"
+            for row in listed
+            if isinstance(row, dict)
+        )
+        sections.append(
+            f"<h3>{_rationale_link(label, label, depth=1)}: "
+            f"{len(listed):,} of {int(field.get('applicable', 0)):,} institutions</h3>"
+            f"<p>Required by {html.escape(str(field.get('statute', '')))}. These are the "
+            "institutions the requirement reaches for which the federal record carries no "
+            "address. Named rather than counted because there is a published rule behind this "
+            "one; the fields with no statute behind them are counted above and their institutions "
+            "are not listed.</p>"
+            f'<ul class="gaps">{items}</ul>'
+        )
+
+    lede = html.escape(scope.sentence) if scope else "This run did not state its coverage."
+    ungradeable = int(payload.get("ungradeable", 0))
+    ungradeable_note = (
+        f"<p>{ungradeable:,} directory rows get no grade at all rather than a zero, because every "
+        "field checked was either suppressed or outside the reach of the rule. Most are system "
+        "offices and closed institutions. They are counted here and excluded from every mean.</p>"
+        if ungradeable
+        else ""
+    )
+    body = f"""
+<nav aria-label="Breadcrumb"><a href="../">All institutions</a></nav>
+<h1>The national picture</h1>
+<p class="lede">{lede}</p>
+<p>Everything else on this site is graded from a sample of the College Scorecard and says so. This
+page is different: IPEDS publishes its directory as a file rather than as a paged API, so grading
+it grades every institution there is, and the percentages below describe the country.</p>
+
+<h2>What the country discloses</h2>
+<table>
+<caption>Per-field national counts. Suppressed and inapplicable institutions are outside the
+applicable column, never scored as failures.</caption>
+<thead><tr><th scope="col">Disclosure</th><th scope="col">Institutions it reaches</th>
+<th scope="col">Record carries none</th><th scope="col">Published</th>
+<th scope="col">Requirement</th></tr></thead>
+<tbody>{rows}</tbody>
+</table>
+<p>The middle column is the whole argument. A disclosure that reaches 1,998 institutions and a
+disclosure that reaches 5,988 produce very different-looking failure counts from the same
+underlying behaviour, and a table that showed only the failures would rank them wrongly.</p>
+{ungradeable_note}
+
+<h2>Named findings</h2>
+{"".join(sections) or "<p>No statute-backed disclosure is absent anywhere in this run.</p>"}
+
+<p class="caveat">An absent address means the federal record carries none. It is not proof the
+institution has nothing: it may have published the thing and not reported where. Which of those
+two is true is not something a blank cell can settle, and this page does not pretend otherwise.
+The <a href="../methodology/">methodology</a> states the rule behind every row.</p>
+"""
+    return Page(
+        path="national",
+        title="What US colleges disclose, nationally",
+        description=(
+            "Per-field disclosure counts across every institution in the IPEDS directory, with "
+            "the applicability rule behind each and the institutions named where a statute "
+            "requires the disclosure."
+        ),
+        body=body,
+    )
+
+
+def home_page(report: dict[str, Any], *, has_national: bool = False) -> Page:
     """The landing page: the thesis, what this run found, and where the numbers stop applying."""
     overall = report.get("overall", {})
     total = int(report.get("institutions", 0))
@@ -504,17 +609,31 @@ def home_page(report: dict[str, Any]) -> Page:
         if ungradeable
         else ""
     )
-    coverage = (
-        f"<p class=\"caveat\"><strong>What this run covers.</strong> {total} institutions across "
-        f"{len(by_state)} states, out of roughly {SCORECARD_UNIVERSE:,} in the College Scorecard. "
-        "That is a slice, not the country, and it is not a random one: it is the first records the "
-        "API returned, which arrive grouped by state, so some states are represented heavily and "
-        "most not at all. Percentages on this page describe the institutions listed here and "
-        "should not be read as national figures. A project about undisclosed information should "
-        "not be coy about the limits of its own sample.</p>"
-        if total < SCORECARD_UNIVERSE
-        else ""
-    )
+    # Printed from the scope the run recorded, never from a constant in this template. A caveat
+    # written into a template stays true only until somebody renders a different report through
+    # it, and the sentence this one carries is the one thing on the page a reader must be able to
+    # trust without checking anything else.
+    scope: Scope | None = scope_from_payload(report)
+    if scope is None:
+        coverage = (
+            '<p class="caveat"><strong>What this run covers.</strong> This report predates the '
+            "coverage record and does not say how much of the College Scorecard it holds. Treat "
+            "every percentage on this page as describing the institutions listed here and nothing "
+            "wider, because nothing wider has been established.</p>"
+        )
+    else:
+        national_pointer = (
+            ' The <a href="national/">national page</a> carries the figures that do describe the '
+            "country, drawn from a source published as a whole file rather than as a paged API."
+            if has_national and not scope.is_national
+            else ""
+        )
+        coverage = (
+            f'<p class="caveat"><strong>What this run covers.</strong> '
+            f"{html.escape(scope.sentence)} {html.escape(scope.note)} A project about undisclosed "
+            f"information should not be coy about the limits of its own sample.{national_pointer}"
+            "</p>"
+        )
     body = f"""
 <h1>disclosed</h1>
 <p class="lede">Grades US higher-education institutions on what they disclose, not on how they
@@ -653,6 +772,7 @@ def build(
     *,
     origin: str = DEFAULT_ORIGIN,
     generated: str,
+    national: dict[str, Any] | None = None,
 ) -> list[Page]:
     """Render the whole site from a graded report.
 
@@ -663,6 +783,10 @@ def build(
         generated: Run identifier shown in the footer. Supplied by the caller rather than read
             from the clock, so that rebuilding the same report is byte-identical and a diff in the
             output means the data changed.
+        national: A payload as written by ``disclosed national``, or ``None``. Without it no
+            national page is written and the site makes no national claim anywhere, which is the
+            right default: the absence of a national corpus must show up as the absence of
+            national figures, not as sample figures with the qualifier quietly dropped.
 
     Returns:
         Every page written, in the order written. Callers use it to assert page counts without
@@ -675,7 +799,9 @@ def build(
         if isinstance(unit_id, str) and unit_id:
             findings_by_id.setdefault(unit_id, []).append(finding)
 
-    pages: list[Page] = [home_page(report), methodology_page()]
+    pages: list[Page] = [home_page(report, has_national=national is not None), methodology_page()]
+    if national is not None:
+        pages.append(national_page(national))
 
     by_state: dict[str, list[dict[str, Any]]] = {}
     for row in grades:

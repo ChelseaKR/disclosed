@@ -9418,5 +9418,14 @@
       ]
     ]
   },
+  "scope": {
+    "coverage": 0.09523809523809523,
+    "institutions": 600,
+    "kind": "sample",
+    "note": "The first records the API returned, which arrive grouped by state, so some states are represented heavily and most not at all. This is a slice and not a random one, and percentages computed from it describe these institutions rather than the country.",
+    "source": "College Scorecard",
+    "states": 13,
+    "universe": 6300
+  },
   "ungradeable": 0
 }

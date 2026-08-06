@@ -18,6 +18,15 @@ from disclosed import cli, site
 from disclosed.fields import ALL_FIELDS, FIELDS
 
 _REPORT: dict[str, Any] = {
+    "scope": {
+        "kind": "sample",
+        "source": "College Scorecard",
+        "institutions": 3,
+        "states": 1,
+        "universe": 6300,
+        "coverage": 3 / 6300,
+        "note": "The first records the API returned, which arrive grouped by state.",
+    },
     "institutions": 3,
     "ungradeable": 1,
     "overall": {
@@ -281,8 +290,18 @@ class TestStructure:
     def test_the_sample_caveat_names_its_own_limits(self, tmp_path: Path) -> None:
         """A project about undisclosed information should not be coy about its own coverage."""
         home = _text(_build(tmp_path) / "index.html")
-        assert "is a slice, not the country" in home
-        assert "should not be read as national figures" in home
+        assert "are not national" in home
+        assert "arrive grouped by state" in home
+
+    def test_a_report_that_never_stated_its_coverage_is_not_promoted_to_national(
+        self, tmp_path: Path
+    ) -> None:
+        """Older reports carry no scope. The page must say so rather than assume the best."""
+        report = {k: v for k, v in _REPORT.items() if k != "scope"}
+        site.build(report, tmp_path, generated="test")
+        home = _text(tmp_path / "index.html")
+        assert "does not say how much of the College Scorecard it holds" in home
+        assert "nothing wider has been established" in home
 
 
 class TestSiteCommand:
