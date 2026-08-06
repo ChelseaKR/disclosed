@@ -32,6 +32,20 @@ __all__ = ["MIN_PEERS", "PeerGroup", "peer_context", "peer_group_for"]
 MIN_PEERS = 10
 
 
+def _fmt(value: float | None) -> str:
+    """Render a peer value at a precision that keeps it readable.
+
+    Rates live between 0 and 1, so whole-number formatting collapsed a spread of 0.31 to 0.95 into
+    "range from 0 to 1", which told the reader nothing and looked like a bug because it was one.
+    Dollar amounts want thousands separators and no decimals; proportions want two.
+    """
+    if value is None:
+        return "n/a"
+    if abs(value) <= 1.0:
+        return f"{value:.2f}"
+    return f"{value:,.0f}"
+
+
 @dataclass(frozen=True, slots=True)
 class PeerGroup:
     """What comparable institutions published for one field."""
@@ -66,8 +80,8 @@ class PeerGroup:
             )
         return (
             f"{self.matching_value} of {self.reporting} comparable institutions publish this "
-            f"value; the rest range from {self.minimum:,.0f} to {self.maximum:,.0f} "
-            f"(median {self.median:,.0f})"
+            f"value; the rest range from {_fmt(self.minimum)} to {_fmt(self.maximum)} "
+            f"(median {_fmt(self.median)})"
         )
 
 

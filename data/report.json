@@ -9333,7 +9333,7 @@
         "publishing_same_value": 0,
         "reporting": 6,
         "size": 49,
-        "verdict": "0 of 6 comparable institutions publish this value; the rest range from 1 to 1 (median 1)"
+        "verdict": "0 of 6 comparable institutions publish this value; the rest range from 0.63 to 1.00 (median 0.98)"
       },
       "rationale": "Same proportion bounds as completion. An exact zero would mean the institution admitted no applicant at all, which is an artifact rather than a policy. Note that open-enrollment institutions legitimately have no admission rate; those are expected to arrive as an explicit not-applicable rather than as a zero, and are excluded from the denominator when they do.",
       "state": "CA",
@@ -9349,7 +9349,7 @@
         "publishing_same_value": 0,
         "reporting": 58,
         "size": 68,
-        "verdict": "0 of 58 comparable institutions publish this value; the rest range from 0 to 1 (median 1)"
+        "verdict": "0 of 58 comparable institutions publish this value; the rest range from 0.07 to 1.00 (median 0.67)"
       },
       "rationale": "A rate is a proportion, so anything outside 0 to 1 is a unit error rather than a measurement. An exact zero is treated as an artifact because an institution that graduated nobody in the cohort would not still be reporting; three institutions in a 600-school sample publish exactly zero here.",
       "state": "CA",
