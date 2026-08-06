@@ -29,4 +29,4 @@ national:
 	$(PYTHON) -m disclosed.cli national --report data/crosscheck.json --out data/national.json
 
 snapshot:
-	$(PYTHON) -m disclosed.cli snapshot --taken $(TAKEN) --out data/snapshots/$(TAKEN).json
+	$(PYTHON) -m disclosed.cli snapshot --taken $(TAKEN) --out data/snapshots/scorecard/$(TAKEN).json

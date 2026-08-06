@@ -50,8 +50,14 @@ disclosed drift data/snapshots/ipeds-2021.json data/snapshots/ipeds-2023.json
 ```
 
 Snapshots are small enough to commit, so the record of what stopped being published lives in git
-rather than in a bucket someone has to trust. A scheduled workflow does this daily, and three real
-IPEDS collection years are committed as history to compare against from day one.
+rather than in a bucket someone has to trust. A scheduled workflow accrues `snapshots/scorecard/`
+daily; `snapshots/ipeds/` holds three real collection years, so `drift` has something true to
+compare against from day one.
+
+The two live in separate directories and each snapshot records its source, because the two field
+sets do not overlap: comparing across them would skip every field and print *"no change in
+per-field disclosure"*, which is the most reassuring possible way of saying nothing at all.
+`drift` refuses such a pair outright.
 
 ### Drift is a change in rate, and it took real history to prove it
 

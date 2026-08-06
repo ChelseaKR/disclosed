@@ -24,5 +24,6 @@
     "Institution web address": 6107,
     "Net price calculator": 5594
   },
-  "taken": "ipeds-2022"
+  "source": "IPEDS directory",
+  "taken": "2022"
 }

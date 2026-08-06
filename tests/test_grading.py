@@ -235,3 +235,26 @@ class TestDrift:
 
     def test_no_institutions_yields_no_drift(self) -> None:
         assert compare(Snapshot("a", 0, {}, {}, {}), Snapshot("b", 0, {}, {}, {})) == ()
+
+
+class TestCrossSourceDriftIsRefused:
+    """Two populations compared is not drift, and the silent version of it is the dangerous one.
+
+    The Scorecard and IPEDS field sets do not overlap, so a comparison across them skips every
+    field and prints "no change in per-field disclosure": a reassuring sentence about nothing.
+    """
+
+    def _snap(self, source: str) -> Snapshot:
+        return Snapshot("a", 10, {"Enrollment": 5}, {"Enrollment": 5}, {"Enrollment": 10}, source)
+
+    def test_two_sources_cannot_be_compared(self) -> None:
+        with pytest.raises(ValueError, match="different populations"):
+            compare(self._snap("College Scorecard"), self._snap("IPEDS directory"))
+
+    def test_the_same_source_compares_normally(self) -> None:
+        assert compare(self._snap("IPEDS directory"), self._snap("IPEDS directory")) == ()
+
+    def test_an_unstated_source_is_not_treated_as_a_match_or_a_mismatch(self) -> None:
+        """Snapshots predating the source field still compare, because refusing them would break
+        a history that is not wrong, only older."""
+        assert compare(self._snap(""), self._snap("IPEDS directory")) == ()

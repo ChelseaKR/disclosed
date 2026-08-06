@@ -24,5 +24,6 @@
     "Institution web address": 5985,
     "Net price calculator": 5501
   },
-  "taken": "ipeds-2023"
+  "source": "IPEDS directory",
+  "taken": "2023"
 }

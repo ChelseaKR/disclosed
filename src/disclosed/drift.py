@@ -80,6 +80,15 @@ class Snapshot:
     of the institution count.
     """
 
+    source: str = ""
+    """Which publisher this run covered, or empty when the run did not record it.
+
+    Carried so that :func:`compare` can refuse to put two different populations side by side. The
+    two histories in this repository have no field in common, so comparing them would skip every
+    field and print "no change in per-field disclosure", which reads as a reassuring finding and
+    is actually a category error. Empty means unstated and is never treated as a match.
+    """
+
     def rate(self, label: str) -> float | None:
         """Share of applicable institutions that reported a field, or ``None`` if unmeasurable.
 
@@ -180,7 +189,18 @@ def compare(earlier: Snapshot, later: Snapshot) -> tuple[FieldDrift, ...]:
     Fields whose rate is unmeasurable in either run sort last, and sort last on purpose rather
     than by the accident of ``abs(None or 0)`` being small. An unknown is not a small change; it
     is not a change at all, and it is ordered behind everything that could actually be measured.
+
+    Raises:
+        ValueError: If the two snapshots name different sources. Drift between two populations is
+            not drift. Because the College Scorecard and IPEDS field sets do not overlap, such a
+            comparison would silently skip every field and report "no change in per-field
+            disclosure", which is the most reassuring possible way of saying nothing at all.
     """
+    if earlier.source and later.source and earlier.source != later.source:
+        raise ValueError(
+            f"refusing to compare a {earlier.source} run against a {later.source} run; "
+            "these are different populations and the difference between them is not drift"
+        )
     drifts: list[FieldDrift] = []
     for label, before in earlier.reported.items():
         if label not in later.reported:

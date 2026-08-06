@@ -60,31 +60,39 @@ jobs:
           DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
         run: python -m disclosed.cli grade --out report.json
 
+      # Into data/snapshots/scorecard/, kept apart from data/snapshots/ipeds/. The two are
+      # different populations with no field in common, and a comparison across them would skip
+      # every field and report "no change in per-field disclosure", which is the most reassuring
+      # possible way of saying nothing at all. `drift` refuses such a pair outright; this keeps
+      # the glob below from ever assembling one.
       - name: Reduce to a committable snapshot
         id: snap
         run: |
           taken="$(date -u +%F)"
           echo "taken=${taken}" >> "$GITHUB_OUTPUT"
-          mkdir -p data/snapshots
+          mkdir -p data/snapshots/scorecard
           python -m disclosed.cli snapshot \
             --report report.json \
             --taken "${taken}" \
-            --out "data/snapshots/${taken}.json"
+            --out "data/snapshots/scorecard/${taken}.json"
 
-      # Drift against the most recent earlier snapshot. Reported into the job summary so a
-      # systemic change is visible without cloning anything.
+      # Drift against the most recent earlier snapshot from this same source. Reported into the
+      # job summary so a systemic change is visible without cloning anything.
       - name: Report drift since the previous snapshot
         run: |
           taken="${{ steps.snap.outputs.taken }}"
-          previous="$(ls data/snapshots/*.json | grep -v "/${taken}.json$" | tail -n 1 || true)"
+          previous="$(ls data/snapshots/scorecard/*.json 2>/dev/null \
+            | grep -v "/${taken}.json$" | tail -n 1 || true)"
           if [ -z "${previous}" ]; then
-            echo "First snapshot; nothing to compare against yet." >> "$GITHUB_STEP_SUMMARY"
+            echo "First Scorecard snapshot; nothing to compare against yet." \
+              >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           {
             echo "## Disclosure drift: $(basename "${previous}" .json) to ${taken}"
             echo '```'
-            python -m disclosed.cli drift "${previous}" "data/snapshots/${taken}.json"
+            python -m disclosed.cli drift \
+              "${previous}" "data/snapshots/scorecard/${taken}.json"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 

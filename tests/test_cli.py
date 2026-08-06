@@ -351,3 +351,32 @@ class TestCrosscheck:
 def test_no_subcommand_is_an_error() -> None:
     with pytest.raises(SystemExit):
         cli.main([])
+
+
+class TestSnapshotProvenance:
+    def test_a_snapshot_records_the_source_its_report_declared(
+        self, stub_source: None, tmp_path: Path
+    ) -> None:
+        report = tmp_path / "report.json"
+        cli.main(["grade", "--out", str(report)])
+        snap = tmp_path / "snap.json"
+        assert cli.main(
+            ["snapshot", "--report", str(report), "--taken", "x", "--out", str(snap)]
+        ) == 0
+        assert json.loads(snap.read_text())["source"] == "College Scorecard"
+
+    def test_drift_across_two_populations_exits_nonzero_rather_than_saying_nothing(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """The failure mode is not a crash, it is the sentence "no change in per-field
+        disclosure" printed about two corpora that share no field."""
+        for name, source in (("a", "College Scorecard"), ("b", "IPEDS directory")):
+            (tmp_path / f"{name}.json").write_text(
+                json.dumps(
+                    {"taken": name, "institutions": 10, "reported": {"Enrollment": 5},
+                     "missing": {"Enrollment": 5}, "applicable": {"Enrollment": 10},
+                     "source": source}
+                )
+            )
+        assert cli.main(["drift", str(tmp_path / "a.json"), str(tmp_path / "b.json")]) == 1
+        assert "different populations" in capsys.readouterr().err

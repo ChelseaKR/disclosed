@@ -24,7 +24,7 @@ from .drift import Snapshot, compare
 from .fields import IPEDS_FIELDS
 from .grading import InstitutionGrade, grade_institution, summarize
 from .peers import peer_context
-from .scope import NATIONAL, SAMPLE, Scope
+from .scope import NATIONAL, SAMPLE, Scope, scope_from_payload
 from .sources import college_scorecard, ipeds
 
 __all__ = ["main"]
@@ -226,12 +226,17 @@ def _cmd_snapshot(args: argparse.Namespace) -> int:
                 reported[label] += 1
             elif state == "missing":
                 missing[label] += 1
+    # Taken from the report's own scope rather than from a flag, so a snapshot cannot be labelled
+    # with a source it did not come from. Reports written before scope existed leave it empty, and
+    # an empty source is never treated as matching anything.
+    scope = scope_from_payload(report)
     snap = Snapshot(
         taken=args.taken,
         institutions=len(report["grades"]),
         reported=reported,
         missing=missing,
         applicable=applicable,
+        source=scope.source if scope else "",
     )
     Path(args.out).write_text(json.dumps(asdict(snap), indent=2, sort_keys=True), encoding="utf-8")
     print(f"snapshot {args.taken}: {snap.institutions} institutions -> {args.out}")
@@ -243,7 +248,11 @@ def _cmd_drift(args: argparse.Namespace) -> int:
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
         return Snapshot(**raw)
 
-    drifts = compare(load(args.earlier), load(args.later))
+    try:
+        drifts = compare(load(args.earlier), load(args.later))
+    except ValueError as exc:
+        print(f"{exc}", file=sys.stderr)
+        return 1
     if not drifts:
         print("no change in per-field disclosure between the two snapshots")
         return 0
