@@ -85,6 +85,17 @@ class Field:
         """
         return "field-" + self.key.replace("latest.", "").replace(".", "-").replace("_", "-")
 
+    @property
+    def column(self) -> str:
+        """Column name for this field in the exported CSV.
+
+        Derived from the source key rather than the label so that a reader can trace any column
+        straight back to the field the publisher actually serves, and so that rewording a label
+        does not silently rename a column in a dataset someone has already cited. The ``latest.``
+        prefix is dropped because it is on every Scorecard field and carries no information.
+        """
+        return self.key.removeprefix("latest.").replace(".", "_").lower()
+
     def classify(self, record: Mapping[str, object]) -> Disclosure:
         """Classify this field's value for one institution.
 

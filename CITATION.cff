@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+title: "disclosed: grading US higher-education institutions on what they disclose"
+message: >-
+  If you use this dataset or its findings, please cite it. Please also carry the coverage
+  caveat with the numbers: the committed capture is 600 institutions across 13 states, not a
+  national sample, and shares computed from it are not national figures.
+type: software
+authors:
+  - family-names: Kelly-Reif
+    given-names: Chelsea
+repository-code: "https://github.com/ChelseaKR/disclosed"
+abstract: >-
+  Grades US higher-education institutions on what they disclose rather than on how they
+  perform. Many tools report a college's graduation rate; none report how many colleges never
+  reported one, or which fields quietly stopped being published. A field an institution did not
+  report, a field suppressed to protect a small cohort, and a field whose true value is zero are
+  three different facts that all render as 0 if handled carelessly, so every value routes through
+  a single classifier that keeps them distinct. Suppressed and not-applicable fields leave the
+  denominator rather than scoring zero, and an institution with an empty denominator receives no
+  grade at all rather than a zero. Findings carry a peer group so a graded institution argues
+  with stated evidence rather than with a constant, and per-field disclosure counts are committed
+  on every run so that a field which stops being published leaves a record in version control.
+keywords:
+  - open data
+  - data quality
+  - missing data
+  - higher education
+  - College Scorecard
+  - IPEDS
+  - transparency
+license: Apache-2.0

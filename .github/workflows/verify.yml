@@ -40,3 +40,10 @@ jobs:
         run: >
           python -m disclosed.cli site
           --report /tmp/report.json --out /tmp/site --generated "${GITHUB_SHA}"
+      # The committed dataset.csv is what anyone citing this project will download, so it must
+      # never fall behind the report it claims to describe. A test asserts they match; this
+      # proves the export still runs end to end.
+      - name: Export the dataset and its schema
+        run: >
+          python -m disclosed.cli dataset
+          --report /tmp/report.json --out /tmp/export/dataset.csv

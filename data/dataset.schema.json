@@ -1,0 +1,164 @@
+{
+  "description": "Grades institutions on what they disclose rather than on how they perform. Each graded field is exported as a classification word rather than as a value, so that an unreported field, a field suppressed to protect a small cohort, a field that does not apply, and a genuine zero remain four distinguishable facts.",
+  "encoding": "utf-8",
+  "format": "csv",
+  "licenses": [
+    {
+      "name": "Apache-2.0",
+      "path": "https://www.apache.org/licenses/LICENSE-2.0"
+    }
+  ],
+  "mediatype": "text/csv",
+  "name": "disclosed",
+  "path": "dataset.csv",
+  "profile": "tabular-data-resource",
+  "schema": {
+    "fields": [
+      {
+        "description": "Federal IPEDS unit id. Empty only when the source published no identifier, in which case the row cannot be joined to anything and is included for completeness of counts.",
+        "name": "unit_id",
+        "type": "string"
+      },
+      {
+        "description": "Institution name exactly as published. Empty when the source did not name the institution; never the string 'None'.",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "description": "Two-letter state or territory code as published by the source.",
+        "name": "state",
+        "type": "string"
+      },
+      {
+        "description": "Share of applicable fields the institution actually published, weighted. EMPTY, never zero, when every graded field was suppressed or inapplicable and there is therefore nothing to score. See the gradeable column. A genuine 0 means the institution was gradeable and published nothing, which is a different fact.",
+        "name": "disclosure_score",
+        "type": "number"
+      },
+      {
+        "description": "Whether the institution had any applicable field to be graded on. False means disclosure_score is empty by definition rather than by accident.",
+        "name": "gradeable",
+        "type": "boolean"
+      },
+      {
+        "description": "Letter band for disclosure_score. Empty exactly when gradeable is false.",
+        "name": "letter",
+        "type": "string"
+      },
+      {
+        "constraints": {
+          "enum": [
+            "reported",
+            "implausible",
+            "suppressed",
+            "not_applicable",
+            "missing",
+            "not_in_report"
+          ]
+        },
+        "description": "How Median earnings 10 years after entry was disclosed. Median earnings of zero across a whole cohort ten years out would mean no former student had any earnings at all, which no real institution produces. The floor of $1,000 is deliberately far below any plausible median so that only artifacts trip it. The ceiling accommodates specialist medical and dental programs.",
+        "name": "earnings_10_yrs_after_entry_median",
+        "source_key": "latest.earnings.10_yrs_after_entry.median",
+        "type": "string",
+        "weight": 1.5
+      },
+      {
+        "constraints": {
+          "enum": [
+            "reported",
+            "implausible",
+            "suppressed",
+            "not_applicable",
+            "missing",
+            "not_in_report"
+          ]
+        },
+        "description": "How Completion rate, 150% of normal time was disclosed. A rate is a proportion, so anything outside 0 to 1 is a unit error rather than a measurement. An exact zero is treated as an artifact because an institution that graduated nobody in the cohort would not still be reporting; three institutions in a 600-school sample publish exactly zero here.",
+        "name": "completion_completion_rate_4yr_150nt",
+        "source_key": "latest.completion.completion_rate_4yr_150nt",
+        "type": "string",
+        "weight": 1.5
+      },
+      {
+        "constraints": {
+          "enum": [
+            "reported",
+            "implausible",
+            "suppressed",
+            "not_applicable",
+            "missing",
+            "not_in_report"
+          ]
+        },
+        "description": "How Admission rate was disclosed. Same proportion bounds as completion. An exact zero would mean the institution admitted no applicant at all, which is an artifact rather than a policy. Note that open-enrollment institutions legitimately have no admission rate; those are expected to arrive as an explicit not-applicable rather than as a zero, and are excluded from the denominator when they do.",
+        "name": "admissions_admission_rate_overall",
+        "source_key": "latest.admissions.admission_rate.overall",
+        "type": "string",
+        "weight": 1.0
+      },
+      {
+        "constraints": {
+          "enum": [
+            "reported",
+            "implausible",
+            "suppressed",
+            "not_applicable",
+            "missing",
+            "not_in_report"
+          ]
+        },
+        "description": "How Median debt at completion was disclosed. Zero is credible here and is not treated as an artifact: a fully funded institution can genuinely graduate students with no federal debt. The ceiling is set above aggregate federal borrowing limits for professional programs.",
+        "name": "aid_median_debt_completers_overall",
+        "source_key": "latest.aid.median_debt.completers.overall",
+        "type": "string",
+        "weight": 1.0
+      },
+      {
+        "constraints": {
+          "enum": [
+            "reported",
+            "implausible",
+            "suppressed",
+            "not_applicable",
+            "missing",
+            "not_in_report"
+          ]
+        },
+        "description": "How In-state tuition was disclosed. A published tuition of exactly zero is nearly always an unpopulated field rather than a free institution. The handful of genuinely tuition-free colleges are a known, small set and are better served by an explicit exemption than by a silent zero.",
+        "name": "cost_tuition_in_state",
+        "source_key": "latest.cost.tuition.in_state",
+        "type": "string",
+        "weight": 1.0
+      },
+      {
+        "constraints": {
+          "enum": [
+            "reported",
+            "implausible",
+            "suppressed",
+            "not_applicable",
+            "missing",
+            "not_in_report"
+          ]
+        },
+        "description": "How Enrollment was disclosed. An institution reporting zero students is either closed or has not populated the field. Either way the rest of its record should not be read as current.",
+        "name": "student_size",
+        "source_key": "latest.student.size",
+        "type": "string",
+        "weight": 1.0
+      }
+    ],
+    "missingValues": [
+      ""
+    ],
+    "primaryKey": [
+      "unit_id"
+    ]
+  },
+  "sources": [
+    {
+      "path": "https://collegescorecard.ed.gov/data/",
+      "title": "College Scorecard"
+    }
+  ],
+  "title": "Disclosure grades for US higher-education institutions"
+}

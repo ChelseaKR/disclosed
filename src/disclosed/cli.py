@@ -19,7 +19,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from . import crosswalk, site
+from . import crosswalk, dataset, site
 from .drift import Snapshot, compare
 from .fields import IPEDS_FIELDS
 from .grading import InstitutionGrade, grade_institution, summarize
@@ -197,6 +197,22 @@ def _cmd_drift(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_dataset(args: argparse.Namespace) -> int:
+    """Write the CSV export and the Table Schema that describes it, from one report."""
+    report = json.loads(Path(args.report).read_text(encoding="utf-8"))
+    if not report.get("grades"):
+        print(f"{args.report} contains no graded institutions; refusing to export", file=sys.stderr)
+        return 1
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(dataset.to_csv(report), encoding="utf-8", newline="")
+    schema_path = out.with_suffix(".schema.json")
+    schema_path.write_text(dataset.to_schema_json(path=out.name), encoding="utf-8")
+    print(f"exported {len(report['grades'])} rows -> {out}")
+    print(f"                          schema -> {schema_path}")
+    return 0
+
+
 def _cmd_crosscheck(args: argparse.Namespace) -> int:
     """Grade IPEDS's own disclosures and report where it disagrees with the Scorecard."""
     try:
@@ -287,6 +303,11 @@ def main(argv: list[str] | None = None) -> int:
     p_drift.add_argument("earlier")
     p_drift.add_argument("later")
     p_drift.set_defaults(func=_cmd_drift)
+
+    p_data = sub.add_parser("dataset", help="export a report as CSV plus a Table Schema")
+    p_data.add_argument("--report", default="data/report.json")
+    p_data.add_argument("--out", default="data/dataset.csv")
+    p_data.set_defaults(func=_cmd_dataset)
 
     p_cross = sub.add_parser(
         "crosscheck",

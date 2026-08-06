@@ -1,0 +1,4 @@
+# RFC 4180 specifies CRLF, and a test asserts the committed export matches byte for byte. Without
+# this, git's end-of-line normalization rewrites the file on checkout on some platforms and the
+# assertion fails for a reason that has nothing to do with the data.
+data/dataset.csv -text

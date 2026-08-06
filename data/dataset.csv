@@ -1,0 +1,601 @@
+unit_id,name,state,disclosure_score,gradeable,letter,earnings_10_yrs_after_entry_median,completion_completion_rate_4yr_150nt,admissions_admission_rate_overall,aid_median_debt_completers_overall,cost_tuition_in_state,student_size
+100654,Alabama A & M University,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+100663,University of Alabama at Birmingham,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+100690,Amridge University,AL,0.857143,true,B,reported,reported,missing,reported,reported,reported
+100706,University of Alabama in Huntsville,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+100724,Alabama State University,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+100751,The University of Alabama,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+100760,Central Alabama Community College,AL,0.642857,true,D,reported,missing,missing,reported,reported,reported
+100812,Athens State University,AL,0.500000,true,D,reported,missing,missing,reported,missing,reported
+100830,Auburn University at Montgomery,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+100858,Auburn University,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+101028,Chattahoochee Valley Community College,AL,0.642857,true,D,reported,missing,missing,reported,reported,reported
+101116,South University-Montgomery,AL,0.857143,true,B,reported,reported,missing,reported,reported,reported
+101143,Enterprise State Community College,AL,0.642857,true,D,reported,missing,missing,reported,reported,reported
+101161,Coastal Alabama Community College,AL,0.642857,true,D,reported,missing,missing,reported,reported,reported
+101189,Faulkner University,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+101240,Gadsden State Community College,AL,0.500000,true,D,reported,missing,missing,missing,reported,reported
+101277,New Beginning College of Cosmetology,AL,0.285714,true,F,missing,missing,missing,reported,missing,reported
+101286,George C Wallace Community College-Dothan,AL,0.500000,true,D,reported,missing,missing,missing,reported,reported
+101295,George C Wallace State Community College-Hanceville,AL,0.642857,true,D,reported,missing,missing,reported,reported,reported
+101301,George C Wallace State Community College-Selma,AL,0.500000,true,D,reported,missing,missing,missing,reported,reported
+101365,Herzing University-Birmingham,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+101435,Huntingdon College,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+101453,Heritage Christian University,AL,0.857143,true,B,reported,reported,reported,missing,reported,reported
+101462,J. F. Drake State Community and Technical College,AL,0.500000,true,D,reported,missing,missing,missing,reported,reported
+101471,J F Ingram State Technical College,AL,0.285714,true,F,missing,missing,missing,missing,reported,reported
+101480,Jacksonville State University,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+101505,Jefferson State Community College,AL,0.642857,true,D,reported,missing,missing,reported,reported,reported
+101514,John C Calhoun State Community College,AL,0.642857,true,D,reported,missing,missing,reported,reported,reported
+101569,Lawson State Community College,AL,0.500000,true,D,reported,missing,missing,missing,reported,reported
+101587,University of West Alabama,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+101602,Lurleen B Wallace Community College,AL,0.500000,true,D,reported,missing,missing,missing,reported,reported
+101648,Marion Military Institute,AL,0.785714,true,C,reported,missing,reported,reported,reported,reported
+101675,Miles College,AL,0.857143,true,B,reported,reported,missing,reported,reported,reported
+101693,University of Mobile,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+101709,University of Montevallo,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+101736,Northwest Shoals Community College,AL,0.642857,true,D,reported,missing,missing,reported,reported,reported
+101879,University of North Alabama,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+101897,Northeast Alabama Community College,AL,0.642857,true,D,reported,missing,missing,reported,reported,reported
+101912,Oakwood University,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+101994,Reid State Technical College,AL,0.500000,true,D,reported,missing,missing,missing,reported,reported
+102030,Bishop State Community College,AL,0.500000,true,D,reported,missing,missing,missing,reported,reported
+102049,Samford University,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+102058,Selma University,AL,0.500000,true,D,missing,reported,missing,missing,reported,reported
+102067,Shelton State Community College,AL,0.500000,true,D,reported,missing,missing,missing,reported,reported
+102076,Snead State Community College,AL,0.642857,true,D,reported,missing,missing,reported,reported,reported
+102094,University of South Alabama,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+102234,Spring Hill College,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+102270,Stillman College,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+102298,Talladega College,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+102313,H Councill Trenholm State Community College,AL,0.500000,true,D,reported,missing,missing,missing,reported,reported
+102368,Troy University,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+102377,Tuskegee University,AL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+102395,United States Sports University,AL,0.642857,true,D,reported,missing,reported,missing,reported,reported
+102429,Bevill State Community College,AL,0.500000,true,D,reported,missing,missing,missing,reported,reported
+102553,University of Alaska Anchorage,AK,0.857143,true,B,reported,reported,missing,reported,reported,reported
+102580,Alaska Bible College,AK,0.500000,true,D,missing,reported,missing,missing,reported,reported
+102614,University of Alaska Fairbanks,AK,0.857143,true,B,reported,reported,missing,reported,reported,reported
+102632,University of Alaska Southeast,AK,1.000000,true,A,reported,reported,reported,reported,reported,reported
+102669,Alaska Pacific University,AK,1.000000,true,A,reported,reported,reported,reported,reported,reported
+102711,Alaska Vocational Technical Center,AK,0.357143,true,F,reported,missing,missing,missing,missing,reported
+102845,Charter College,AK,0.857143,true,B,reported,reported,missing,reported,reported,reported
+103501,Alaska Career College,AK,0.500000,true,D,reported,missing,missing,reported,missing,reported
+103741,Empire Beauty School-Tucson,AZ,0.500000,true,D,reported,missing,missing,reported,missing,reported
+103893,Carrington College-Phoenix North,AZ,0.500000,true,D,reported,missing,missing,reported,missing,reported
+103909,Carrington College-Mesa,AZ,0.500000,true,D,reported,missing,missing,reported,missing,reported
+103927,Carrington College-Tucson,AZ,0.500000,true,D,reported,missing,missing,reported,missing,reported
+103963,Miller-Motte College-Arizona Automotive Institute,AZ,0.500000,true,D,reported,missing,missing,reported,missing,reported
+104090,Brookline College-Phoenix,AZ,0.714286,true,C,reported,reported,missing,reported,missing,reported
+104151,Arizona State University Campus Immersion,AZ,1.000000,true,A,reported,reported,reported,reported,reported,reported
+104160,Arizona Western College,AZ,0.642857,true,D,reported,missing,missing,reported,reported,reported
+104179,University of Arizona,AZ,1.000000,true,A,reported,reported,reported,reported,reported,reported
+104346,Central Arizona College,AZ,0.642857,true,D,reported,missing,missing,reported,reported,reported
+104391,Charles of Italy Beauty College,AZ,0.500000,true,D,reported,missing,missing,reported,missing,reported
+104425,Cochise County Community College District,AZ,0.857143,true,B,reported,reported,missing,reported,reported,reported
+104443,Empire Beauty School-Chandler,AZ,0.500000,true,D,reported,missing,missing,reported,missing,reported
+104568,Avalon Institute-Mesa,AZ,0.500000,true,D,reported,missing,missing,reported,missing,reported
+104577,Eastern Arizona College,AZ,0.714286,true,C,reported,reported,missing,missing,reported,reported
+104586,Embry-Riddle Aeronautical University-Prescott,AZ,1.000000,true,A,reported,reported,reported,reported,reported,reported
+104665,The School of Architecture,AZ,0.000000,true,F,missing,missing,missing,missing,missing,missing
+104708,Glendale Community College,AZ,0.857143,true,B,reported,reported,missing,reported,reported,reported
+104717,Grand Canyon University,AZ,1.000000,true,A,reported,reported,reported,reported,reported,reported
+105145,GateWay Community College,AZ,0.857143,true,B,reported,reported,missing,reported,reported,reported
+105154,Mesa Community College,AZ,0.857143,true,B,reported,reported,missing,reported,reported,reported
+105206,Mohave Community College,AZ,0.642857,true,D,reported,missing,missing,reported,reported,reported
+105215,Universal Technical Institute-Phoenix,AZ,0.500000,true,D,reported,missing,missing,reported,missing,reported
+105297,Dine College,AZ,0.714286,true,C,reported,reported,missing,missing,reported,reported
+105330,Northern Arizona University,AZ,1.000000,true,A,reported,reported,reported,reported,reported,reported
+105349,Northland Pioneer College,AZ,0.714286,true,C,reported,reported,missing,missing,reported,reported
+105428,Phoenix College,AZ,0.857143,true,B,reported,reported,missing,reported,reported,reported
+105525,Pima Community College,AZ,0.642857,true,D,reported,missing,missing,reported,reported,reported
+105534,Pima Medical Institute-Tucson,AZ,0.714286,true,C,reported,reported,missing,reported,missing,reported
+105543,Pima Medical Institute-Albuquerque,NM,0.500000,true,D,reported,missing,missing,reported,missing,reported
+105589,Prescott College,AZ,1.000000,true,A,reported,reported,reported,reported,reported,reported
+105659,Refrigeration School Inc,AZ,0.500000,true,D,reported,missing,missing,reported,missing,reported
+105668,Rio Salado College,AZ,0.857143,true,B,reported,reported,missing,reported,reported,reported
+105677,Roberto-Venn School of Luthiery,AZ,0.357143,true,F,reported,missing,missing,missing,missing,reported
+105747,Scottsdale Community College,AZ,0.857143,true,B,reported,reported,missing,reported,reported,reported
+105792,South Mountain Community College,AZ,0.857143,true,B,reported,reported,missing,reported,reported,reported
+105899,Arizona Christian University,AZ,1.000000,true,A,reported,reported,reported,reported,reported,reported
+106041,Universal Technical Institute of Arizona Inc,AZ,0.500000,true,D,reported,missing,missing,reported,missing,reported
+106148,Yavapai College,AZ,0.857143,true,B,reported,reported,missing,reported,reported,reported
+106245,University of Arkansas at Little Rock,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+106263,University of Arkansas for Medical Sciences,AR,0.500000,true,D,reported,missing,missing,reported,missing,reported
+106306,Arkansas Baptist College,AR,0.857143,true,B,reported,reported,missing,reported,reported,reported
+106315,Arkansas Beauty School-Little Rock,AR,0.500000,true,D,reported,missing,missing,reported,missing,reported
+106324,Arkansas Beauty College,AR,0.357143,true,F,reported,missing,missing,missing,missing,reported
+106342,Lyon College,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+106351,Arkansas Technical School,AR,0.500000,true,D,reported,missing,missing,reported,missing,reported
+106397,University of Arkansas,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+106412,University of Arkansas at Pine Bluff,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+106449,Arkansas State University-Beebe,AR,0.642857,true,D,reported,missing,missing,reported,reported,reported
+106458,Arkansas State University,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+106467,Arkansas Tech University,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+106485,University of Arkansas at Monticello,AR,0.857143,true,B,reported,reported,missing,reported,reported,reported
+106494,Arthur's Beauty College,AR,0.500000,true,D,reported,missing,missing,reported,missing,reported
+106546,Baptist Health College Little Rock,AR,0.785714,true,C,reported,missing,reported,reported,reported,reported
+106625,Black River Technical College,AR,0.642857,true,D,reported,missing,missing,reported,reported,reported
+106704,University of Central Arkansas,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+106713,Central Baptist College,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+106795,Cossatot Community College of the University of Arkansas,AR,0.500000,true,D,reported,missing,missing,missing,reported,reported
+106810,Crowley's Ridge College,AR,0.857143,true,B,reported,reported,missing,reported,reported,reported
+106883,University of Arkansas-East Arkansas Community College,AR,0.642857,true,D,reported,missing,missing,reported,reported,reported
+106908,Paul Mitchell the School-Little Rock,AR,0.500000,true,D,reported,missing,missing,reported,missing,reported
+106980,National Park College,AR,0.642857,true,D,reported,missing,missing,reported,reported,reported
+106999,University of Arkansas Community College-Batesville,AR,0.642857,true,D,reported,missing,missing,reported,reported,reported
+107044,Harding University,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+107071,Henderson State University,AR,0.857143,true,B,reported,reported,missing,reported,reported,reported
+107080,Hendrix College,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+107099,Hot Springs Beauty College,AR,0.500000,true,D,reported,missing,missing,reported,missing,reported
+107123,Jefferson Regional School of Nursing,AR,0.500000,true,D,reported,missing,missing,reported,missing,reported
+107141,John Brown University,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+107220,Career Academy of Hair Design,AR,0.500000,true,D,reported,missing,missing,reported,missing,reported
+107293,Academy of Salon and Spa,AR,0.500000,true,D,reported,missing,missing,reported,missing,reported
+107318,Arkansas State University Mid-South,AR,0.500000,true,D,reported,missing,missing,missing,reported,reported
+107327,Arkansas Northeastern College,AR,0.500000,true,D,reported,missing,missing,missing,reported,reported
+107442,New Tyler Barber College Inc,AR,0.357143,true,F,reported,missing,missing,missing,missing,reported
+107460,North Arkansas College,AR,0.642857,true,D,reported,missing,missing,reported,reported,reported
+107488,Northwest Technical Institute,AR,0.500000,true,D,reported,missing,missing,missing,reported,reported
+107512,Ouachita Baptist University,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+107521,Arkansas State University Three Rivers,AR,0.642857,true,D,reported,missing,missing,reported,reported,reported
+107549,Ozarka College,AR,0.642857,true,D,reported,missing,missing,reported,reported,reported
+107558,University of the Ozarks,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+107585,University of Arkansas Community College-Morrilton,AR,0.785714,true,C,reported,missing,reported,reported,reported,reported
+107600,Philander Smith University,AR,0.857143,true,B,reported,reported,missing,reported,reported,reported
+107619,Phillips Community College of the University of Arkansas,AR,0.500000,true,D,reported,missing,missing,missing,reported,reported
+107637,Southeast Arkansas College,AR,0.642857,true,D,reported,missing,missing,reported,reported,reported
+107655,University of Aesthetics & Cosmetology,AR,0.500000,true,D,reported,missing,missing,reported,missing,reported
+107664,University of Arkansas-Pulaski Technical College,AR,0.642857,true,D,reported,missing,missing,reported,reported,reported
+107725,University of Arkansas Hope-Texarkana,AR,0.500000,true,D,reported,missing,missing,missing,reported,reported
+107743,University of Arkansas Community College Rich Mountain,AR,0.642857,true,D,reported,missing,missing,reported,reported,reported
+107789,Paul Mitchell the School-Arkansas,AR,0.500000,true,D,reported,missing,missing,reported,missing,reported
+107831,Searcy Beauty College,AR,0.500000,true,D,reported,missing,missing,reported,missing,reported
+107840,Shorter College,AR,0.428571,true,F,missing,missing,missing,reported,reported,reported
+107877,Williams Baptist University,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+107974,South Arkansas College,AR,0.642857,true,D,reported,missing,missing,reported,reported,reported
+107983,Southern Arkansas University Main Campus,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+107992,Southern Arkansas University Tech,AR,0.642857,true,D,reported,missing,missing,reported,reported,reported
+108065,Velvatex College of Beauty Culture,AR,0.357143,true,F,reported,missing,missing,missing,missing,reported
+108092,University of Arkansas-Fort Smith,AR,1.000000,true,A,reported,reported,reported,reported,reported,reported
+108232,Academy of Art University,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+108269,Academy of Chinese Culture and Health Sciences,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+108667,College of Alameda,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+108807,Allan Hancock College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+108861,Berkeley School of Theology,CA,0.428571,true,F,missing,missing,reported,missing,reported,reported
+108870,American Film Institute Conservatory,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+108977,American Beauty College,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+109040,American Career College-Los Angeles,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+109208,American River College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+109350,Antelope Valley Community College District,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+109651,Art Center College of Design,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+109721,Associated Technical College-Los Angeles,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+109785,Azusa Pacific University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+109819,Bakersfield College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+109907,Barstow Community College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+109934,Bellus Academy-Chula Vista,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+110060,Bethesda University,CA,0.642857,true,D,missing,reported,missing,reported,reported,reported
+110097,Biola University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110194,Brownson Technical School,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+110219,Bryan University,AZ,0.857143,true,B,reported,reported,missing,reported,reported,reported
+110246,Butte College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+110316,California Institute of Integral Studies,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+110334,Cabrillo College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+110361,California Baptist University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110370,California College of the Arts,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110398,University of California College of the Law-San Francisco,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+110404,California Institute of Technology,CA,0.857143,true,B,reported,reported,reported,missing,reported,reported
+110413,California Lutheran University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110422,California Polytechnic State University-San Luis Obispo,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110468,Alliant International University-San Diego,CA,0.642857,true,D,reported,missing,implausible,reported,reported,reported
+110486,California State University-Bakersfield,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110495,California State University-Stanislaus,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110510,California State University-San Bernardino,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110529,California State Polytechnic University-Pomona,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110538,California State University-Chico,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110547,California State University-Dominguez Hills,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110556,California State University-Fresno,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110565,California State University-Fullerton,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110574,California State University-East Bay,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110583,California State University-Long Beach,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110592,California State University-Los Angeles,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110608,California State University-Northridge,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110617,California State University-Sacramento,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110635,University of California-Berkeley,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110644,University of California-Davis,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110653,University of California-Irvine,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110662,University of California-Los Angeles,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110671,University of California-Riverside,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110680,University of California-San Diego,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110699,University of California-San Francisco,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+110705,University of California-Santa Barbara,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110714,University of California-Santa Cruz,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+110778,Sofia University,CA,0.142857,true,F,missing,missing,missing,missing,missing,reported
+110875,California Beauty College,CA,0.357143,true,F,reported,missing,missing,missing,missing,reported
+111045,Haven University,CA,0.285714,true,F,missing,missing,missing,missing,reported,reported
+111054,California Hair Design Academy,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+111081,California Institute of the Arts,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+111188,Cal Poly Maritime Academy,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+111391,California Western School of Law,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+111434,Canada College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+111461,College of the Canyons,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+111513,Career Academy of Beauty,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+111638,Casa Loma College-Los Angeles,CA,0.857143,true,B,reported,reported,reported,reported,missing,reported
+111708,CET-San Diego,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+111717,CET-San Jose,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+111726,CET-El Centro,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+111744,CET-Colton,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+111762,CET-Watsonville,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+111799,CET-Salinas,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+111887,Cerritos College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+111896,Cerro Coso Community College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+111920,Chabot College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+111939,Chaffey College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+111948,Chapman University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+111966,Charles R Drew University of Medicine and Science,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+112075,Concordia University-Irvine,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+112084,San Diego Christian College,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+112127,Church Divinity School of the Pacific,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+112172,Citrus College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+112181,Citrus Heights Beauty College,CA,0.285714,true,F,missing,missing,missing,reported,missing,reported
+112190,City College of San Francisco,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+112251,Claremont Graduate University,CA,0.214286,true,F,reported,missing,missing,missing,missing,missing
+112260,Claremont McKenna College,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+112288,Milan Institute-Visalia,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+112367,Clovis Adult Education,CA,0.357143,true,F,reported,missing,missing,missing,missing,reported
+112385,Coastline Community College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+112394,University of Silicon Valley,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+112455,Coba Academy,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+112525,Western University of Health Sciences,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+112561,Columbia College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+112570,California College of ASU,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+112686,Compton College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+112826,Contra Costa College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+113096,Cosumnes River College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+113111,Crafton Hills College,CA,0.714286,true,C,reported,reported,missing,missing,reported,reported
+113193,Cuesta College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+113218,Cuyamaca College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+113236,Cypress College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+113333,De Anza College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+113449,International School of Beauty Inc,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+113573,College of the Desert,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+113582,Design Institute of San Diego,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+113634,Diablo Valley College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+113698,Dominican University of California,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+113704,Dominican School of Philosophy & Theology,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+113856,East Los Angeles College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+113980,El Camino Community College District,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+114266,Evergreen Valley College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+114433,Feather River Community College District,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+114460,Federico Beauty Institute,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+114549,Fielding Graduate University,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+114585,Five Branches University,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+114637,Redondo Beach Beauty College,CA,0.142857,true,F,missing,missing,missing,missing,missing,reported
+114716,Foothill College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+114734,Franciscan School of Theology,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+114761,Fredrick and Charles Beauty College,CA,0.357143,true,F,reported,missing,missing,missing,missing,reported
+114789,Fresno City College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+114813,Fresno Pacific University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+114840,Fuller Theological Seminary,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+114859,Fullerton College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+114938,Gavilan College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+114947,Gemological Institute of America-Carlsbad,CA,0.357143,true,F,reported,missing,missing,missing,missing,reported
+115001,Glendale Community College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+115010,Glendale Career College,CA,0.714286,true,C,reported,reported,missing,reported,missing,reported
+115083,Golden Gate University,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+115126,Golden West College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+115214,Graduate Theological Union,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+115296,Grossmont College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+115357,Salon Success Academy-Riverside,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+115393,Hartnell College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+115409,Harvey Mudd College,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+115658,Hilltop Beauty School,CA,0.357143,true,F,reported,missing,missing,missing,missing,reported
+115746,Pacifica Graduate Institute,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+115755,California State Polytechnic University-Humboldt,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+115773,Humphreys University,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+115861,Imperial Valley College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+115931,Institute for Business and Technology,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+116226,Interior Designers Institute,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+116439,Irvine Valley College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+116563,Bellus Academy-El Cajon,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+116846,American Jewish University,CA,0.571429,true,D,reported,reported,missing,missing,missing,reported
+117052,Reedley College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+117104,Life Pacific University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+117140,University of La Verne,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+117168,Laguna College of Art and Design,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+117195,Lake Tahoe Community College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+117238,Lancaster Beauty School,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+117247,Laney College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+117274,Lassen Community College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+117283,Latin American Bible Institute,CA,0.642857,true,D,missing,reported,reported,missing,reported,reported
+117520,Life Chiropractic College West,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+117557,Lincoln University,CA,0.714286,true,C,reported,reported,missing,missing,reported,reported
+117575,Southern California Seminary,CA,0.714286,true,C,reported,reported,missing,missing,reported,reported
+117627,La Sierra University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+117636,Loma Linda University,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+117645,Long Beach City College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+117672,Southern California University of Health Sciences,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+117690,Los Angeles Harbor College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+117706,Los Angeles Pierce College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+117715,Los Angeles Southwest College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+117724,Los Angeles Trade Technical College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+117733,Los Angeles Valley College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+117751,The Master's University and Seminary,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+117788,Los Angeles City College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+117803,Los Angeles County College of Nursing and Allied Health,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+117867,Los Angeles Mission College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+117894,Los Medanos College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+117946,Loyola Marymount University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+117955,Lu Ross Academy,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+118134,Lyle's College of Beauty,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+118143,Lyle's College of  Beauty,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+118161,Lytles Redwood Empire Beauty College,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+118198,MTI College,CA,0.642857,true,D,reported,missing,reported,reported,missing,reported
+118347,College of Marin,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+118684,Mendocino College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+118693,Menlo College,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+118718,Merced College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+118772,Merritt College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+118888,Northeastern University Oakland,CA,0.785714,true,C,reported,missing,reported,reported,reported,reported
+118912,MiraCosta College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+118930,Mission College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+118958,Modern Beauty Academy,CA,0.357143,true,F,reported,missing,missing,missing,missing,reported
+118976,Modesto Junior College,CA,0.714286,true,C,reported,reported,missing,missing,reported,reported
+118994,Moler Barber College,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+119058,Middlebury Institute of International Studies at Monterey,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+119067,Monterey Peninsula College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+119137,Moorpark College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+119164,Mt San Antonio College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+119173,Mount Saint Mary's University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+119216,Mt San Jacinto Community College District,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+119270,Musicians Institute,CA,0.857143,true,B,reported,reported,reported,missing,reported,reported
+119331,Napa Valley College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+119553,National Holistic Institute,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+119605,National University,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+119678,Naval Postgraduate School,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+119775,Newschool of Architecture and Design,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+119951,North Adrian's College of Beauty Inc,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+120069,North-West College-Pomona,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+120078,North-West College-West Covina,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+120087,North-West College-Van Nuys,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+120166,San Francisco Bay University,CA,0.428571,true,F,missing,missing,reported,missing,reported,reported
+120184,Notre Dame de Namur University,CA,0.714286,true,C,reported,reported,missing,reported,missing,reported
+120254,Occidental College,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+120290,Ohlone College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+120342,Orange Coast College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+120403,Otis College of Art and Design,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+120421,Oxnard College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+120537,Hope International University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+120661,Concorde Career College-San Diego,CA,0.642857,true,D,reported,missing,reported,reported,missing,reported
+120698,Palo Alto University,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+120768,Pacific Oaks College,CA,0.785714,true,C,reported,missing,reported,reported,reported,reported
+120795,Pacific School of Religion,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+120838,Pacific States University,CA,0.500000,true,D,missing,reported,missing,missing,reported,reported
+120865,Pacific Union College,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+120883,University of the Pacific,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+120953,Palo Verde College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+120971,Palomar College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+121044,Pasadena City College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+121150,Pepperdine University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+121257,Pitzer College,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+121309,Point Loma Nazarene University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+121345,Pomona College,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+121363,Porterville College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+121433,Professional Institute of Beauty,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+121619,Santa Ana College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+121628,RAND School of Public Policy,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+121637,Shasta School of Cosmetology,CA,0.142857,true,F,missing,missing,missing,missing,missing,reported
+121691,University of Redlands,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+121707,College of the Redwoods,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+121859,Salon Success Academy-Upland,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+121868,Salon Success Academy-Corona,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+121886,Rio Hondo College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+121901,Riverside City College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+122117,Dongguk University Los Angeles,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+122180,Sacramento City College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+122205,Saddleback College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+122296,Samuel Merritt University,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+122339,San Diego City College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+122375,San Diego Mesa College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+122384,San Diego Miramar College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+122409,San Diego State University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+122436,University of San Diego,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+122506,San Francisco Conservatory of Music,CA,0.785714,true,C,missing,reported,reported,reported,reported,reported
+122597,San Francisco State University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+122612,University of San Francisco,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+122649,San Joaquin College of Law,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+122658,San Joaquin Delta College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+122685,San Joaquin Valley College-Visalia,CA,0.714286,true,C,reported,reported,missing,reported,missing,reported
+122694,San Joaquin Valley College-Bakersfield,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+122728,William Jessup University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+122746,San Jose City College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+122755,San Jose State University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+122791,College of San Mateo,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+122889,Santa Barbara City College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+122931,Santa Clara University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+122977,Santa Monica College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+123013,Santa Rosa Junior College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+123095,Saybrook University,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+123165,Scripps College,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+123217,College of the Sequoias,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+123280,Shasta Bible College and Graduate School,CA,0.857143,true,B,reported,reported,reported,missing,reported,reported
+123299,Shasta College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+123341,Sierra College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+123350,Sierra College of Beauty,CA,0.357143,true,F,reported,missing,missing,missing,missing,reported
+123448,Trinity Law School,CA,0.357143,true,F,reported,missing,missing,reported,missing,missing
+123457,Simpson University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+123484,College of the Siskiyous,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+123493,Charles A Jones Career and Education Center,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+123509,Skyline College,CA,0.714286,true,C,reported,reported,missing,missing,reported,reported
+123527,San Bernardino Valley College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+123554,Saint Mary's College of California,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+123563,Solano Community College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+123572,Sonoma State University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+123633,South Baylo University,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+123642,South Coast College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+123651,Vanguard University of Southern California,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+123679,Concorde Career College-Garden Grove,CA,0.642857,true,D,reported,missing,reported,reported,missing,reported
+123800,Southwestern College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+123916,Starr King School for the Ministry,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+123943,Marshall B Ketchum University,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+123952,Southern California Institute of Architecture,CA,0.857143,true,B,reported,reported,reported,missing,reported,reported
+123961,University of Southern California,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+123970,Southwestern Law School,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+124113,Taft College,CA,0.714286,true,C,reported,reported,missing,missing,reported,reported
+124283,Claremont School of Theology,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+124292,Thomas Aquinas College,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+124487,Epic Bible College & Graduate School,CA,0.500000,true,D,reported,implausible,missing,missing,reported,reported
+124681,UEI College-Huntington Park,CA,0.500000,true,D,reported,missing,missing,reported,missing,reported
+124706,Concorde Career College-San Bernardino,CA,0.642857,true,D,reported,missing,reported,reported,missing,reported
+124937,Concorde Career College-North Hollywood,CA,0.642857,true,D,reported,missing,reported,reported,missing,reported
+125028,Ventura College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+125037,The Colleges of Law at Ventura,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+125082,Bridges Beauty College,CA,0.357143,true,F,reported,missing,missing,missing,missing,reported
+125091,Victor Valley College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+125170,Berkeley City College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+125231,Walden University,MN,0.642857,true,D,reported,missing,missing,reported,reported,reported
+125310,Waynes College of Beauty,CA,0.285714,true,F,missing,missing,missing,reported,missing,reported
+125462,Coalinga College,CA,0.642857,true,D,reported,missing,missing,reported,reported,reported
+125471,West Los Angeles College,CA,0.857143,true,B,reported,reported,missing,reported,reported,reported
+125499,West Valley College,CA,0.357143,true,F,reported,missing,missing,missing,implausible,reported
+125532,Carrington College-Sacramento,CA,0.714286,true,C,reported,reported,missing,reported,missing,reported
+125718,Westminster Theological Seminary in California,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+125727,Westmont College,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+125763,Whittier College,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+125897,Woodbury University,CA,1.000000,true,A,reported,reported,reported,reported,reported,reported
+126012,The Wright Institute,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+126049,Thomas Jefferson School of Law,CA,0.000000,true,F,missing,missing,missing,missing,missing,missing
+126076,Yeshiva Ohr Elchonon Chabad West Coast Talmudical Seminary,CA,0.857143,true,B,reported,reported,reported,missing,reported,reported
+126119,Yuba College,CA,0.500000,true,D,reported,missing,missing,missing,reported,reported
+126182,Adams State University,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+126207,Aims Community College,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+126289,Arapahoe Community College,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+126359,Bel-Rea Institute of Animal Technology,CO,0.642857,true,D,reported,missing,missing,reported,reported,reported
+126562,University of Colorado Denver/Anschutz Medical Campus,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+126580,University of Colorado Colorado Springs,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+126605,Spartan College of Aeronautics and Technology,CO,0.642857,true,D,reported,missing,missing,reported,reported,reported
+126614,University of Colorado Boulder,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+126669,Colorado Christian University,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+126678,Colorado College,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+126687,Concorde Career College-Aurora,CO,0.857143,true,B,reported,reported,reported,reported,missing,reported
+126711,Colorado Mountain College,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+126748,Colorado Northwestern Community College,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+126775,Colorado School of Mines,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+126784,Colorado School of Trades,CO,0.642857,true,D,reported,missing,reported,reported,missing,reported
+126818,Colorado State University-Fort Collins,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+126827,Colorado Technical University-Colorado Springs,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+126863,Community College of Aurora,CO,0.642857,true,D,reported,missing,missing,reported,reported,reported
+126915,Technical College of the Rockies,CO,0.500000,true,D,reported,missing,missing,reported,missing,reported
+126942,Community College of Denver,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+126951,Lincoln College of Technology-Denver,CO,0.500000,true,D,reported,missing,missing,reported,missing,reported
+126979,Denver Seminary,CO,0.000000,true,F,missing,missing,missing,missing,missing,missing
+127060,University of Denver,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+127158,Emily Griffith Technical College,CO,0.357143,true,F,reported,missing,missing,missing,missing,reported
+127185,Fort Lewis College,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+127200,Front Range Community College,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+127273,Iliff School of Theology,CO,0.000000,true,F,missing,missing,missing,missing,missing,missing
+127316,International Salon and Spa Academy,CO,0.500000,true,D,reported,missing,missing,reported,missing,reported
+127389,Lamar Community College,CO,0.642857,true,D,reported,missing,missing,reported,reported,reported
+127556,Colorado Mesa University,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+127565,Metropolitan State University of Denver,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+127617,Morgan Community College,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+127653,Naropa University,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+127714,Nazarene Bible College,CO,0.642857,true,D,reported,missing,missing,reported,reported,reported
+127732,Northeastern Junior College,CO,0.642857,true,D,reported,missing,missing,reported,reported,reported
+127741,University of Northern Colorado,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+127778,Otero College,CO,0.642857,true,D,reported,missing,missing,reported,reported,reported
+127820,Pikes Peak State College,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+127884,Pueblo Community College,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+127909,Red Rocks Community College,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+127918,Regis University,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+127945,Rocky Mountain College of Art and Design,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+127954,Montessori Education Center of the Rockies,CO,0.714286,true,C,reported,reported,reported,missing,missing,reported
+128106,Colorado State University Pueblo,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+128151,Pickens Technical College,CO,0.500000,true,D,reported,missing,missing,missing,reported,reported
+128179,Intellitec College-Colorado Springs,CO,0.500000,true,D,reported,missing,missing,reported,missing,reported
+128188,Intellitec College-Grand Junction,CO,0.500000,true,D,reported,missing,missing,reported,missing,reported
+128258,Trinidad State College,CO,0.857143,true,B,reported,reported,missing,reported,reported,reported
+128328,United States Air Force Academy,CO,0.500000,true,D,missing,reported,reported,missing,missing,reported
+128337,Empire Beauty School-Thornton,CO,0.500000,true,D,reported,missing,missing,reported,missing,reported
+128391,Western Colorado University,CO,1.000000,true,A,reported,reported,reported,reported,reported,reported
+128498,Albertus Magnus College,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+128586,Bais Binyomin Academy,NY,0.642857,true,D,missing,reported,reported,missing,reported,reported
+128744,University of Bridgeport,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+128771,Central Connecticut State University,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+128780,Charter Oak State College,CT,0.857143,true,B,reported,reported,missing,reported,reported,reported
+128896,Cortiva Institute,CT,0.500000,true,D,reported,missing,missing,reported,missing,reported
+128902,Connecticut College,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+129002,Porter & Chester Institute of Hamden,CT,0.642857,true,D,reported,missing,missing,reported,reported,reported
+129020,University of Connecticut,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+129154,Goodwin University,CT,0.857143,true,B,reported,reported,missing,reported,reported,reported
+129181,Lincoln Technical Institute-East Windsor,CT,0.500000,true,D,reported,missing,missing,reported,missing,reported
+129215,Eastern Connecticut State University,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+129242,Fairfield University,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+129349,Paul Mitchell the School-North Haven,CT,0.500000,true,D,reported,missing,missing,reported,missing,reported
+129367,Connecticut State Community College,CT,0.642857,true,D,reported,missing,missing,reported,reported,reported
+129482,American Institute-West Hartford,CT,0.500000,true,D,reported,missing,missing,reported,missing,reported
+129491,Hartford International University for Religion and Peace,CT,0.000000,true,F,missing,missing,missing,missing,missing,missing
+129525,University of Hartford,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+129534,Holy Apostles College and Seminary,CT,0.642857,true,D,missing,reported,missing,reported,reported,reported
+129774,Mitchell College,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+129923,Lincoln Technical Institute-New Britain,CT,0.500000,true,D,reported,missing,missing,reported,missing,reported
+129932,New England Tractor Trailer Training School of Connecticut,CT,0.500000,true,D,reported,missing,missing,reported,missing,reported
+129941,University of New Haven,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+130174,Porter & Chester Institute,CT,0.642857,true,D,reported,missing,missing,reported,reported,reported
+130183,Post University,CT,0.857143,true,B,reported,reported,missing,reported,reported,reported
+130226,Quinnipiac University,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+130253,Sacred Heart University,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+130314,University of Saint Joseph,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+130493,Southern Connecticut State University,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+130590,Trinity College,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+130624,United States Coast Guard Academy,CT,0.500000,true,D,missing,reported,reported,missing,missing,reported
+130697,Wesleyan University,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+130776,Western Connecticut State University,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+130794,Yale University,CT,1.000000,true,A,reported,reported,reported,reported,reported,reported
+130837,Margaret H Rollins School of Nursing at Beebe Medical Center,DE,0.500000,true,D,reported,missing,missing,reported,missing,reported
+130873,Dawn Career Institute LLC,DE,0.500000,true,D,reported,missing,missing,reported,missing,reported
+130907,Delaware Technical Community College-Terry,DE,0.857143,true,B,reported,reported,missing,reported,reported,reported
+130934,Delaware State University,DE,1.000000,true,A,reported,reported,reported,reported,reported,reported
+130943,University of Delaware,DE,1.000000,true,A,reported,reported,reported,reported,reported,reported
+130989,Goldey-Beacom College,DE,1.000000,true,A,reported,reported,reported,reported,reported,reported
+131061,Schilling-Douglas School of Hair Design,DE,0.500000,true,D,reported,missing,missing,reported,missing,reported
+131113,Wilmington University,DE,0.857143,true,B,reported,reported,missing,reported,reported,reported
+131159,American University,DC,1.000000,true,A,reported,reported,reported,reported,reported,reported
+131283,The Catholic University of America,DC,1.000000,true,A,reported,reported,reported,reported,reported,reported
+131399,University of the District of Columbia,DC,0.857143,true,B,reported,reported,missing,reported,reported,reported
+131405,Pontifical Faculty of the Immaculate Conception at the Dominican House of Studies,DC,0.000000,true,F,missing,missing,missing,missing,missing,missing
+131450,Gallaudet University,DC,1.000000,true,A,reported,reported,reported,reported,reported,reported
+131469,George Washington University,DC,1.000000,true,A,reported,reported,reported,reported,reported,reported
+131496,Georgetown University,DC,1.000000,true,A,reported,reported,reported,reported,reported,reported
+131520,Howard University,DC,1.000000,true,A,reported,reported,reported,reported,reported,reported
+131803,Strayer University-District of Columbia,DC,0.642857,true,D,reported,implausible,missing,reported,reported,reported
+131830,National Conservatory of Dramatic Arts,DC,0.428571,true,F,missing,missing,reported,missing,reported,reported
+131876,Trinity Washington University,DC,1.000000,true,A,reported,reported,reported,reported,reported,reported
+131973,Wesley Theological Seminary,DC,0.000000,true,F,missing,missing,missing,missing,missing,missing
+132374,Atlantic Technical College,FL,0.357143,true,F,reported,missing,missing,missing,missing,reported
+132408,Baptist University of Florida,FL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+132471,Barry University,FL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+132602,Bethune-Cookman University,FL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+132657,Lynn University,FL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+132675,North Florida Technical College,FL,0.357143,true,F,reported,missing,missing,missing,missing,reported
+132693,Eastern Florida State College,FL,0.857143,true,B,reported,reported,missing,reported,reported,reported
+132709,Broward College,FL,0.857143,true,B,reported,reported,missing,reported,reported,reported
+132842,Albizu University-Miami,FL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+132851,College of Central Florida,FL,0.857143,true,B,reported,reported,missing,reported,reported,reported
+132903,University of Central Florida,FL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+132976,Charlotte Technical College,FL,0.500000,true,D,reported,missing,missing,missing,reported,reported
+133021,Chipola College,FL,0.714286,true,C,reported,reported,missing,missing,reported,reported
+133155,Lorenzo Walker Technical College,FL,0.357143,true,F,reported,missing,missing,missing,missing,reported
+133386,Daytona State College,FL,0.857143,true,B,reported,reported,missing,reported,reported,reported
+133465,South University-West Palm Beach,FL,0.857143,true,B,reported,reported,missing,reported,reported,reported
+133492,Eckerd College,FL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+133508,Florida SouthWestern State College,FL,0.857143,true,B,reported,reported,missing,reported,reported,reported
+133526,Edward Waters University,FL,0.857143,true,B,reported,reported,reported,missing,reported,reported
+133553,Embry-Riddle Aeronautical University-Daytona Beach,FL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+133650,Florida Agricultural and Mechanical University,FL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+133669,Florida Atlantic University,FL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+133702,Florida State College at Jacksonville,FL,0.857143,true,B,reported,reported,missing,reported,reported,reported
+133711,Flagler College,FL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+133809,Florida College,FL,1.000000,true,A,reported,reported,reported,reported,reported,reported
+133845,Concorde Career Institute-Jacksonville,FL,0.642857,true,D,reported,missing,reported,reported,missing,reported
+133854,Concorde Career Institute-Miramar,FL,0.642857,true,D,reported,missing,reported,reported,missing,reported
