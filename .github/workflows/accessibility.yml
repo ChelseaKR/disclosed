@@ -59,17 +59,17 @@ jobs:
       # 616 audits of the same four templates.
       - name: Audit
         run: |
-          npx --yes lighthouse@12 \
+          # The URL goes FIRST. Lighthouse takes it as a positional argument, and with it trailing
+          # behind the flags the CLI exited "Please provide a url" without auditing anything.
+          npx --yes lighthouse@12 http://127.0.0.1:8000/ \
             --output=json --output-path=/tmp/home.json --quiet --chrome-flags="--headless" \
             --budget-path=lighthouse-budget.json \
-            --only-categories=accessibility,best-practices,seo,performance \
-            http://127.0.0.1:8000/
+            --only-categories=accessibility,best-practices,seo,performance
           for page in methodology national state/CA institution/110468; do
-            npx --yes lighthouse@12 \
+            npx --yes lighthouse@12 "http://127.0.0.1:8000/${page}/" \
               --output=json --output-path="/tmp/$(basename "$page").json" --quiet \
               --chrome-flags="--headless" --budget-path=lighthouse-budget.json \
-              --only-categories=accessibility \
-              "http://127.0.0.1:8000/${page}/"
+              --only-categories=accessibility
           done
 
       - name: Require 100 on accessibility
