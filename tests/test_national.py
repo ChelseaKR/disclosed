@@ -284,7 +284,7 @@ class TestTheNationalPage:
             national=payload,
         )
         page = (tmp_path / "national" / "index.html").read_text(encoding="utf-8")
-        main = page.split("<main>")[1].split("</main>")[0]
+        main = page.split('id="content">')[1].split("</main>")[0]
         assert "no applicable institutions" in main
         assert "0%" not in main
 

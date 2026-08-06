@@ -121,9 +121,22 @@ def _name_of(row: dict[str, Any]) -> str:
 
 
 def _grade_badge(letter: str | None) -> str:
+    """A grade, with its meaning available to a reader who cannot see the badge.
+
+    The ungradeable badge used to carry its explanation in a ``title`` attribute, which is not
+    reliably announced by screen readers and is invisible to anyone navigating by keyboard. A
+    person using a screen reader would have heard "n a" and nothing else, which is the audible
+    version of rendering an absence as a bare number: technically present, unreadable as meaning.
+    """
     if letter is None:
-        return '<span class="grade grade-none" title="No gradeable fields">n/a</span>'
-    return f'<span class="grade grade-{letter.lower()}">{html.escape(letter)}</span>'
+        return (
+            '<span class="grade grade-none">n/a'
+            '<span class="visually-hidden">: not gradeable, no field applied</span></span>'
+        )
+    return (
+        f'<span class="grade grade-{letter.lower()}">{html.escape(letter)}'
+        f'<span class="visually-hidden"> grade</span></span>'
+    )
 
 
 def _rationale_link(label: str, text: str, *, depth: int) -> str:
@@ -167,14 +180,14 @@ def institution_page(
         except ValueError:
             # A report written by a newer version than this renderer. Say so rather than guessing.
             rows.append(
-                f"<tr><td>{_rationale_link(label, label, depth=2)}</td>"
+                f'<tr><th scope="row">{_rationale_link(label, label, depth=2)}</th>'
                 f'<td colspan="2">unrecognized classification '
                 f"{html.escape(str(raw_state))}</td></tr>"
             )
             continue
         title, meaning = _DISCLOSURE_COPY[disclosure]
         rows.append(
-            f"<tr><td>{_rationale_link(label, label, depth=2)}</td>"
+            f'<tr><th scope="row">{_rationale_link(label, label, depth=2)}</th>'
             f'<td><span class="tag tag-{disclosure.value.replace("_", "-")}">'
             f"{html.escape(title)}</span></td>"
             f"<td>{html.escape(meaning)}</td></tr>"
@@ -225,6 +238,7 @@ def institution_page(
 </dl>
 <h2>What was disclosed</h2>
 <table>
+<caption>Every field this project checks, and how this institution disclosed it.</caption>
 <thead><tr><th scope="col">Field</th><th scope="col">Status</th>
 <th scope="col">What that means</th></tr></thead>
 <tbody>{"".join(rows)}</tbody>
@@ -259,7 +273,7 @@ def state_page(summary: dict[str, Any], rows: list[dict[str, Any]]) -> Page:
         name = html.escape(_name_of(row))
         linked = f'<a href="../../{path}/">{name}</a>' if path else name
         listed.append(
-            f"<tr><td>{linked}</td><td>{_grade_badge(row.get('letter'))}</td>"
+            f'<tr><th scope="row">{linked}</th><td>{_grade_badge(row.get("letter"))}</td>'
             f"<td>{html.escape(_pct(row.get('score')))}</td></tr>"
         )
 
@@ -285,6 +299,8 @@ def state_page(summary: dict[str, Any], rows: list[dict[str, Any]]) -> Page:
 <ul class="worst">{worst}</ul>
 <h2>Institutions</h2>
 <table>
+<caption>Every institution graded in this state, with its disclosure score. An institution with
+no gradeable field shows as not gradeable rather than as a zero.</caption>
 <thead><tr><th scope="col">Institution</th><th scope="col">Grade</th>
 <th scope="col">Disclosure</th></tr></thead>
 <tbody>{"".join(listed)}</tbody>
@@ -349,8 +365,8 @@ def methodology_page() -> Page:
     scorecard_sections = "".join(render(f) for f in FIELDS)
     ipeds_sections = "".join(render(f) for f in IPEDS_FIELDS)
     classifications = "".join(
-        f"<tr><td><span class=\"tag tag-{d.value.replace('_', '-')}\">"
-        f"{html.escape(_DISCLOSURE_COPY[d][0])}</span></td>"
+        f"<tr><th scope=\"row\"><span class=\"tag tag-{d.value.replace('_', '-')}\">"
+        f"{html.escape(_DISCLOSURE_COPY[d][0])}</span></th>"
         f"<td>{html.escape(_DISCLOSURE_COPY[d][1])}</td>"
         f"<td>{'yes' if d.counts_against_publisher else 'no'}</td></tr>"
         for d in Disclosure
@@ -375,6 +391,8 @@ field whose true value is zero are three different facts. Rendered carelessly th
 <code>0</code> on a page, and a reader cannot tell a college that admits nobody from a college
 that declined to say. Every value is classified before anything else touches it.</p>
 <table>
+<caption>The five ways a value can be absent or present, and which of them an institution is
+answerable for.</caption>
 <thead><tr><th scope="col">Classification</th><th scope="col">Meaning</th>
 <th scope="col">Counts against the institution?</th></tr></thead>
 <tbody>{classifications}</tbody>
@@ -497,7 +515,8 @@ def national_page(payload: dict[str, Any]) -> Page:
     gaps: dict[str, Any] = payload.get("gaps", {}) or {}
 
     rows = "".join(
-        f"<tr><td>{_rationale_link(str(f.get('label', '')), str(f.get('label', '')), depth=1)}</td>"
+        f'<tr><th scope="row">'
+        f"{_rationale_link(str(f.get('label', '')), str(f.get('label', '')), depth=1)}</th>"
         f"<td>{int(f.get('applicable', 0)):,}</td>"
         f"<td>{int(f.get('missing', 0)):,}</td>"
         f"<td>{html.escape(_share(int(f.get('reported', 0)), int(f.get('applicable', 0))))}</td>"
@@ -591,7 +610,7 @@ def home_page(report: dict[str, Any], *, has_national: bool = False) -> Page:
     mean = overall.get("mean_score")
 
     worst = "".join(
-        f"<tr><td>{_rationale_link(str(label), str(label), depth=1)}</td>"
+        f'<tr><th scope="row">{_rationale_link(str(label), str(label), depth=1)}</th>'
         f"<td>{int(count)}</td>"
         f"<td>{int(count) / total:.0%}</td></tr>"
         for label, count in overall.get("worst_fields", [])
@@ -671,6 +690,8 @@ zero in most tools, and a reader cannot tell them apart.</p>
 
 <h2>Least-reported fields</h2>
 <table>
+<caption>Fields most often absent across the institutions in this run. Shares are of this run,
+not of the country.</caption>
 <thead><tr><th scope="col">Field</th><th scope="col">Institutions not reporting it</th>
 <th scope="col">Share</th></tr></thead>
 <tbody>{worst}</tbody>
@@ -707,6 +728,20 @@ _STYLE: Final[str] = """
 body { font-family: system-ui, -apple-system, sans-serif; max-width: 52rem; margin: 0 auto;
        padding: 1.5rem 1rem 4rem; line-height: 1.55; color: #1a1a1a; background: #fff; }
 a { color: #0b5cad; }
+/* Available to a screen reader and to nothing else. Used where a visual cue carries meaning that
+   would otherwise be lost, such as the letter in a grade badge. Clip rather than display:none,
+   which removes the text from the accessibility tree along with the screen. */
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden;
+                   clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+/* The skip link is off-screen until focused, then lands in the top-left corner. A keyboard user
+   should not have to tab through a breadcrumb on 616 pages to reach the content of any of them. */
+.skip { position: absolute; left: -9999px; top: 0; background: #fff; color: #0b5cad;
+        padding: .6rem 1rem; border: 2px solid currentColor; border-radius: 0 0 4px 0; }
+.skip:focus { left: 0; z-index: 10; }
+/* An explicit focus ring, because the custom link colours make the browser default hard to see
+   in dark mode. Two-colour outline so it stays visible against both backgrounds. */
+:focus-visible { outline: 3px solid #0b5cad; outline-offset: 2px; }
+caption { text-align: left; font-size: .9rem; color: #555; padding-bottom: .4rem; }
 nav[aria-label="Breadcrumb"] { font-size: .9rem; margin-bottom: .5rem; }
 h1 { line-height: 1.2; }
 h2 { margin-top: 2rem; }
@@ -743,6 +778,9 @@ footer { margin-top: 3rem; font-size: .9rem; color: #555; }
   a { color: #79b8ff; }
   .lede { color: #cfcfcf; }
   th, td, section[id] { border-color: #333; }
+  .skip { background: #131313; color: #79b8ff; }
+  :focus-visible { outline-color: #79b8ff; }
+  caption { color: #bbb; }
   .why, .bounds, .caveat, footer { color: #bbb; }
   .caveat { border-color: #333; }
   .tag-reported { color: #6fbf73; } .tag-implausible { color: #ff8a80; }
@@ -769,11 +807,12 @@ def _shell(page: Page, *, canonical: str, generated: str) -> str:
 <style>{_STYLE}</style>
 </head>
 <body>
-<main>
+<a class="skip" href="#content">Skip to content</a>
+<main id="content">
 {page.body}
 </main>
 <footer>
-<p>Generated {html.escape(generated)} from the College Scorecard. This grades disclosure, not
+<p>Generated {html.escape(generated)} from public federal data. This grades disclosure, not
 quality, and says so on every page. <a href="{root}methodology/">Methodology</a>.</p>
 </footer>
 </body>

@@ -198,11 +198,36 @@ quietly dropped.
 
 A run recorded before `scope` existed says so on the page rather than being assumed complete.
 
+## Accessibility
+
+A page nobody can read has not disclosed anything, so this is the same argument as the rest of the
+project rather than a separate one. The bar is **100 on Lighthouse accessibility**, and everything
+a static checker can prove runs in `make verify` with no browser: WCAG AA contrast for every
+colour pair the stylesheet puts together in both light and dark, one `<main>` and one `<h1>` per
+page, a skip link with a target that exists, named navigation landmarks, no skipped heading level,
+a caption and row headers on every data table, and no meaning carried by colour alone.
+
+One test asserts that every colour in the stylesheet is covered by a case in the contrast table,
+so a new colour fails the build instead of shipping unchecked.
+
+Two fixes worth naming. The ungradeable badge carried its meaning in a `title` attribute, which a
+screen reader may not announce and a keyboard user cannot reach: "n/a" and nothing else is the
+audible version of printing an absence as a bare number. And every table row now starts with a
+`<th scope="row">`, because without one a screen reader reading the third cell of the four
+hundredth row announces a classification with nothing attached to say whose it is.
+
+`lighthouse-budget.json` budgets every resource type except the document at **zero**. That is not
+an aspiration: there are no scripts, no external stylesheets, no fonts, no images and no
+third-party requests, and the budget exists so that adding one is a build failure rather than a
+decision nobody noticed.
+
 ## Development
 
 ```
-make verify     # lint, typecheck, test
+make verify     # lint, typecheck, test (including the accessibility checks)
 make grade      # fetch and grade against the live API
+make crosscheck # grade the whole IPEDS directory, no key needed
+make national   # reduce that to the committed national artifact
 ```
 
 Python 3.12+, no runtime dependencies. Strict mypy, ruff, and a 90% branch-coverage gate.
