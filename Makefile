@@ -1,6 +1,6 @@
 PYTHON ?= .venv/bin/python
 
-.PHONY: verify lint typecheck test grade snapshot
+.PHONY: verify lint typecheck test grade site snapshot
 
 verify: lint typecheck test
 
@@ -15,6 +15,9 @@ test:
 
 grade:
 	$(PYTHON) -m disclosed.cli grade --out data/report.json
+
+site:
+	$(PYTHON) -m disclosed.cli site --report data/report.json --out site --generated $(shell date -u +%F)
 
 snapshot:
 	$(PYTHON) -m disclosed.cli snapshot --taken $(TAKEN) --out data/snapshots/$(TAKEN).json

@@ -1,9 +1,13 @@
 """Command line entry point.
 
-Three verbs: ``grade`` runs the checks and writes a report, ``snapshot`` reduces a report to
-per-field counts for later comparison, and ``drift`` compares two snapshots. Splitting snapshot out
-from grade keeps the drift history small enough to commit, so the record of what stopped being
-published lives in git rather than in a bucket someone has to trust.
+Four verbs: ``grade`` runs the checks and writes a report, ``snapshot`` reduces a report to
+per-field counts for later comparison, ``drift`` compares two snapshots, and ``site`` renders a
+report as static HTML. Splitting snapshot out from grade keeps the drift history small enough to
+commit, so the record of what stopped being published lives in git rather than in a bucket someone
+has to trust.
+
+``site`` reads the report rather than regrading, so the published pages cannot claim anything the
+published dataset does not contain.
 """
 
 from __future__ import annotations
@@ -15,6 +19,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
+from . import site
 from .drift import Snapshot, compare
 from .grading import InstitutionGrade, grade_institution, summarize
 from .peers import peer_context
@@ -191,6 +196,19 @@ def _cmd_drift(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_site(args: argparse.Namespace) -> int:
+    report = json.loads(Path(args.report).read_text(encoding="utf-8"))
+    if not report.get("grades"):
+        # Same rule as ``grade``: a site with no institutions in it is not a finding about higher
+        # education, it is a broken build, and publishing it would look like one.
+        print(f"{args.report} contains no graded institutions; refusing to build", file=sys.stderr)
+        return 1
+    out = Path(args.out)
+    pages = site.build(report, out, origin=args.origin, generated=args.generated)
+    print(f"built {len(pages)} pages -> {out}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="disclosed",
@@ -218,6 +236,20 @@ def main(argv: list[str] | None = None) -> int:
     p_drift.add_argument("earlier")
     p_drift.add_argument("later")
     p_drift.set_defaults(func=_cmd_drift)
+
+    p_site = sub.add_parser("site", help="render a report as static HTML")
+    p_site.add_argument("--report", default="data/report.json")
+    p_site.add_argument("--out", default="site")
+    p_site.add_argument("--origin", default=site.DEFAULT_ORIGIN)
+    p_site.add_argument(
+        "--generated",
+        default="an unrecorded run",
+        help=(
+            "run identifier shown in the footer, typically a date. Taken from the caller rather "
+            "than the clock so that rebuilding the same report is byte-identical"
+        ),
+    )
+    p_site.set_defaults(func=_cmd_site)
 
     args = parser.parse_args(argv)
     result: int = args.func(args)

@@ -14,7 +14,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
-__all__ = ["FIELDS", "SCORECARD_API_FIELDS", "Field", "field_by_key"]
+__all__ = [
+    "FIELDS",
+    "SCORECARD_API_FIELDS",
+    "Field",
+    "field_by_key",
+    "field_by_label",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,6 +41,16 @@ class Field:
 
     weight: float = 1.0
     """Relative contribution to the institution's disclosure grade."""
+
+    @property
+    def anchor(self) -> str:
+        """Stable fragment id for this field's rationale on the methodology page.
+
+        Derived from ``key`` rather than ``label`` because the label is prose and will be reworded;
+        an anchor that moves silently breaks every published link to the reasoning behind a grade,
+        and that reasoning is the one thing a graded institution is invited to go and read.
+        """
+        return "field-" + self.key.replace("latest.", "").replace(".", "-").replace("_", "-")
 
 
 # Ordered roughly by how much a prospective student loses when the field is absent.
@@ -130,6 +146,7 @@ IDENTITY_FIELDS: Final[tuple[str, ...]] = (
 SCORECARD_API_FIELDS: Final[tuple[str, ...]] = IDENTITY_FIELDS + tuple(f.key for f in FIELDS)
 
 _BY_KEY: Final[dict[str, Field]] = {f.key: f for f in FIELDS}
+_BY_LABEL: Final[dict[str, Field]] = {f.label: f for f in FIELDS}
 
 
 def field_by_key(key: str) -> Field:
@@ -140,3 +157,13 @@ def field_by_key(key: str) -> Field:
             deliberate act that requires writing a rationale.
     """
     return _BY_KEY[key]
+
+
+def field_by_label(label: str) -> Field | None:
+    """Look up a graded field by its published label, or ``None`` if nothing matches.
+
+    Returns ``None`` rather than raising because the caller is the site generator reading a report
+    that may have been produced by an older version of this code. A field that has since been
+    renamed should cost that one row its link to a rationale, not the whole build.
+    """
+    return _BY_LABEL.get(label)

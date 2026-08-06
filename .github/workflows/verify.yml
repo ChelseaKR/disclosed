@@ -36,3 +36,7 @@ jobs:
         run: python -m pip install -e .
       - name: Grade the committed capture
         run: python -m disclosed.cli grade --source data/sample.json --out /tmp/report.json
+      - name: Build the site from it
+        run: >
+          python -m disclosed.cli site
+          --report /tmp/report.json --out /tmp/site --generated "${GITHUB_SHA}"
