@@ -74,8 +74,22 @@ jobs:
 
       - name: Require 100 on accessibility
         run: |
+          # Named explicitly rather than globbed. `/tmp/*.json` swept up a file that was not a
+          # lighthouse report and the scorer died on KeyError: 'categories', after all five real
+          # pages had already scored 1. The glob was also the more dangerous shape: had lighthouse
+          # written nothing, the loop body would never run and `exit "${fail}"` would exit 0, so a
+          # gate that measured zero pages would have reported success.
+          reports="/tmp/home.json /tmp/methodology.json /tmp/national.json /tmp/CA.json /tmp/110468.json"
+          expected=5
+          found=0
           fail=0
-          for report in /tmp/*.json; do
+          for report in ${reports}; do
+            if [ ! -f "${report}" ]; then
+              echo "::error title=Missing report::${report} was never written; lighthouse did not audit that page."
+              fail=1
+              continue
+            fi
+            found=$((found + 1))
             score=$(python -c "
           import json,sys
           data = json.load(open(sys.argv[1]))
@@ -89,4 +103,8 @@ jobs:
             echo "${report}: accessibility ${score}"
             [ "${score}" = "1" ] || fail=1
           done
+          if [ "${found}" -ne "${expected}" ]; then
+            echo "::error title=Audited ${found} of ${expected} pages::A pass over a partial set is not a pass."
+            fail=1
+          fi
           exit "${fail}"
