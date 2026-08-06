@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from disclosed.drift import Snapshot, compare, snapshot
 from disclosed.fields import FIELDS
 from disclosed.grading import grade_institution, summarize
@@ -145,31 +147,91 @@ class TestDrift:
         assert snap.reported["Enrollment"] == 1
         assert snap.missing["Enrollment"] == 1
 
+    def test_the_snapshot_records_the_denominator_every_rate_divides_by(self) -> None:
+        """Suppressed and inapplicable institutions leave it, exactly as they leave the grade."""
+        rows = [
+            grade_institution(_COMPLETE),
+            grade_institution(_with(**{"latest.student.size": "PrivacySuppressed"})),
+        ]
+        snap = snapshot(rows, taken="2026-08-05")
+        assert snap.applicable["Enrollment"] == 1
+        assert snap.rate("Enrollment") == 1.0
+
+    def test_a_field_that_reached_nobody_has_no_rate_rather_than_a_zero(self) -> None:
+        snap = Snapshot("a", 10, {"Enrollment": 0}, {"Enrollment": 0}, {"Enrollment": 0})
+        assert snap.rate("Enrollment") is None
+        assert snap.rate("A Field Not In This Snapshot") is None
+
     def test_systemic_loss_is_flagged(self) -> None:
-        earlier = Snapshot("a", 1000, {"Admission rate": 900}, {"Admission rate": 100})
-        later = Snapshot("b", 1000, {"Admission rate": 400}, {"Admission rate": 600})
+        earlier = Snapshot(
+            "a", 1000, {"Admission rate": 900}, {"Admission rate": 100}, {"Admission rate": 1000}
+        )
+        later = Snapshot(
+            "b", 1000, {"Admission rate": 400}, {"Admission rate": 600}, {"Admission rate": 1000}
+        )
         (drift,) = compare(earlier, later)
         assert drift.direction == "lost"
         assert drift.delta == -500
+        assert drift.rate_change == pytest.approx(-0.5)
         assert drift.is_systemic
 
     def test_small_change_is_not_systemic(self) -> None:
-        earlier = Snapshot("a", 1000, {"Enrollment": 900}, {"Enrollment": 100})
-        later = Snapshot("b", 1000, {"Enrollment": 895}, {"Enrollment": 105})
+        earlier = Snapshot(
+            "a", 1000, {"Enrollment": 900}, {"Enrollment": 100}, {"Enrollment": 1000}
+        )
+        later = Snapshot(
+            "b", 1000, {"Enrollment": 895}, {"Enrollment": 105}, {"Enrollment": 1000}
+        )
         (drift,) = compare(earlier, later)
         assert not drift.is_systemic
 
     def test_gains_are_reported_too(self) -> None:
-        earlier = Snapshot("a", 100, {"Enrollment": 10}, {"Enrollment": 90})
-        later = Snapshot("b", 100, {"Enrollment": 90}, {"Enrollment": 10})
+        earlier = Snapshot("a", 100, {"Enrollment": 10}, {"Enrollment": 90}, {"Enrollment": 100})
+        later = Snapshot("b", 100, {"Enrollment": 90}, {"Enrollment": 10}, {"Enrollment": 100})
         (drift,) = compare(earlier, later)
         assert drift.direction == "gained"
 
+    def test_a_shrinking_population_is_not_a_change_in_disclosure(self) -> None:
+        """The real IPEDS web address numbers, 2021 to 2023. 130 fewer institutions published one
+        because 131 stopped existing. Measured on counts this was a systemic 2.1% collapse; the
+        share reporting it actually rose."""
+        earlier = Snapshot(
+            "a", 6289, {"Web address": 6115}, {"Web address": 4}, {"Web address": 6119}
+        )
+        later = Snapshot(
+            "b", 6163, {"Web address": 5985}, {"Web address": 3}, {"Web address": 5988}
+        )
+        (drift,) = compare(earlier, later)
+        assert drift.delta == -130
+        assert drift.applicability_moved == -131
+        assert drift.rate_change is not None and drift.rate_change > 0
+        assert drift.direction == "gained"
+        assert not drift.is_systemic
+
+    def test_an_unmeasurable_rate_is_never_systemic(self) -> None:
+        """A snapshot that recorded no denominator has not demonstrated anything. Treating the
+        unknown as a large movement would be the loudest way of reading an absence as a number."""
+        earlier = Snapshot("a", 1000, {"Enrollment": 900}, {"Enrollment": 100})
+        later = Snapshot("b", 1000, {"Enrollment": 100}, {"Enrollment": 900})
+        (drift,) = compare(earlier, later)
+        assert drift.rate_change is None
+        assert not drift.is_systemic
+        assert drift.direction == "lost"
+
+    def test_measurable_changes_sort_ahead_of_unmeasurable_ones(self) -> None:
+        earlier = Snapshot(
+            "a", 100, {"Known": 90, "Unknown": 90}, {"Known": 10, "Unknown": 10}, {"Known": 100}
+        )
+        later = Snapshot(
+            "b", 100, {"Known": 89, "Unknown": 10}, {"Known": 11, "Unknown": 90}, {"Known": 100}
+        )
+        assert [d.field_label for d in compare(earlier, later)] == ["Known", "Unknown"]
+
     def test_field_added_to_the_graded_set_is_not_reported_as_publisher_drift(self) -> None:
         """A change in this project must never look like a change at the publisher."""
-        earlier = Snapshot("a", 100, {"Enrollment": 50}, {"Enrollment": 50})
-        later = Snapshot("b", 100, {"Enrollment": 50, "New Field": 50}, {})
+        earlier = Snapshot("a", 100, {"Enrollment": 50}, {"Enrollment": 50}, {"Enrollment": 100})
+        later = Snapshot("b", 100, {"Enrollment": 50, "New Field": 50}, {}, {"Enrollment": 100})
         assert compare(earlier, later) == ()
 
     def test_no_institutions_yields_no_drift(self) -> None:
-        assert compare(Snapshot("a", 0, {}, {}), Snapshot("b", 0, {}, {})) == ()
+        assert compare(Snapshot("a", 0, {}, {}, {}), Snapshot("b", 0, {}, {}, {})) == ()

@@ -212,10 +212,16 @@ def _cmd_snapshot(args: argparse.Namespace) -> int:
     # and undid the fix one module over.
     reported: dict[str, int] = {}
     missing: dict[str, int] = {}
+    applicable: dict[str, int] = {}
     for row in report["grades"]:
         for label, state in row["fields"].items():
             reported.setdefault(label, 0)
             missing.setdefault(label, 0)
+            applicable.setdefault(label, 0)
+            # The denominator every drift rate divides by, counted the same way the grade counts
+            # it: suppressed and inapplicable institutions were never asked and leave it.
+            if state not in ("suppressed", "not_applicable"):
+                applicable[label] += 1
             if state == "reported":
                 reported[label] += 1
             elif state == "missing":
@@ -225,6 +231,7 @@ def _cmd_snapshot(args: argparse.Namespace) -> int:
         institutions=len(report["grades"]),
         reported=reported,
         missing=missing,
+        applicable=applicable,
     )
     Path(args.out).write_text(json.dumps(asdict(snap), indent=2, sort_keys=True), encoding="utf-8")
     print(f"snapshot {args.taken}: {snap.institutions} institutions -> {args.out}")
@@ -242,10 +249,25 @@ def _cmd_drift(args: argparse.Namespace) -> int:
         return 0
     for d in drifts:
         flag = "SYSTEMIC" if d.is_systemic else "        "
-        print(
-            f"  {flag} {d.field_label:42} {d.direction} {abs(d.delta):>5} "
-            f"({d.share_of_institutions:+.1%})  {d.was_reported} -> {d.now_reported}"
+        # An unmeasured rate prints as words. Through a percent format it would have printed as
+        # "+0.00", which reads as "we checked and nothing moved" rather than "we could not check".
+        rate = (
+            "  rate unmeasured"
+            if d.rate_change is None
+            else f"{d.rate_change * 100:+7.2f} points"
         )
+        print(
+            f"  {flag} {d.field_label:34} {d.direction:>6} {rate}   "
+            f"{d.was_reported}/{d.was_applicable} -> {d.now_reported}/{d.now_applicable}"
+        )
+        if d.applicability_moved:
+            # Printed whenever it moves, because it is the explanation for every count that looks
+            # alarming and is not. Three findings were published as systemic collapses before this
+            # line existed, and all three were institutions closing.
+            print(
+                f"           {'':34} the field reached {d.applicability_moved:+} institutions, a "
+                f"change in who it applies to rather than in who answered"
+            )
     return 0
 
 

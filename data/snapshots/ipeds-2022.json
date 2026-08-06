@@ -1,0 +1,28 @@
+{
+  "applicable": {
+    "Admissions information": 6112,
+    "Disability services information": 6112,
+    "Equity in athletics disclosure": 2005,
+    "Financial aid information": 6112,
+    "Institution web address": 6112,
+    "Net price calculator": 5631
+  },
+  "institutions": 6256,
+  "missing": {
+    "Admissions information": 788,
+    "Disability services information": 38,
+    "Equity in athletics disclosure": 825,
+    "Financial aid information": 768,
+    "Institution web address": 5,
+    "Net price calculator": 37
+  },
+  "reported": {
+    "Admissions information": 5324,
+    "Disability services information": 6074,
+    "Equity in athletics disclosure": 1180,
+    "Financial aid information": 5344,
+    "Institution web address": 6107,
+    "Net price calculator": 5594
+  },
+  "taken": "ipeds-2022"
+}

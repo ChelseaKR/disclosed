@@ -410,12 +410,27 @@ graduation rates tomorrow, a curve would report that as normal.</p>
 collected until recently and then stopped. The first is a gap in the data model; the second is a
 change in what the public is allowed to know. Only the comparison between runs can tell them
 apart, so per-field counts are committed to version control on every run.</p>
-<p>A change is called systemic when it moves at least 2% of institutions. That threshold is a
-judgement call, stated here so a reader can disagree with it. It is set low because a coordinated
-stop-reporting event is newsworthy well before it touches a majority of institutions. Drift is
-reported in both directions: fields that <em>started</em> being reported are as real a finding as
-fields that stopped, and reporting only the losses would make this an argument rather than a
-measurement.</p>
+<p><strong>Drift is a change in rate, not a change in count.</strong> Every comparison divides by
+the institutions the field applied to in that run, and the reason is a mistake this project made
+and published to itself. Measured on counts, three IPEDS collection years produced three confident
+systemic findings and all three were false: between 2021 and 2023 the directory shrank from 6,289
+institutions to 6,163, so 130 fewer published a web address, and that was reported as a systemic
+2.1% collapse. The share publishing one had gone <em>up</em>, from 99.93% to 99.95%. Colleges
+closed; they did not stop reporting. The one real movement in the period, the athletics disclosure
+rising from 57.1% to 59.4%, ranked fourth and was never flagged, because 52 is a small number next
+to 130.</p>
+<p>A change is called systemic when that rate moves by at least 2 percentage points. The threshold
+is a judgement call, stated here so a reader can disagree with it, and set low because a
+coordinated stop-reporting event is newsworthy well before it touches a majority of institutions.
+Three real collection years say it is roughly right: every year-on-year movement in these six
+disclosures sits under one point except the athletics disclosure, which rose 1.75 points in a year
+and 2.26 across two. At 2% the bar flags that and nothing else. At 1% it would report ordinary
+annual churn as policy; at 5% it would have found nothing in three years of federal data, which is
+not a measurement but a way of never having to say anything.</p>
+<p>Drift is reported in both directions: fields that <em>started</em> being reported are as real a
+finding as fields that stopped, and reporting only the losses would make this an argument rather
+than a measurement. A field whose rate cannot be computed in either run is reported as unmeasured
+and is never called systemic, because an unknown is not a large movement.</p>
 
 <h2>The fields: College Scorecard</h2>
 {scorecard_sections}

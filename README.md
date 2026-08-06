@@ -46,11 +46,31 @@ that stopped, and reporting only the losses would make this an argument rather t
 ```
 disclosed grade --out data/report.json
 disclosed snapshot --taken 2026-08-05 --out data/snapshots/2026-08-05.json
-disclosed drift data/snapshots/2026-07-05.json data/snapshots/2026-08-05.json
+disclosed drift data/snapshots/ipeds-2021.json data/snapshots/ipeds-2023.json
 ```
 
 Snapshots are small enough to commit, so the record of what stopped being published lives in git
-rather than in a bucket someone has to trust. A scheduled workflow does this daily.
+rather than in a bucket someone has to trust. A scheduled workflow does this daily, and three real
+IPEDS collection years are committed as history to compare against from day one.
+
+### Drift is a change in rate, and it took real history to prove it
+
+Measured on counts, those three years produced three confident systemic findings and **all three
+were false.** The directory shrank from 6,289 institutions to 6,163, so 130 fewer published a web
+address, and that was reported as a systemic 2.1% collapse. The share publishing one had gone
+**up**, from 99.93% to 99.95%. Colleges closed; they did not stop reporting. Meanwhile the one
+real movement in the period — the athletics disclosure rising from 57.1% to 59.4% — ranked fourth
+and was never flagged, because 52 is a small number next to 130.
+
+Every comparison now divides by the institutions the field applied to in that run, and the
+direction word is read from the rate rather than the count. A field can shed reporters while the
+share reporting it rises; printing "lost" beside a rise of 1.67 points got the count right and the
+finding backwards, which is worse than a wrong number because it comes with a word attached.
+
+The 2-point threshold is a judgement call, and three years of federal data say it is roughly
+right: every year-on-year movement sits under one point except the athletics disclosure, at 1.75
+in a year and 2.26 across two. At 1% the bar reports ordinary churn as policy. At 5% it finds
+nothing in three years, which is not a measurement but a way of never having to say anything.
 
 ## Two federal sources, one disagreement
 

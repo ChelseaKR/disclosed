@@ -186,27 +186,68 @@ class TestSnapshotAndDrift:
         assert cli.main(["drift", str(tmp_path / "a.json"), str(tmp_path / "b.json")]) == 0
         assert "no change" in capsys.readouterr().out
 
+    def _snapshots(self, tmp_path: Path, earlier: dict[str, Any], later: dict[str, Any]) -> None:
+        (tmp_path / "earlier.json").write_text(json.dumps({"taken": "a", **earlier}))
+        (tmp_path / "later.json").write_text(json.dumps({"taken": "b", **later}))
+
     def test_drift_flags_a_systemic_loss(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        earlier = tmp_path / "earlier.json"
-        later = tmp_path / "later.json"
-        earlier.write_text(
-            json.dumps(
-                {"taken": "a", "institutions": 1000,
-                 "reported": {"Admission rate": 900}, "missing": {"Admission rate": 100}}
-            )
+        self._snapshots(
+            tmp_path,
+            {"institutions": 1000, "reported": {"Admission rate": 900},
+             "missing": {"Admission rate": 100}, "applicable": {"Admission rate": 1000}},
+            {"institutions": 1000, "reported": {"Admission rate": 300},
+             "missing": {"Admission rate": 700}, "applicable": {"Admission rate": 1000}},
         )
-        later.write_text(
-            json.dumps(
-                {"taken": "b", "institutions": 1000,
-                 "reported": {"Admission rate": 300}, "missing": {"Admission rate": 700}}
-            )
-        )
-        assert cli.main(["drift", str(earlier), str(later)]) == 0
+        assert cli.main(
+            ["drift", str(tmp_path / "earlier.json"), str(tmp_path / "later.json")]
+        ) == 0
         out = capsys.readouterr().out
         assert "SYSTEMIC" in out
         assert "lost" in out
+
+    def test_a_shrinking_population_is_not_a_reporting_collapse(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """The real 2021-to-2023 IPEDS numbers for the institution web address. 130 fewer
+        institutions published one because 131 institutions stopped existing; the share reporting
+        it went up. The count-based version called this a systemic 2.1% collapse."""
+        self._snapshots(
+            tmp_path,
+            {"institutions": 6289, "reported": {"Institution web address": 6115},
+             "missing": {"Institution web address": 4},
+             "applicable": {"Institution web address": 6119}},
+            {"institutions": 6163, "reported": {"Institution web address": 5985},
+             "missing": {"Institution web address": 3},
+             "applicable": {"Institution web address": 5988}},
+        )
+        assert cli.main(
+            ["drift", str(tmp_path / "earlier.json"), str(tmp_path / "later.json")]
+        ) == 0
+        out = capsys.readouterr().out
+        assert "SYSTEMIC" not in out
+        assert "gained" in out
+        assert "a change in who it applies to rather than in who answered" in out
+
+    def test_a_snapshot_that_recorded_no_denominator_says_so(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Snapshots predating the applicable counts cannot yield a rate. Unmeasured must print
+        as unmeasured: through a percent format it would read as "we checked, nothing moved"."""
+        self._snapshots(
+            tmp_path,
+            {"institutions": 1000, "reported": {"Admission rate": 900},
+             "missing": {"Admission rate": 100}},
+            {"institutions": 1000, "reported": {"Admission rate": 300},
+             "missing": {"Admission rate": 700}},
+        )
+        assert cli.main(
+            ["drift", str(tmp_path / "earlier.json"), str(tmp_path / "later.json")]
+        ) == 0
+        out = capsys.readouterr().out
+        assert "rate unmeasured" in out
+        assert "SYSTEMIC" not in out
 
 
 class TestCrosscheck:
@@ -214,11 +255,12 @@ class TestCrosscheck:
 
     _HEADER = (
         "UNITID,INSTNM,STABBR,CONTROL,ICLEVEL,SECTOR,INSTCAT,UGOFFER,CYACTIVE,PSET4FLG,"
-        "WEBADDR,NPRICURL,FAIDURL,ADMINURL,DISAURL"
+        "WEBADDR,NPRICURL,FAIDURL,ADMINURL,DISAURL,ATHURL"
     )
     _ROW = (
         '104717,"Grand Canyon University",AZ,3,1,3,2,1,1,1,'
-        "www.gcu.edu/,www.gcu.edu/npc,www.gcu.edu/aid,www.gcu.edu/admit,www.gcu.edu/disability"
+        "www.gcu.edu/,www.gcu.edu/npc,www.gcu.edu/aid,www.gcu.edu/admit,"
+        "www.gcu.edu/disability,www.gcu.edu/athletics"
     )
 
     @pytest.fixture
@@ -230,18 +272,52 @@ class TestCrosscheck:
             bundle.writestr("hd2023.csv", f"{self._HEADER}\n{self._ROW}\n")
         return path
 
+    @pytest.fixture
+    def characteristics(self, tmp_path: Path) -> Path:
+        """A cached characteristics archive, so no test in this file touches the network.
+
+        Both IPEDS files are mandatory, so without this fixture these tests quietly downloaded
+        380 KB from NCES on every run and passed for the wrong reason: green because the internet
+        was up, not because the code was right.
+        """
+        import zipfile
+
+        path = tmp_path / "IC2023.zip"
+        with zipfile.ZipFile(path, "w") as bundle:
+            bundle.writestr("ic2023.csv", "UNITID,ATHASSOC,SPORT1,SPORT2,SPORT3,SPORT4\n"
+                                          "104717,1,1,1,1,1\n")
+        return path
+
+    def _argv(self, cache: Path, characteristics: Path, out: Path) -> list[str]:
+        return [
+            "crosscheck",
+            "--cache", str(cache),
+            "--characteristics", str(characteristics),
+            "--out", str(out),
+        ]
+
     def test_grades_ipeds_alone_when_given_no_scorecard_capture(
-        self, cache: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+        self, cache: Path, characteristics: Path, tmp_path: Path,
+        capsys: pytest.CaptureFixture[str]
     ) -> None:
         out = tmp_path / "cross.json"
-        assert cli.main(["crosscheck", "--cache", str(cache), "--out", str(out)]) == 0
+        assert cli.main(self._argv(cache, characteristics, out)) == 0
         payload = json.loads(out.read_text())
         assert payload["institutions"] == 1
         assert payload["contradictions"] == []
         assert "pass --source" in capsys.readouterr().out
 
+    def test_the_directory_is_the_population_so_the_run_is_national(
+        self, cache: Path, characteristics: Path, tmp_path: Path
+    ) -> None:
+        """IPEDS publishes a file, not a page of a file, so grading it grades everyone."""
+        out = tmp_path / "cross.json"
+        assert cli.main(self._argv(cache, characteristics, out)) == 0
+        assert json.loads(out.read_text())["scope"]["kind"] == "national"
+
     def test_reports_a_disagreement_between_the_two_federal_sources(
-        self, cache: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+        self, cache: Path, characteristics: Path, tmp_path: Path,
+        capsys: pytest.CaptureFixture[str]
     ) -> None:
         """The live finding: the Scorecard files GCU as private nonprofit, IPEDS as for-profit."""
         source = tmp_path / "sc.json"
@@ -252,8 +328,7 @@ class TestCrosscheck:
             )
         )
         out = tmp_path / "cross.json"
-        assert cli.main(["crosscheck", "--cache", str(cache), "--source", str(source),
-                         "--out", str(out)]) == 0
+        assert cli.main([*self._argv(cache, characteristics, out), "--source", str(source)]) == 0
         (found,) = json.loads(out.read_text())["contradictions"]
         assert found["field_label"] == "Sector"
         assert found["scorecard_value"] == "private nonprofit (2)"
@@ -263,12 +338,12 @@ class TestCrosscheck:
         assert "cross-source disagreements  1" in printed
 
     def test_an_unreadable_directory_writes_nothing(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+        self, characteristics: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         bad = tmp_path / "HD2023.zip"
         bad.write_bytes(b"not a zip")
         out = tmp_path / "cross.json"
-        assert cli.main(["crosscheck", "--cache", str(bad), "--out", str(out)]) == 1
+        assert cli.main(self._argv(bad, characteristics, out)) == 1
         assert "IPEDS unreadable" in capsys.readouterr().err
         assert not out.exists()
 

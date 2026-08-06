@@ -1,0 +1,28 @@
+{
+  "applicable": {
+    "Admissions information": 5988,
+    "Disability services information": 5988,
+    "Equity in athletics disclosure": 1998,
+    "Financial aid information": 5988,
+    "Institution web address": 5988,
+    "Net price calculator": 5535
+  },
+  "institutions": 6163,
+  "missing": {
+    "Admissions information": 730,
+    "Disability services information": 7,
+    "Equity in athletics disclosure": 812,
+    "Financial aid information": 736,
+    "Institution web address": 3,
+    "Net price calculator": 34
+  },
+  "reported": {
+    "Admissions information": 5258,
+    "Disability services information": 5981,
+    "Equity in athletics disclosure": 1186,
+    "Financial aid information": 5252,
+    "Institution web address": 5985,
+    "Net price calculator": 5501
+  },
+  "taken": "ipeds-2023"
+}
