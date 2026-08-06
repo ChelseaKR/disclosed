@@ -32,11 +32,21 @@ def _implausible_findings(
     that wants to contest a grade is arguing with a stated comparison instead of guessing at one.
     Where the peers turn out to publish the same value, the verdict says so, and the finding
     effectively argues against itself. That is intended.
+
+    Records without an id are excluded from the lookup instead of being keyed on ``""``. They used
+    to be keyed on the string ``"None"``, so any two unidentified institutions collided and the
+    second one's finding was published carrying the first one's peer group. Peer evidence attached
+    to the wrong school is worse than no peer evidence, because it is citable.
     """
-    by_id = {str(r.get("id", "")): r for r in corpus}
+    by_id: dict[str, dict[str, Any]] = {}
+    for row in corpus:
+        ident = row.get("id")
+        if ident is None:
+            continue
+        by_id.setdefault(str(ident), row)
     findings: list[dict[str, Any]] = []
     for grade in grades:
-        record = by_id.get(grade.unit_id)
+        record = by_id.get(grade.unit_id) if grade.unit_id is not None else None
         for result in grade.implausible:
             finding: dict[str, Any] = {
                 "unit_id": grade.unit_id,
@@ -130,19 +140,10 @@ def _cmd_grade(args: argparse.Namespace) -> int:
 
 def _cmd_snapshot(args: argparse.Namespace) -> int:
     report = json.loads(Path(args.report).read_text(encoding="utf-8"))
-    grades = [
-        InstitutionGrade(
-            unit_id=str(row["unit_id"]),
-            name=str(row["name"]),
-            state=str(row["state"]),
-            results=(),
-            score=row["score"],
-            letter=row["letter"],
-        )
-        for row in report["grades"]
-    ]
-    # Field-level detail lives in the report, not in the reconstructed grades, so counts are read
-    # straight from it rather than recomputed from a lossy round trip.
+    # Counts are read straight out of the report rather than rebuilt into InstitutionGrade objects.
+    # The rebuild was lossy in both directions: it dropped every FieldResult, and it ran the
+    # identity fields back through ``str()``, which turned a JSON null id into the string "None"
+    # and undid the fix one module over.
     reported: dict[str, int] = {}
     missing: dict[str, int] = {}
     for row in report["grades"]:
@@ -154,7 +155,10 @@ def _cmd_snapshot(args: argparse.Namespace) -> int:
             elif state == "missing":
                 missing[label] += 1
     snap = Snapshot(
-        taken=args.taken, institutions=len(grades), reported=reported, missing=missing
+        taken=args.taken,
+        institutions=len(report["grades"]),
+        reported=reported,
+        missing=missing,
     )
     Path(args.out).write_text(json.dumps(asdict(snap), indent=2, sort_keys=True), encoding="utf-8")
     print(f"snapshot {args.taken}: {snap.institutions} institutions -> {args.out}")

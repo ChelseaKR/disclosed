@@ -75,6 +75,41 @@ class TestInstitutionGrade:
         assert grade.letter is None
 
 
+class TestIdentityIsNotRenderedAsAValue:
+    """An absent name must not become the string "None", for the same reason an absent rate must
+    not become 0. Both are absences wearing the costume of a measurement."""
+
+    def test_missing_identity_is_none_not_the_word_none(self) -> None:
+        grade = grade_institution(_with(**{"id": None, "school.name": None, "school.state": None}))
+        assert grade.name is None
+        assert grade.unit_id is None
+        assert grade.state is None
+
+    def test_absent_identity_keys_behave_like_explicit_nulls(self) -> None:
+        record = dict(_COMPLETE)
+        for key in ("id", "school.name", "school.state"):
+            del record[key]
+        grade = grade_institution(record)
+        assert (grade.unit_id, grade.name, grade.state) == (None, None, None)
+
+    def test_whitespace_only_identity_is_an_absence(self) -> None:
+        """IPEDS sends a single space for unpopulated text columns; that is not a name."""
+        grade = grade_institution(_with(**{"school.name": "  ", "school.state": ""}))
+        assert grade.name is None
+        assert grade.state is None
+
+    def test_present_identity_survives_unchanged(self) -> None:
+        grade = grade_institution(_COMPLETE)
+        assert grade.unit_id == "100654"
+        assert grade.name == "Example University"
+
+    def test_two_unidentified_records_do_not_share_a_key(self) -> None:
+        """They both used to stringify to "None", so one shadowed the other in every id lookup."""
+        first = grade_institution(_with(**{"id": None, "school.name": None}))
+        second = grade_institution(_with(**{"id": None, "school.name": None}))
+        assert first.unit_id is None and second.unit_id is None
+
+
 class TestSummary:
     def test_ungradeable_are_counted_separately_from_the_mean(self) -> None:
         blank: dict[str, object] = {"id": 2, "school.name": "Blank", "school.state": "CA"}

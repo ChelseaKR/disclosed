@@ -83,6 +83,42 @@ class TestGrade:
         cli.main(["grade", "--limit", "1", "--out", str(out)])
         assert json.loads(out.read_text())["institutions"] == 1
 
+    def test_unidentified_records_never_borrow_each_others_peers(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Two id-less records once collided on the key "None", and the second finding was
+        published carrying the first record's peer group. Peer evidence attached to the wrong
+        school is worse than none, because a reader can cite it."""
+        anonymous: list[dict[str, Any]] = [
+            {
+                "id": None,
+                "school.name": None,
+                "school.state": "CA",
+                "latest.admissions.admission_rate.overall": 0,
+                "latest.student.size": 500,
+            },
+            {
+                "id": None,
+                "school.name": None,
+                "school.state": "NY",
+                "latest.cost.tuition.in_state": 0,
+                "latest.student.size": 900,
+            },
+        ]
+        monkeypatch.setattr(
+            college_scorecard, "iter_institutions", lambda limit=None: iter(anonymous)
+        )
+        out = tmp_path / "report.json"
+        assert cli.main(["grade", "--out", str(out)]) == 0
+        report = json.loads(out.read_text())
+
+        assert len(report["implausible"]) == 2
+        for finding in report["implausible"]:
+            # No id means no defensible peer claim, so none is made.
+            assert "peers" not in finding
+            assert finding["unit_id"] is None
+            assert finding["name"] is None
+
 
 class TestSnapshotAndDrift:
     def _report(self, tmp_path: Path, stub: None) -> Path:

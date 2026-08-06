@@ -15,6 +15,13 @@ opposite of the point.
 An institution with nothing left in its denominator gets no grade at all, not a zero. This is the
 same discipline the classifier enforces one level down: absence of a measurement is reported as
 absence, never rendered as the number zero.
+
+The same rule applies to the identity fields, and it took a real bug to notice. ``str()`` on a
+missing name yields the four-character string ``"None"``, which is a perfectly good institution
+name as far as any renderer is concerned, and two records with no id both collapsed onto the key
+``"None"`` so one silently shadowed the other and a finding was served its neighbour's peer
+evidence. Identity is therefore ``str | None`` for exactly the same reason ``score`` is
+``float | None``.
 """
 
 from __future__ import annotations
@@ -57,11 +64,16 @@ class InstitutionGrade:
 
     ``score`` is ``None`` when every graded field was suppressed or not applicable. Callers must
     render that as "not gradeable" and never as zero.
+
+    ``unit_id``, ``name`` and ``state`` are ``None`` when the source did not identify the
+    institution, never the string ``"None"`` and never ``""``. A renderer that prints them
+    unconditionally will show the word "None" as a name, which is the same error as printing a
+    missing rate as zero, one level up.
     """
 
-    unit_id: str
-    name: str
-    state: str
+    unit_id: str | None
+    name: str | None
+    state: str | None
     results: tuple[FieldResult, ...]
     score: float | None
     letter: str | None
@@ -100,6 +112,21 @@ def _letter(score: float) -> str:
     return "F"
 
 
+def _identity(record: dict[str, object], key: str) -> str | None:
+    """Read an identity field, distinguishing an absent label from a label that says nothing.
+
+    Deliberately not ``str(record.get(key, ""))``. That renders a null name as ``"None"`` and a
+    null id as the key ``"None"``, which two unidentified records then share. Whitespace-only
+    values are absences too: a source that sends ``" "`` has told us no more than one that sent
+    nothing, and IPEDS sends exactly that for unpopulated text columns.
+    """
+    value = record.get(key)
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
 def grade_institution(record: dict[str, object]) -> InstitutionGrade:
     """Grade a single institution record as returned by a source adapter.
 
@@ -124,9 +151,9 @@ def grade_institution(record: dict[str, object]) -> InstitutionGrade:
         # Everything was suppressed or inapplicable. There is no grade to give, and inventing a
         # zero here would be the exact error this project exists to catch.
         return InstitutionGrade(
-            unit_id=str(record.get("id", "")),
-            name=str(record.get("school.name", "")),
-            state=str(record.get("school.state", "")),
+            unit_id=_identity(record, "id"),
+            name=_identity(record, "school.name"),
+            state=_identity(record, "school.state"),
             results=tuple(results),
             score=None,
             letter=None,
@@ -135,9 +162,9 @@ def grade_institution(record: dict[str, object]) -> InstitutionGrade:
     earned = sum(r.field.weight for r in results if r.in_denominator and r.disclosure.is_usable)
     score = earned / weighted_total
     return InstitutionGrade(
-        unit_id=str(record.get("id", "")),
-        name=str(record.get("school.name", "")),
-        state=str(record.get("school.state", "")),
+        unit_id=_identity(record, "id"),
+        name=_identity(record, "school.name"),
+        state=_identity(record, "school.state"),
         results=tuple(results),
         score=score,
         letter=_letter(score),
@@ -150,18 +177,21 @@ def summarize(grades: list[InstitutionGrade], *, label: str) -> GroupSummary:
     ``ungradeable`` is reported alongside the mean rather than folded into it, so that a group
     where most records could not be graded cannot masquerade as a group that scored well.
     """
-    scored = [g for g in grades if g.score is not None]
+    scores = [g.score for g in grades if g.score is not None]
     failures: dict[str, int] = {}
     for grade in grades:
         for result in grade.failures:
             failures[result.field.label] = failures.get(result.field.label, 0) + 1
 
     ranked = sorted(failures.items(), key=lambda kv: (-kv[1], kv[0]))
-    mean = sum(g.score or 0.0 for g in scored) / len(scored) if scored else None
+    # Filtered into a list of plain floats rather than summed with ``g.score or 0.0``. That idiom
+    # was correct here only because the list was already filtered, and it is the precise habit
+    # this project exists to argue against: it silently reads an absent score as zero.
+    mean = sum(scores) / len(scores) if scores else None
     return GroupSummary(
         label=label,
-        graded=len(scored),
-        ungradeable=len(grades) - len(scored),
+        graded=len(scores),
+        ungradeable=len(grades) - len(scores),
         mean_score=mean,
         worst_fields=tuple(ranked[:5]),
     )
