@@ -67,8 +67,13 @@ resolved: deciding which federal source is correct is not something this project
 to do, and quietly preferring one would throw away the only interesting part of the observation.
 
 IPEDS also carries public disclosures the Scorecard does not. Among institutions that participate
-in Title IV and enrol first-time undergraduates, **34 publish no net price calculator URL**, which
-[20 U.S.C. §1015a(h)(3)](https://www.law.cornell.edu/uscode/text/20/1015a) requires of them.
+in Title IV and enrol first-time undergraduates, **the federal record carries no net price
+calculator for 34 of them**, a calculator that
+[20 U.S.C. §1015a(h)(3)](https://www.law.cornell.edu/uscode/text/20/1015a) requires and that
+[§1094(a)(17)](https://www.law.cornell.edu/uscode/text/20/1094) requires them to report. Which of
+the two is missing is not something a blank cell can tell you, and the finding says so rather than
+picking the more dramatic reading.
+
 Getting to 34 rather than 62 is the applicability rule doing its job: graduate-only institutions,
 system offices, closures, and institutions taking no federal aid are outside the statute and leave
 the denominator instead of being marked down.

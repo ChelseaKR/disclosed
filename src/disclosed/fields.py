@@ -266,14 +266,19 @@ IPEDS_FIELDS: Final[tuple[Field, ...]] = (
         applies_when=_owes_a_net_price_calculator,
         rationale=(
             "A net price calculator is required by 20 U.S.C. 1015a(h)(3) of institutions that "
-            "participate in Title IV and enrol first-time, full-time undergraduates, so an "
-            "absent URL here is not a reporting preference but a missing legal disclosure. Both "
-            "conditions are applied before grading: graduate-only institutions, institutions "
-            "taking no federal student aid, system and district offices, and closed institutions "
-            "leave the denominator entirely rather than being marked down, because the "
-            "requirement does not reach them. Dropping either condition would inflate this "
-            "finding with institutions the statute never touched. Only the presence of a "
-            "published address is checked; the page behind it is never fetched and is not graded."
+            "participate in Title IV and enrol first-time, full-time undergraduates, and IPEDS "
+            "collects the address of it. What a blank here establishes is that the federal "
+            "record carries no calculator, which is not the same claim as the institution "
+            "having none: either the calculator does not exist, which 1015a(h)(3) requires, or "
+            "it exists and was not reported to IPEDS, which 20 U.S.C. 1094(a)(17) requires. "
+            "Something required is absent either way, and stating which one is not this "
+            "project's to do. Both applicability conditions are applied before grading: "
+            "graduate-only institutions, institutions taking no federal student aid, system and "
+            "district offices, and closed institutions leave the denominator entirely rather "
+            "than being marked down, because the requirement does not reach them. Dropping "
+            "either condition would inflate this finding with institutions the statute never "
+            "touched. Only the presence of a published address is checked; the page behind it "
+            "is never fetched and is not graded."
         ),
         weight=1.5,
     ),

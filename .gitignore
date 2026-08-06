@@ -13,3 +13,6 @@ dist/
 # Built output. The site is regenerated from data/report.json on every run, so committing it
 # would put two copies of the same claim in the repo and let them disagree.
 site/
+data/HD*.zip
+data/IC*.zip
+data/crosscheck.json
