@@ -209,6 +209,70 @@ class TestSnapshotAndDrift:
         assert "lost" in out
 
 
+class TestCrosscheck:
+    """Grading IPEDS and reporting where it disagrees with the Scorecard about one institution."""
+
+    _HEADER = (
+        "UNITID,INSTNM,STABBR,CONTROL,ICLEVEL,SECTOR,INSTCAT,UGOFFER,CYACTIVE,PSET4FLG,"
+        "WEBADDR,NPRICURL,FAIDURL,ADMINURL,DISAURL"
+    )
+    _ROW = (
+        '104717,"Grand Canyon University",AZ,3,1,3,2,1,1,1,'
+        "www.gcu.edu/,www.gcu.edu/npc,www.gcu.edu/aid,www.gcu.edu/admit,www.gcu.edu/disability"
+    )
+
+    @pytest.fixture
+    def cache(self, tmp_path: Path) -> Path:
+        import zipfile
+
+        path = tmp_path / "HD2023.zip"
+        with zipfile.ZipFile(path, "w") as bundle:
+            bundle.writestr("hd2023.csv", f"{self._HEADER}\n{self._ROW}\n")
+        return path
+
+    def test_grades_ipeds_alone_when_given_no_scorecard_capture(
+        self, cache: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        out = tmp_path / "cross.json"
+        assert cli.main(["crosscheck", "--cache", str(cache), "--out", str(out)]) == 0
+        payload = json.loads(out.read_text())
+        assert payload["institutions"] == 1
+        assert payload["contradictions"] == []
+        assert "pass --source" in capsys.readouterr().out
+
+    def test_reports_a_disagreement_between_the_two_federal_sources(
+        self, cache: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """The live finding: the Scorecard files GCU as private nonprofit, IPEDS as for-profit."""
+        source = tmp_path / "sc.json"
+        source.write_text(
+            json.dumps(
+                [{"id": 104717, "school.name": "Grand Canyon University",
+                  "school.state": "AZ", "school.ownership": 2}]
+            )
+        )
+        out = tmp_path / "cross.json"
+        assert cli.main(["crosscheck", "--cache", str(cache), "--source", str(source),
+                         "--out", str(out)]) == 0
+        (found,) = json.loads(out.read_text())["contradictions"]
+        assert found["field_label"] == "Sector"
+        assert found["scorecard_value"] == "private nonprofit (2)"
+        assert found["ipeds_value"] == "private for-profit (3)"
+        printed = capsys.readouterr().out
+        assert "Grand Canyon University" in printed
+        assert "cross-source disagreements  1" in printed
+
+    def test_an_unreadable_directory_writes_nothing(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        bad = tmp_path / "HD2023.zip"
+        bad.write_bytes(b"not a zip")
+        out = tmp_path / "cross.json"
+        assert cli.main(["crosscheck", "--cache", str(bad), "--out", str(out)]) == 1
+        assert "IPEDS unreadable" in capsys.readouterr().err
+        assert not out.exists()
+
+
 def test_no_subcommand_is_an_error() -> None:
     with pytest.raises(SystemExit):
         cli.main([])

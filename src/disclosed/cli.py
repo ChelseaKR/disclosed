@@ -19,11 +19,12 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from . import site
+from . import crosswalk, site
 from .drift import Snapshot, compare
+from .fields import IPEDS_FIELDS
 from .grading import InstitutionGrade, grade_institution, summarize
 from .peers import peer_context
-from .sources import college_scorecard
+from .sources import college_scorecard, ipeds
 
 __all__ = ["main"]
 
@@ -196,6 +197,56 @@ def _cmd_drift(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_crosscheck(args: argparse.Namespace) -> int:
+    """Grade IPEDS's own disclosures and report where it disagrees with the Scorecard."""
+    try:
+        directory = ipeds.load_directory(
+            year=args.year, cache=Path(args.cache) if args.cache else None
+        )
+    except ipeds.IpedsError as exc:
+        print(f"IPEDS unreadable, nothing written: {exc}", file=sys.stderr)
+        return 1
+
+    scorecard = _load_records(args) if args.source else []
+    grades = [grade_institution(r, fields=IPEDS_FIELDS) for r in directory]
+    overall = summarize(grades, label="all institutions")
+    found = crosswalk.contradictions(scorecard, directory) if scorecard else []
+
+    payload = {
+        "institutions": len(grades),
+        "ungradeable": sum(1 for g in grades if g.score is None),
+        "overall": asdict(overall),
+        "contradictions": [asdict(c) for c in found],
+        "grades": [
+            {
+                "unit_id": g.unit_id,
+                "name": g.name,
+                "state": g.state,
+                "score": g.score,
+                "letter": g.letter,
+                "fields": {r.field.label: r.disclosure.value for r in g.results},
+            }
+            for g in grades
+        ],
+    }
+    Path(args.out).write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+
+    print(f"graded {len(grades)} IPEDS records -> {args.out}")
+    mean = overall.mean_score
+    print(f"  mean disclosure  {mean:.1%}" if mean is not None else "  mean disclosure  n/a")
+    print(f"  ungradeable      {payload['ungradeable']}")
+    for label, count in overall.worst_fields:
+        print(f"    {count:>5} institutions do not publish: {label}")
+    if not scorecard:
+        print("  (pass --source to cross-check against a College Scorecard capture)")
+        return 0
+    print(f"  cross-source disagreements  {len(found)}")
+    for item in found:
+        print(f"    {item.unit_id} {item.name or 'unnamed'}: {item.field_label}")
+        print(f"      Scorecard says {item.scorecard_value}, IPEDS says {item.ipeds_value}")
+    return 0
+
+
 def _cmd_site(args: argparse.Namespace) -> int:
     report = json.loads(Path(args.report).read_text(encoding="utf-8"))
     if not report.get("grades"):
@@ -236,6 +287,23 @@ def main(argv: list[str] | None = None) -> int:
     p_drift.add_argument("earlier")
     p_drift.add_argument("later")
     p_drift.set_defaults(func=_cmd_drift)
+
+    p_cross = sub.add_parser(
+        "crosscheck",
+        help="grade IPEDS disclosures and report where it disagrees with the Scorecard",
+    )
+    p_cross.add_argument("--year", type=int, default=ipeds.DEFAULT_YEAR)
+    p_cross.add_argument(
+        "--cache", default=None, help="path to hold the downloaded IPEDS archive"
+    )
+    p_cross.add_argument(
+        "--source",
+        default=None,
+        help="College Scorecard capture to cross-check against; omit to grade IPEDS alone",
+    )
+    p_cross.add_argument("--limit", type=int, default=None)
+    p_cross.add_argument("--out", default="data/crosscheck.json")
+    p_cross.set_defaults(func=_cmd_crosscheck)
 
     p_site = sub.add_parser("site", help="render a report as static HTML")
     p_site.add_argument("--report", default="data/report.json")

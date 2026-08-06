@@ -26,10 +26,11 @@ evidence. Identity is therefore ``str | None`` for exactly the same reason ``sco
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from .disclosure import Disclosure, classify
+from .disclosure import Disclosure
 from .fields import FIELDS, Field
 
 __all__ = ["FieldResult", "GroupSummary", "InstitutionGrade", "grade_institution", "summarize"]
@@ -127,24 +128,24 @@ def _identity(record: dict[str, object], key: str) -> str | None:
     return text or None
 
 
-def grade_institution(record: dict[str, object]) -> InstitutionGrade:
+def grade_institution(
+    record: dict[str, object], *, fields: Sequence[Field] = FIELDS
+) -> InstitutionGrade:
     """Grade a single institution record as returned by a source adapter.
 
     Args:
         record: Flat mapping of source field key to raw value. Missing keys are treated exactly
             like present-but-null, because a source that omits a key is disclosing no more than a
             source that nulls it.
+        fields: Which fields to grade. Defaults to the College Scorecard set. IPEDS records carry
+            different columns and their own missing-data codes, so the field set travels with the
+            source rather than being global; grading one source's record against another's fields
+            would report every column of it as unreported.
     """
     results: list[FieldResult] = []
-    for field in FIELDS:
+    for field in fields:
         raw = record.get(field.key)
-        disclosure = classify(
-            raw,
-            credible_min=field.credible_min,
-            credible_max=field.credible_max,
-            zero_is_credible=field.zero_is_credible,
-        )
-        results.append(FieldResult(field=field, raw=raw, disclosure=disclosure))
+        results.append(FieldResult(field=field, raw=raw, disclosure=field.classify(record)))
 
     weighted_total = sum(r.field.weight for r in results if r.in_denominator)
     if weighted_total == 0.0:

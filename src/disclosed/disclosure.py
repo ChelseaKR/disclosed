@@ -21,6 +21,7 @@ credible range for every field it knows about.
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from enum import Enum
 from typing import Final
 
@@ -80,6 +81,50 @@ def _normalize(text: str) -> str:
     return "".join(ch for ch in text.casefold() if ch.isalnum() or ch == "/")
 
 
+def _sentinel_token(value: object) -> str | None:
+    """Canonical string form of a value, for matching a source's own missing-data codes.
+
+    Matching happens here, on the raw value, and deliberately not on the output of
+    :func:`_normalize`. Normalization strips the minus sign, so IPEDS's ``-2`` ("not applicable")
+    would normalize to ``"2"`` and collide with a real measurement of two. An integral float is
+    reduced to its integer form because a CSV round trip turns ``-2`` into ``-2.0``.
+    """
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float) and math.isfinite(value) and value.is_integer():
+        return str(int(value))
+    return None
+
+
+def _classify_text(value: object) -> Disclosure:
+    """Classify a field whose value is text, such as a published URL.
+
+    Split from the numeric path because the numeric path treats any non-numeric string as an
+    absence, which is right for a tuition column and catastrophic for a URL column: every
+    institution in IPEDS would have been graded as failing to publish a net price calculator
+    because ``https://...`` does not parse as a float.
+
+    Suppression markers are matched on the whole token here rather than as substrings. Substring
+    matching exists for numeric columns that carry a literal ``PrivacySuppressed`` in place of a
+    number; a free-text column can legitimately contain the word, and a college with a page at
+    ``/withheld-records`` has not suppressed anything.
+    """
+    if not isinstance(value, str):
+        return Disclosure.MISSING
+    token = _normalize(value)
+    if not token:
+        return Disclosure.MISSING
+    if token in SUPPRESSION_MARKERS:
+        return Disclosure.SUPPRESSED
+    if token in _NOT_APPLICABLE_MARKERS:
+        return Disclosure.NOT_APPLICABLE
+    return Disclosure.REPORTED
+
+
 def _as_number(value: object) -> float | Disclosure:
     """Reduce a raw value to a finite float, or to the :class:`Disclosure` that ends the question.
 
@@ -123,6 +168,8 @@ def classify(
     credible_min: float | None = None,
     credible_max: float | None = None,
     zero_is_credible: bool = True,
+    sentinels: Mapping[str, Disclosure] | None = None,
+    text_is_a_value: bool = False,
 ) -> Disclosure:
     """Decide how to treat one raw value from a publisher.
 
@@ -134,11 +181,29 @@ def classify(
             for rates and prices where zero is nearly always a reporting artifact. This is kept
             separate from ``credible_min`` because a rate legitimately has a lower bound of zero;
             it is the exact value that is suspect, not the boundary.
+        sentinels: The source's own missing-data codes, mapped to what they mean. IPEDS encodes
+            three different absences as negative integers (``-1`` not reported, ``-2`` not
+            applicable, ``-3`` not available), and without this they would all be graded as real
+            measurements of minus one, minus two and minus three. Checked before anything else,
+            because a sentinel is a statement about absence and outranks any reading of the number.
+        text_is_a_value: Whether a non-numeric string is the measurement rather than noise. True
+            for URL and other text columns. Left False by default so that a word appearing in a
+            numeric column stays an absence.
 
     Returns:
         The :class:`Disclosure` that applies. Never raises for unexpected input; anything
         uninterpretable is ``MISSING``, because guessing is how the null-versus-zero bug gets in.
     """
+    if sentinels:
+        token = _sentinel_token(value)
+        if token is not None:
+            stated = sentinels.get(token)
+            if stated is not None:
+                return stated
+
+    if text_is_a_value:
+        return _classify_text(value)
+
     parsed = _as_number(value)
     if isinstance(parsed, Disclosure):
         return parsed
