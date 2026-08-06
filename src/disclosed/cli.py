@@ -119,7 +119,15 @@ def _load_records(args: argparse.Namespace) -> list[dict[str, Any]]:
 
 
 def _cmd_grade(args: argparse.Namespace) -> int:
-    records = _load_records(args)
+    try:
+        records = _load_records(args)
+    except college_scorecard.ScorecardError as exc:
+        # A failed fetch exits non-zero with the reason on stderr rather than unwinding a
+        # traceback. The distinction matters in CI: a scheduled run that cannot reach the API must
+        # be visibly broken, not quietly commit a snapshot built from however many pages arrived
+        # before the failure. That snapshot would read as a nationwide collapse in reporting.
+        print(f"fetch failed, no report written: {exc}", file=sys.stderr)
+        return 1
     if not records:
         print("no institutions returned; refusing to write an empty report", file=sys.stderr)
         return 1

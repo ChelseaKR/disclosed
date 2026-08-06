@@ -78,6 +78,42 @@ class TestGrade:
         assert cli.main(["grade", "--out", str(out)]) == 1
         assert not out.exists()
 
+    def test_a_failed_fetch_exits_nonzero_with_the_reason(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """A scheduled run that cannot reach the API must break visibly. Committing a snapshot
+        from a half-finished fetch would publish a nationwide reporting collapse that never
+        happened."""
+
+        def refuse(limit: int | None = None) -> Any:
+            raise college_scorecard.RateLimited("page 4 still returning HTTP 429")
+
+        monkeypatch.setattr(college_scorecard, "iter_institutions", refuse)
+        out = tmp_path / "report.json"
+        assert cli.main(["grade", "--out", str(out)]) == 1
+        assert not out.exists()
+        assert "429" in capsys.readouterr().err
+
+    def test_a_source_file_that_is_not_a_list_is_refused(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        bad = tmp_path / "bad.json"
+        bad.write_text(json.dumps({"results": []}))
+        out = tmp_path / "report.json"
+        assert cli.main(["grade", "--source", str(bad), "--out", str(out)]) == 1
+        assert "not a JSON array" in capsys.readouterr().err
+        assert not out.exists()
+
+    def test_replay_from_a_captured_file_matches_the_api_path(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Replay is what makes a run reproducible, so it must grade identically to a live fetch."""
+        source = tmp_path / "records.json"
+        source.write_text(json.dumps(_RECORDS))
+        out = tmp_path / "report.json"
+        assert cli.main(["grade", "--source", str(source), "--out", str(out)]) == 0
+        assert json.loads(out.read_text())["institutions"] == 2
+
     def test_limit_is_passed_through(self, stub_source: None, tmp_path: Path) -> None:
         out = tmp_path / "report.json"
         cli.main(["grade", "--limit", "1", "--out", str(out)])
