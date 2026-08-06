@@ -15,7 +15,7 @@ from typing import Any
 import pytest
 
 from disclosed import cli, site
-from disclosed.fields import FIELDS
+from disclosed.fields import ALL_FIELDS, FIELDS
 
 _REPORT: dict[str, Any] = {
     "institutions": 3,
@@ -147,11 +147,28 @@ class TestFindingsLinkToTheirReasoning:
     def test_every_anchor_linked_to_actually_exists_on_the_methodology_page(
         self, tmp_path: Path
     ) -> None:
-        """A link into a rationale that is not there is worse than no link: it looks answered."""
+        """A link into a rationale that is not there is worse than no link: it looks answered.
+
+        Asserted over ALL_FIELDS, not just the Scorecard set. `_rationale_link` resolves labels
+        against every field this project knows about, so an IPEDS label appearing in any report
+        would have produced a link to an anchor the methodology page did not render.
+        """
         out = _build(tmp_path)
         methodology = _text(out / "methodology" / "index.html")
-        for field in FIELDS:
-            assert f'id="{field.anchor}"' in methodology
+        for field in ALL_FIELDS:
+            assert f'id="{field.anchor}"' in methodology, field.label
+
+    def test_anchors_are_unique_so_a_link_lands_somewhere_definite(self) -> None:
+        anchors = [f.anchor for f in ALL_FIELDS]
+        assert len(anchors) == len(set(anchors))
+
+    def test_a_url_field_states_its_applicability_instead_of_a_credible_range(
+        self, tmp_path: Path
+    ) -> None:
+        """A URL column has no numeric range to quote; what a reader needs is who it applies to."""
+        methodology = _text(_build(tmp_path) / "methodology" / "index.html")
+        assert "no page is ever fetched" in methodology
+        assert "leave the denominator entirely" in methodology
 
     def test_an_implausible_value_carries_its_peer_verdict(self, tmp_path: Path) -> None:
         page = _text(_build(tmp_path) / "institution" / "2" / "index.html")

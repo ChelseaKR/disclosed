@@ -50,7 +50,46 @@ disclosed drift data/snapshots/2026-07-05.json data/snapshots/2026-08-05.json
 ```
 
 Snapshots are small enough to commit, so the record of what stopped being published lives in git
-rather than in a bucket someone has to trust.
+rather than in a bucket someone has to trust. A scheduled workflow does this daily.
+
+## Two federal sources, one disagreement
+
+IPEDS and the College Scorecard are published by the same department and keyed on the same unit
+id, so the same institution can be checked against both. Across the 600 institutions in the
+committed capture they agree on state for every one and disagree about exactly one on sector:
+
+> **Grand Canyon University.** The College Scorecard files it as **private nonprofit**. IPEDS
+> files it as **private for-profit**.
+
+Sector decides which rules an institution answers to and which peer group it is compared against
+in most analyses of federal education data. The disagreement is reported and deliberately never
+resolved: deciding which federal source is correct is not something this project is in a position
+to do, and quietly preferring one would throw away the only interesting part of the observation.
+
+IPEDS also carries public disclosures the Scorecard does not. Among institutions that participate
+in Title IV and enrol first-time undergraduates, **34 publish no net price calculator URL**, which
+[20 U.S.C. §1015a(h)(3)](https://www.law.cornell.edu/uscode/text/20/1015a) requires of them.
+Getting to 34 rather than 62 is the applicability rule doing its job: graduate-only institutions,
+system offices, closures, and institutions taking no federal aid are outside the statute and leave
+the denominator instead of being marked down.
+
+```
+disclosed crosscheck --source data/sample.json --out data/crosscheck.json
+```
+
+## Use the data
+
+```
+disclosed site    --report data/report.json --out site --generated 2026-08-05
+disclosed dataset --report data/report.json --out data/dataset.csv
+```
+
+`data/dataset.csv` ships with a Table Schema at `data/dataset.schema.json`, generated in the same
+pass so the two cannot drift. Every graded field is exported as a word (`reported`, `missing`,
+`suppressed`, `not_applicable`, `implausible`) rather than as a value, so no cell in a
+classification column is ever empty. Exactly one column may be empty, `disclosure_score`, and only
+when an institution had nothing to be graded on. A `gradeable` column travels beside it saying so,
+because an empty numeric cell is ambiguous on its own and spreadsheets coerce blanks to zero.
 
 ## How we grade
 
@@ -68,11 +107,25 @@ stop-reporting event is newsworthy well before it touches a majority of institut
 | Source | Status | Notes |
 | --- | --- | --- |
 | College Scorecard | **Live** | Public API. `DEMO_KEY` works for small runs; set `DATA_GOV_API_KEY` for a higher rate limit. |
-| IPEDS | Planned | Bulk files are public and downloadable; adds fields the Scorecard doesn't carry. |
+| IPEDS | **Live** | Public bulk directory file, no key and no quota. Adds required disclosures the Scorecard doesn't carry, and lets the same institution be checked against two federal sources. |
 | Credential Registry (CTDL) | Blocked | The public search endpoint returns `x-total: 0` for every query shape tried; it appears to require an API key. Adapter deliberately not stubbed in until access is confirmed. |
 
 A partial fetch is treated as a failure, not as data. Truncation would understate disclosure across
 every institution that never arrived, which looks identical to a real reporting collapse.
+
+IPEDS states absence three different ways, all negative integers: `-1` not reported, `-2` not
+applicable, `-3` not available. They are not interchangeable and only the first counts against an
+institution. They are matched on the raw value rather than the normalized token, because
+normalization strips the minus sign and `-2` would otherwise collide with a real measurement of
+two.
+
+## What this sample is not
+
+The committed capture is **600 institutions across 13 states**, out of roughly 6,300. It is the
+first records the API returned, which arrive grouped by state, so California is 51% of it and most
+states are absent entirely. Percentages computed from it describe these 600 institutions and are
+not national figures. A project about undisclosed information should not be coy about the coverage
+of its own sample, so the generated site says this on its front page too.
 
 ## Development
 

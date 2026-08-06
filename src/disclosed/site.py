@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from .disclosure import Disclosure
-from .fields import FIELDS, field_by_label
+from .fields import FIELDS, IPEDS_FIELDS, Field, field_by_label
 
 __all__ = ["Page", "build", "slug"]
 
@@ -319,18 +319,39 @@ def methodology_page() -> Page:
             return "no upper bound" if upper else "no lower bound"
         return html.escape(f"{value:,.4g}")
 
-    sections = "".join(
-        f'<section id="{field.anchor}">'
-        f"<h3>{html.escape(field.label)}</h3>"
-        f"<p><code>{html.escape(field.key)}</code></p>"
-        f"<p>{html.escape(field.rationale)}</p>"
-        f'<p class="bounds">Credible range: {bound(field.credible_min, upper=False)} to '
-        f"{bound(field.credible_max, upper=True)}. An exact zero is "
-        f"{'a credible measurement' if field.zero_is_credible else 'treated as an artifact'}"
-        f". Weight {field.weight:g}.</p>"
-        f"</section>"
-        for field in FIELDS
-    )
+    def render(field: Field) -> str:
+        if field.text_is_a_value:
+            # A URL column has no credible range to state; what it has is a rule about who the
+            # field applies to at all, and that is what a reader needs in its place.
+            terms = (
+                "Graded on whether an address was published, not on what is behind it; no page "
+                "is ever fetched."
+            )
+            if field.applies_when is not None:
+                terms += (
+                    " Institutions the requirement does not reach leave the denominator entirely "
+                    "rather than being marked down."
+                )
+        else:
+            zero = "a credible measurement" if field.zero_is_credible else "treated as an artifact"
+            terms = (
+                f"Credible range: {bound(field.credible_min, upper=False)} to "
+                f"{bound(field.credible_max, upper=True)}. An exact zero is {zero}."
+            )
+        return (
+            f'<section id="{field.anchor}">'
+            f"<h3>{html.escape(field.label)}</h3>"
+            f"<p><code>{html.escape(field.key)}</code></p>"
+            f"<p>{html.escape(field.rationale)}</p>"
+            f'<p class="bounds">{terms} Weight {field.weight:g}.</p>'
+            f"</section>"
+        )
+
+    # Every field this project knows about is documented here, not only the ones in the report
+    # being rendered. Findings link to these anchors by label, and a link into a rationale that
+    # is not on the page is worse than no link, because it looks answered.
+    scorecard_sections = "".join(render(f) for f in FIELDS)
+    ipeds_sections = "".join(render(f) for f in IPEDS_FIELDS)
     classifications = "".join(
         f"<tr><td><span class=\"tag tag-{d.value.replace('_', '-')}\">"
         f"{html.escape(_DISCLOSURE_COPY[d][0])}</span></td>"
@@ -400,8 +421,19 @@ reported in both directions: fields that <em>started</em> being reported are as 
 fields that stopped, and reporting only the losses would make this an argument rather than a
 measurement.</p>
 
-<h2>The fields</h2>
-{sections}
+<h2>The fields: College Scorecard</h2>
+{scorecard_sections}
+
+<h2>The fields: IPEDS</h2>
+<p>IPEDS records public disclosures the Scorecard does not carry, and states absence three
+different ways, all of them negative integers: -1 not reported, -2 not applicable, -3 not
+available. They are not interchangeable, and only the first counts against an institution.</p>
+<p>Two obvious candidates are deliberately not graded, and their absence is the point. The Equity
+in Athletics disclosure is required only of institutions with intercollegiate athletics and is
+blank for 4,469 of 6,163 rows, nearly all of them schools with no athletics programme. The
+veterans information page has no universal requirement behind it. Grading either would produce a
+large, confident, entirely fabricated finding.</p>
+{ipeds_sections}
 
 <h2>If this is wrong about your institution</h2>
 <p>The rules above are the whole of it; there is no model anywhere in the grading path and no
