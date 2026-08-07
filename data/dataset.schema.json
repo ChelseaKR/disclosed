@@ -72,7 +72,7 @@
             "not_in_report"
           ]
         },
-        "description": "How Completion rate, 150% of normal time was disclosed. A rate is a proportion, so anything outside 0 to 1 is a unit error rather than a measurement. An exact zero is treated as an artifact because an institution that graduated nobody in the cohort would not still be reporting; three institutions in a 600-school sample publish exactly zero here.",
+        "description": "How Completion rate, 150% of normal time was disclosed. A rate is a proportion, so anything outside 0 to 1 is a unit error rather than a measurement. An exact zero is treated as an artifact because an institution that graduated nobody in the cohort would not still be reporting; two institutions in a 600-school sample publish exactly zero here.",
         "name": "completion_completion_rate_4yr_150nt",
         "source_key": "latest.completion.completion_rate_4yr_150nt",
         "type": "string",

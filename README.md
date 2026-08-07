@@ -43,7 +43,7 @@ event. Four hundred colleges dropping the same field between two runs is a polic
 reported in both directions — fields that *started* being reported are as real a finding as fields
 that stopped, and reporting only the losses would make this an argument rather than a measurement.
 
-```
+```sh
 disclosed grade --out data/report.json
 disclosed snapshot --taken 2026-08-05 --out data/snapshots/2026-08-05.json
 disclosed drift data/snapshots/ipeds-2021.json data/snapshots/ipeds-2023.json
@@ -122,7 +122,7 @@ The veterans page is still not graded, and the same file would now supply a rule
 no universal requirement to publish one, and a rule about who a duty reaches is worthless when the
 duty does not exist.
 
-```
+```sh
 disclosed crosscheck --cache data/HD2023.zip --characteristics data/IC2023.zip \
   --source data/sample.json --out data/crosscheck.json
 ```
@@ -133,7 +133,7 @@ the page exactly like a field everybody suddenly started reporting.
 
 ## Use the data
 
-```
+```sh
 disclosed site    --report data/report.json --out site --generated 2026-08-05
 disclosed dataset --report data/report.json --out data/dataset.csv
 ```
@@ -191,7 +191,7 @@ a `scope` block, the site prints its sentence rather than a constant, and `discl
 **refuses to build** from a run that did not cover the population: there is no correct way to
 relabel a sample, so the only safe answer is to fail.
 
-```
+```sh
 disclosed national --report data/crosscheck.json --out data/national.json
 disclosed site --report data/report.json --national data/national.json --out site --generated 2026-08-05
 ```
@@ -229,7 +229,7 @@ decision nobody noticed.
 
 ## Development
 
-```
+```sh
 make verify     # lint, typecheck, test (including the accessibility checks)
 make grade      # fetch and grade against the live API
 make crosscheck # grade the whole IPEDS directory, no key needed
@@ -237,6 +237,43 @@ make national   # reduce that to the committed national artifact
 ```
 
 Python 3.12+, no runtime dependencies. Strict mypy, ruff, and a 90% branch-coverage gate.
+`make verify` is the single local gate and the same target CI runs; `CONTRIBUTING.md` has the
+setup. Status: Beta, pre-release (`0.1.0.dev0`), no tagged releases yet.
+
+## AI-assisted development
+
+This project is built with an AI coding agent (Claude Code), with the maintainer directing the
+work and accountable for all of it. A project that grades others on disclosure should disclose
+that. Two things keep it honest: every change has to pass the same gate regardless of who wrote
+it (`make verify`: lint, format, strict types, tests including the accessibility suite, plus
+the CI security scans), and no finding rests on anyone's fluency, machine or human. The
+numbers come from committed data and are reproducible with the commands above; nothing in the
+dataset or on the site is model-generated.
+
+## Standards Conformance
+
+This repo is bound by the portfolio standards set
+([`ChelseaKR/portfolio-standards`](https://github.com/ChelseaKR/portfolio-standards)). N/A
+rows carry their reason here and an ADR in `docs/adr/`; there are no blank rows and no silent
+skips.
+
+| Standard | State |
+|---|---|
+| Responsible-Tech Framework | Applies - audit record in `docs/RESPONSIBLE-TECH-AUDITS.md`; the ethics constraints (suppression never punished, no grade is not a zero, refuse-to-overclaim scope) are code and are tested |
+| Code Quality | Applies - ruff (incl. bandit `S` rules, complexity <= 10) + `ruff format --check` + strict mypy + pytest with a 90% branch-coverage floor; `uv.lock` and `.python-version` committed; dev deps in a PEP 735 group |
+| Security & Supply-Chain | Applies - gitleaks, semgrep, and pip-audit as blocking CI gates (`.github/workflows/security.yml`); all actions SHA-pinned; Dependabot for deps and action pins; ASVS L1 declared in `docs/RESPONSIBLE-TECH-AUDITS.md` |
+| CI/CD | Applies - `verify.yml` runs `make verify` verbatim (local/CI parity) with `uv sync --frozen` as the lockfile-drift check; workflows are permission-scoped. Branch protection is a GitHub settings action, recorded as open in `docs/RESPONSIBLE-TECH-AUDITS.md` |
+| Observability | Applies - Tier C (CLI producing a static build; no hosted runtime): declared in `docs/ROADMAP.md` |
+| Accessibility | Applies - static WCAG suite in `make verify` (`tests/test_accessibility.py`), Lighthouse accessibility == 100 on all five page classes with zero resource budgets (`.github/workflows/accessibility.yml`, `lighthouse-budget.json`). Human walkthrough and ACR remain open, recorded honestly in `docs/RESPONSIBLE-TECH-AUDITS.md` |
+| Internationalization | Applies - deferred to the first public release, with the entry point recorded (`docs/I18N.md`) |
+| AI Evaluation | N/A - no LLM or model component; every classification is a deterministic rule with a committed rationale |
+| Documentation | Applies - `CHANGELOG.md`, `CITATION.cff`, `SECURITY.md`, `CONTRIBUTING.md`, ADR log (`docs/adr/`), roadmap and metrics ledger (`docs/ROADMAP.md`) |
+| Quality & Metrics | Applies - metrics ledger with AUTO/REVIEW gates in `docs/ROADMAP.md` |
+| Release & Versioning | N/A - nothing versioned is released; committed data plus a rebuildable static site, no downstream consumers (`docs/adr/0001-no-versioned-release.md`) |
+| Performance | Applies - `lighthouse-budget.json` budgets every non-document resource at zero, enforced in CI; no server-side surface to load-test |
+| Incident Response | Applies - no incidents to date; postmortems will live in `docs/incidents/` |
+| Data Governance | Applies - public federal datasets only, each payload names its source and coverage in its `scope` block; data inventory in `docs/RESPONSIBLE-TECH-AUDITS.md` |
+| AI-Development Measurement | Applies - declared in `docs/ROADMAP.md` metrics ledger |
 
 ## License
 

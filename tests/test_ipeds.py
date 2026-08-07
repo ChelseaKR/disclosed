@@ -56,9 +56,9 @@ def _characteristics(*rows: str, name: str = "ic2023.csv") -> bytes:
     return buffer.getvalue()
 
 
-def _joined(directory_rows: tuple[str, ...], characteristics_rows: tuple[str, ...]) -> list[
-    dict[str, Any]
-]:
+def _joined(
+    directory_rows: tuple[str, ...], characteristics_rows: tuple[str, ...]
+) -> list[dict[str, Any]]:
     """A directory parsed and joined to a characteristics file, as the grader sees it."""
     return ipeds.merge_characteristics(
         ipeds.parse_directory(_archive(*directory_rows)),
@@ -79,7 +79,9 @@ class TestSentinelCodes:
     def test_a_sentinel_is_never_graded_as_a_measurement(self) -> None:
         field = field_by_key("ipeds.WEBADDR")
         record: dict[str, object] = {
-            "ipeds.INSTCAT": "2", "ipeds.CYACTIVE": "1", "ipeds.WEBADDR": "-2"
+            "ipeds.INSTCAT": "2",
+            "ipeds.CYACTIVE": "1",
+            "ipeds.WEBADDR": "-2",
         }
         assert field.classify(record) is Disclosure.NOT_APPLICABLE
 
@@ -131,14 +133,18 @@ class TestUrlFieldsAreNotNumericFields:
         """Graded on the numeric path, every institution in IPEDS would fail every URL field."""
         field = field_by_key("ipeds.WEBADDR")
         record: dict[str, object] = {
-            "ipeds.INSTCAT": "2", "ipeds.CYACTIVE": "1", "ipeds.WEBADDR": "https://www.aamu.edu/"
+            "ipeds.INSTCAT": "2",
+            "ipeds.CYACTIVE": "1",
+            "ipeds.WEBADDR": "https://www.aamu.edu/",
         }
         assert field.classify(record) is Disclosure.REPORTED
 
     def test_a_blank_url_column_is_missing(self) -> None:
         field = field_by_key("ipeds.WEBADDR")
         record: dict[str, object] = {
-            "ipeds.INSTCAT": "2", "ipeds.CYACTIVE": "1", "ipeds.WEBADDR": "  "
+            "ipeds.INSTCAT": "2",
+            "ipeds.CYACTIVE": "1",
+            "ipeds.WEBADDR": "  ",
         }
         assert field.classify(record) is Disclosure.MISSING
 
@@ -160,7 +166,7 @@ class TestApplicability:
         return {r.field.label: r.disclosure for r in grade.results}
 
     def test_a_system_office_is_not_held_to_student_facing_disclosures(self) -> None:
-        """"University of Alabama System Office" is a real row that admits nobody. Grading it as
+        """ "University of Alabama System Office" is a real row that admits nobody. Grading it as
         failing to publish a net price calculator would invent a violation."""
         record = ipeds.parse_directory(_archive(_SYSTEM_OFFICE))[0]
         results = self._graded(record)
@@ -230,9 +236,9 @@ class TestAthleticsApplicability:
         """Silence about athletics is not a claim to have any. Reading an absent join as a yes
         would put four thousand colleges with no team into the denominator, which is the exact
         shape of the null-versus-zero bug one level up."""
-        record = ipeds.merge_characteristics(
-            ipeds.parse_directory(_archive(*self._NO_REPORT)), {}
-        )[0]
+        record = ipeds.merge_characteristics(ipeds.parse_directory(_archive(*self._NO_REPORT)), {})[
+            0
+        ]
         assert "ipeds.ATHASSOC" not in record
         assert self._athletics(record) is Disclosure.NOT_APPLICABLE
 
@@ -343,7 +349,7 @@ class TestParsing:
 
     def test_an_alias_is_a_rename_and_never_a_coercion(self) -> None:
         """A suppressed control code must stay suppressed rather than becoming a sector."""
-        row = _CAMPUS.replace(',AL,1,1,1,2,1,1,1,', ',AL,-3,1,1,2,1,1,1,')
+        row = _CAMPUS.replace(",AL,1,1,1,2,1,1,1,", ",AL,-3,1,1,2,1,1,1,")
         record = ipeds.parse_directory(_archive(row))[0]
         assert record["school.ownership"] == "-3"
         assert record["ipeds.CONTROL"] == "-3"
@@ -450,8 +456,12 @@ class TestCrossSourceContradictions:
         IPEDS files it as private for-profit, which is a documented classification dispute rather
         than a rounding difference."""
         scorecard = [
-            {"id": 100654, "school.name": "Alabama A & M University",
-             "school.state": "AL", "school.ownership": 2}
+            {
+                "id": 100654,
+                "school.name": "Alabama A & M University",
+                "school.state": "AL",
+                "school.ownership": 2,
+            }
         ]
         (found,) = contradictions(scorecard, self._ipeds(_CAMPUS))
         assert found.unit_id == "100654"

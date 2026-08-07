@@ -6,9 +6,10 @@ honest objection was ready to hand: California community colleges charge enrollm
 tuition, so perhaps zero is the correct convention and the rule was wrong.
 
 The way to settle that is not to argue about the threshold. It is to look at the institution's
-peers. Of 79 California public community colleges in the sample, 78 report a tuition between $1,108
-and about $1,430, and West Valley reports zero. The convention argument fails on its own evidence,
-and the finding survives with something better than a bound behind it.
+peers. Of 79 California public associate-predominant institutions in the committed capture, 78
+publish a tuition figure at all; 77 of those fall between $1,108 and $1,571, and the seventy-eighth
+is West Valley reporting zero. The convention argument fails on its own evidence, and the finding
+survives with something better than a bound behind it.
 
 So every implausible finding carries its peer group. A reader who thinks the grade is unfair sees
 immediately what comparable institutions published, and can attack the peer definition, the sample,
@@ -29,6 +30,9 @@ __all__ = ["MIN_PEERS", "PeerGroup", "peer_context", "peer_group_for"]
 
 # Below this, a "peer group" is an anecdote. Findings without enough peers are still reported, but
 # without a peer claim attached, because an unsupported comparison is worse than none.
+#
+# Applied to both the size of the group and the number of peers that actually published, because
+# the second is what the comparison is made out of. See :attr:`PeerGroup.is_usable`.
 MIN_PEERS = 10
 
 
@@ -65,13 +69,31 @@ class PeerGroup:
 
     @property
     def is_usable(self) -> bool:
-        return self.size >= MIN_PEERS and self.reporting > 0
+        """Whether there is enough published evidence here to say anything with.
+
+        Both counts have to clear the bar, and it took a live finding to notice that only one of
+        them did. ``size`` is how many comparable institutions exist; ``reporting`` is how many of
+        them published a value, and it is what every sentence in :attr:`verdict` divides by.
+        Guarding ``size`` alone let a peer group of 49 carry the verdict "0 of 6 comparable
+        institutions publish this value" — a claim resting on six numbers, cleared by a threshold
+        that never looked at them. That is the anecdote :data:`MIN_PEERS` exists to refuse, wearing
+        a large denominator, and it is this project's own null-versus-zero argument turned inward:
+        the institutions with nothing to report were counted as though they had said something.
+        """
+        return self.size >= MIN_PEERS and self.reporting >= MIN_PEERS
 
     @property
     def verdict(self) -> str:
         """One line a graded institution can check or contest."""
-        if not self.is_usable:
+        if self.size < MIN_PEERS:
             return f"only {self.size} comparable institutions; too few to draw a conclusion"
+        if self.reporting < MIN_PEERS:
+            # Which count fell short is named. "Only 49 comparable institutions" would be both
+            # confusing and false when 49 is the number that passed.
+            return (
+                f"{self.size} comparable institutions, but only {self.reporting} publish this "
+                "field at all; too few to draw a conclusion"
+            )
         share = self.matching_value / self.reporting
         if share >= 0.5:
             return (
@@ -103,9 +125,7 @@ def peer_group_for(record: dict[str, Any]) -> tuple[str, tuple[Any, Any, Any]]:
     return f"{sector} {level}-predominant institutions in {state}", (ownership, predominant, state)
 
 
-def peer_context(
-    record: dict[str, Any], field_key: str, corpus: list[dict[str, Any]]
-) -> PeerGroup:
+def peer_context(record: dict[str, Any], field_key: str, corpus: list[dict[str, Any]]) -> PeerGroup:
     """Describe how an institution's value for one field compares with its peers.
 
     The institution itself is excluded from its own peer group, so a value cannot help justify
@@ -119,8 +139,12 @@ def peer_context(
         r
         for r in corpus
         if r.get("id") != own_id
-        and (r.get("school.ownership"), r.get("school.degrees_awarded.predominant"),
-             r.get("school.state")) == key
+        and (
+            r.get("school.ownership"),
+            r.get("school.degrees_awarded.predominant"),
+            r.get("school.state"),
+        )
+        == key
     ]
     values = [
         float(r[field_key])

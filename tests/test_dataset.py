@@ -187,3 +187,15 @@ class TestDatasetCommand:
         root = Path(__file__).resolve().parent.parent
         report = json.loads((root / "data" / "report.json").read_text(encoding="utf-8"))
         assert (root / "data" / "dataset.csv").read_bytes() == dataset.to_csv(report).encode()
+
+    def test_the_committed_schema_matches_the_field_definitions(self) -> None:
+        """The schema ships beside the CSV and had no such check, so it went stale on its own.
+
+        Every field's rationale is copied into the schema as that column's description, which
+        makes the published schema a second copy of prose that lives in ``fields.py``. When the
+        completion-rate rationale was wrong, this file was one of the three places it was
+        published, and the only one nothing was watching.
+        """
+        root = Path(__file__).resolve().parent.parent
+        committed = (root / "data" / "dataset.schema.json").read_text(encoding="utf-8")
+        assert committed == dataset.to_schema_json()

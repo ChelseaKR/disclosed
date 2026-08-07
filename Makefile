@@ -6,6 +6,7 @@ verify: lint typecheck test
 
 lint:
 	$(PYTHON) -m ruff check src tests
+	$(PYTHON) -m ruff format --check src tests
 
 typecheck:
 	$(PYTHON) -m mypy

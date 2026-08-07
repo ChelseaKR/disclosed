@@ -123,9 +123,7 @@ class TestIterInstitutions:
         )
         assert list(college_scorecard.iter_institutions()) == []
 
-    def test_non_dict_rows_are_skipped_not_yielded(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_non_dict_rows_are_skipped_not_yielded(self, monkeypatch: pytest.MonkeyPatch) -> None:
         it = iter([_page([{"id": 1}, "junk", {"id": 2}], total=2)])  # type: ignore[list-item]
         monkeypatch.setattr(
             college_scorecard.urllib.request, "urlopen", lambda url, timeout=0: next(it)

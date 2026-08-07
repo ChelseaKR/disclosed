@@ -87,9 +87,7 @@ class TestRetries:
         with pytest.raises(college_scorecard.RateLimited, match="after 4 attempts"):
             college_scorecard.fetch_page(0)
 
-    def test_demo_key_gets_the_specific_remedy(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_demo_key_gets_the_specific_remedy(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """The error must name the fix, because 'rate limited' alone leaves the user stuck."""
         monkeypatch.delenv("DATA_GOV_API_KEY", raising=False)
         monkeypatch.setattr(

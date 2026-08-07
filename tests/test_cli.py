@@ -139,9 +139,7 @@ class TestGrade:
         assert scope["kind"] == "sample"
         assert scope["coverage"] != 1.0
 
-    def test_a_replayed_source_is_labelled_sample_not_national(
-        self, tmp_path: Path
-    ) -> None:
+    def test_a_replayed_source_is_labelled_sample_not_national(self, tmp_path: Path) -> None:
         """--source is a replay of a capture and must never be affected by this fix."""
         source = tmp_path / "records.json"
         source.write_text(json.dumps(_RECORDS))
@@ -211,6 +209,30 @@ class TestGrade:
             assert finding["name"] is None
 
 
+class TestTheCommittedReport:
+    def test_it_reproduces_from_the_committed_capture(self, tmp_path: Path) -> None:
+        """The report and the capture it claims to describe, checked against each other.
+
+        ``data/report.json`` is where every published figure about the sample comes from, and
+        until this existed nothing tied it to ``data/sample.json``. CI regrades the capture on
+        every push and throws the result away into ``/tmp``, which proves the pipeline runs and
+        proves nothing about the file the repository ships: a rule could change, or the committed
+        report could be edited by hand, and both the export test and the replay job would stay
+        green while the citable artifact described a grading run nobody could reproduce.
+
+        Compared as parsed JSON rather than as bytes, so that a reformat is not a failure while a
+        changed number is.
+        """
+        root = Path(__file__).resolve().parent.parent
+        out = tmp_path / "report.json"
+        assert (
+            cli.main(["grade", "--source", str(root / "data" / "sample.json"), "--out", str(out)])
+            == 0
+        )
+        committed = json.loads((root / "data" / "report.json").read_text(encoding="utf-8"))
+        assert json.loads(out.read_text(encoding="utf-8")) == committed
+
+
 class TestSnapshotAndDrift:
     def _report(self, tmp_path: Path, stub: None) -> Path:
         out = tmp_path / "report.json"
@@ -220,9 +242,12 @@ class TestSnapshotAndDrift:
     def test_snapshot_counts_fields(self, stub_source: None, tmp_path: Path) -> None:
         report = self._report(tmp_path, stub_source)
         snap = tmp_path / "snap.json"
-        assert cli.main(
-            ["snapshot", "--report", str(report), "--taken", "2026-08-05", "--out", str(snap)]
-        ) == 0
+        assert (
+            cli.main(
+                ["snapshot", "--report", str(report), "--taken", "2026-08-05", "--out", str(snap)]
+            )
+            == 0
+        )
         data = json.loads(snap.read_text())
         assert data["taken"] == "2026-08-05"
         assert data["institutions"] == 2
@@ -235,8 +260,15 @@ class TestSnapshotAndDrift:
         report = self._report(tmp_path, stub_source)
         for name in ("a", "b"):
             cli.main(
-                ["snapshot", "--report", str(report), "--taken", name,
-                 "--out", str(tmp_path / f"{name}.json")]
+                [
+                    "snapshot",
+                    "--report",
+                    str(report),
+                    "--taken",
+                    name,
+                    "--out",
+                    str(tmp_path / f"{name}.json"),
+                ]
             )
         assert cli.main(["drift", str(tmp_path / "a.json"), str(tmp_path / "b.json")]) == 0
         assert "no change" in capsys.readouterr().out
@@ -250,14 +282,22 @@ class TestSnapshotAndDrift:
     ) -> None:
         self._snapshots(
             tmp_path,
-            {"institutions": 1000, "reported": {"Admission rate": 900},
-             "missing": {"Admission rate": 100}, "applicable": {"Admission rate": 1000}},
-            {"institutions": 1000, "reported": {"Admission rate": 300},
-             "missing": {"Admission rate": 700}, "applicable": {"Admission rate": 1000}},
+            {
+                "institutions": 1000,
+                "reported": {"Admission rate": 900},
+                "missing": {"Admission rate": 100},
+                "applicable": {"Admission rate": 1000},
+            },
+            {
+                "institutions": 1000,
+                "reported": {"Admission rate": 300},
+                "missing": {"Admission rate": 700},
+                "applicable": {"Admission rate": 1000},
+            },
         )
-        assert cli.main(
-            ["drift", str(tmp_path / "earlier.json"), str(tmp_path / "later.json")]
-        ) == 0
+        assert (
+            cli.main(["drift", str(tmp_path / "earlier.json"), str(tmp_path / "later.json")]) == 0
+        )
         out = capsys.readouterr().out
         assert "SYSTEMIC" in out
         assert "lost" in out
@@ -270,16 +310,22 @@ class TestSnapshotAndDrift:
         it went up. The count-based version called this a systemic 2.1% collapse."""
         self._snapshots(
             tmp_path,
-            {"institutions": 6289, "reported": {"Institution web address": 6115},
-             "missing": {"Institution web address": 4},
-             "applicable": {"Institution web address": 6119}},
-            {"institutions": 6163, "reported": {"Institution web address": 5985},
-             "missing": {"Institution web address": 3},
-             "applicable": {"Institution web address": 5988}},
+            {
+                "institutions": 6289,
+                "reported": {"Institution web address": 6115},
+                "missing": {"Institution web address": 4},
+                "applicable": {"Institution web address": 6119},
+            },
+            {
+                "institutions": 6163,
+                "reported": {"Institution web address": 5985},
+                "missing": {"Institution web address": 3},
+                "applicable": {"Institution web address": 5988},
+            },
         )
-        assert cli.main(
-            ["drift", str(tmp_path / "earlier.json"), str(tmp_path / "later.json")]
-        ) == 0
+        assert (
+            cli.main(["drift", str(tmp_path / "earlier.json"), str(tmp_path / "later.json")]) == 0
+        )
         out = capsys.readouterr().out
         assert "SYSTEMIC" not in out
         assert "gained" in out
@@ -292,14 +338,20 @@ class TestSnapshotAndDrift:
         as unmeasured: through a percent format it would read as "we checked, nothing moved"."""
         self._snapshots(
             tmp_path,
-            {"institutions": 1000, "reported": {"Admission rate": 900},
-             "missing": {"Admission rate": 100}},
-            {"institutions": 1000, "reported": {"Admission rate": 300},
-             "missing": {"Admission rate": 700}},
+            {
+                "institutions": 1000,
+                "reported": {"Admission rate": 900},
+                "missing": {"Admission rate": 100},
+            },
+            {
+                "institutions": 1000,
+                "reported": {"Admission rate": 300},
+                "missing": {"Admission rate": 700},
+            },
         )
-        assert cli.main(
-            ["drift", str(tmp_path / "earlier.json"), str(tmp_path / "later.json")]
-        ) == 0
+        assert (
+            cli.main(["drift", str(tmp_path / "earlier.json"), str(tmp_path / "later.json")]) == 0
+        )
         out = capsys.readouterr().out
         assert "rate unmeasured" in out
         assert "SYSTEMIC" not in out
@@ -339,21 +391,24 @@ class TestCrosscheck:
 
         path = tmp_path / "IC2023.zip"
         with zipfile.ZipFile(path, "w") as bundle:
-            bundle.writestr("ic2023.csv", "UNITID,ATHASSOC,SPORT1,SPORT2,SPORT3,SPORT4\n"
-                                          "104717,1,1,1,1,1\n")
+            bundle.writestr(
+                "ic2023.csv", "UNITID,ATHASSOC,SPORT1,SPORT2,SPORT3,SPORT4\n104717,1,1,1,1,1\n"
+            )
         return path
 
     def _argv(self, cache: Path, characteristics: Path, out: Path) -> list[str]:
         return [
             "crosscheck",
-            "--cache", str(cache),
-            "--characteristics", str(characteristics),
-            "--out", str(out),
+            "--cache",
+            str(cache),
+            "--characteristics",
+            str(characteristics),
+            "--out",
+            str(out),
         ]
 
     def test_grades_ipeds_alone_when_given_no_scorecard_capture(
-        self, cache: Path, characteristics: Path, tmp_path: Path,
-        capsys: pytest.CaptureFixture[str]
+        self, cache: Path, characteristics: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         out = tmp_path / "cross.json"
         assert cli.main(self._argv(cache, characteristics, out)) == 0
@@ -371,15 +426,20 @@ class TestCrosscheck:
         assert json.loads(out.read_text())["scope"]["kind"] == "national"
 
     def test_reports_a_disagreement_between_the_two_federal_sources(
-        self, cache: Path, characteristics: Path, tmp_path: Path,
-        capsys: pytest.CaptureFixture[str]
+        self, cache: Path, characteristics: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """The live finding: the Scorecard files GCU as private nonprofit, IPEDS as for-profit."""
         source = tmp_path / "sc.json"
         source.write_text(
             json.dumps(
-                [{"id": 104717, "school.name": "Grand Canyon University",
-                  "school.state": "AZ", "school.ownership": 2}]
+                [
+                    {
+                        "id": 104717,
+                        "school.name": "Grand Canyon University",
+                        "school.state": "AZ",
+                        "school.ownership": 2,
+                    }
+                ]
             )
         )
         out = tmp_path / "cross.json"
@@ -415,9 +475,9 @@ class TestSnapshotProvenance:
         report = tmp_path / "report.json"
         cli.main(["grade", "--out", str(report)])
         snap = tmp_path / "snap.json"
-        assert cli.main(
-            ["snapshot", "--report", str(report), "--taken", "x", "--out", str(snap)]
-        ) == 0
+        assert (
+            cli.main(["snapshot", "--report", str(report), "--taken", "x", "--out", str(snap)]) == 0
+        )
         assert json.loads(snap.read_text())["source"] == "College Scorecard"
 
     def test_drift_across_two_populations_exits_nonzero_rather_than_saying_nothing(
@@ -428,9 +488,14 @@ class TestSnapshotProvenance:
         for name, source in (("a", "College Scorecard"), ("b", "IPEDS directory")):
             (tmp_path / f"{name}.json").write_text(
                 json.dumps(
-                    {"taken": name, "institutions": 10, "reported": {"Enrollment": 5},
-                     "missing": {"Enrollment": 5}, "applicable": {"Enrollment": 10},
-                     "source": source}
+                    {
+                        "taken": name,
+                        "institutions": 10,
+                        "reported": {"Enrollment": 5},
+                        "missing": {"Enrollment": 5},
+                        "applicable": {"Enrollment": 10},
+                        "source": source,
+                    }
                 )
             )
         assert cli.main(["drift", str(tmp_path / "a.json"), str(tmp_path / "b.json")]) == 1

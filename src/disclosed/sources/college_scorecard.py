@@ -145,8 +145,10 @@ def iter_institutions(*, limit: int | None = None) -> Iterator[dict[str, Any]]:
             total = metadata.get("total") if isinstance(metadata, dict) else None
             confirmed_exhausted = isinstance(total, int) and seen >= total
             if limit is None and not confirmed_exhausted:
-                total_desc = f"the API's stated total of {total}" if isinstance(total, int) else (
-                    "an unknown total; this page carried no usable metadata either"
+                total_desc = (
+                    f"the API's stated total of {total}"
+                    if isinstance(total, int)
+                    else ("an unknown total; this page carried no usable metadata either")
                 )
                 raise ScorecardError(
                     f"College Scorecard page {page} returned no usable results after {seen} "

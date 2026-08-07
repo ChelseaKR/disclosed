@@ -114,9 +114,7 @@ def to_csv(report: dict[str, Any], *, fields: tuple[Field, ...] = FIELDS) -> str
     return buffer.getvalue()
 
 
-def to_schema(
-    *, fields: tuple[Field, ...] = FIELDS, path: str = "dataset.csv"
-) -> dict[str, Any]:
+def to_schema(*, fields: tuple[Field, ...] = FIELDS, path: str = "dataset.csv") -> dict[str, Any]:
     """Build a Table Schema (frictionless tabular-data-resource) description of the export.
 
     ``missingValues`` is declared as the empty string and nothing else. Left at its default, a
@@ -132,9 +130,7 @@ def to_schema(
             {
                 "name": field.column,
                 "type": "string",
-                "description": (
-                    f"How {field.label} was disclosed. {field.rationale}"
-                ),
+                "description": (f"How {field.label} was disclosed. {field.rationale}"),
                 "constraints": {"enum": [*_CLASSIFICATION_VALUES, "not_in_report"]},
                 "source_key": field.key,
                 "weight": field.weight,
@@ -154,9 +150,7 @@ def to_schema(
             "an unreported field, a field suppressed to protect a small cohort, a field that "
             "does not apply, and a genuine zero remain four distinguishable facts."
         ),
-        "licenses": [
-            {"name": "Apache-2.0", "path": "https://www.apache.org/licenses/LICENSE-2.0"}
-        ],
+        "licenses": [{"name": "Apache-2.0", "path": "https://www.apache.org/licenses/LICENSE-2.0"}],
         "sources": [
             {
                 "title": "College Scorecard",

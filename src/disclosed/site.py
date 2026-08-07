@@ -31,6 +31,7 @@ from typing import Any, Final
 
 from .disclosure import Disclosure
 from .fields import FIELDS, IPEDS_FIELDS, Field, field_by_label
+from .peers import MIN_PEERS
 from .scope import Scope, scope_from_payload
 
 __all__ = ["Page", "build", "slug"]
@@ -162,9 +163,7 @@ def _institution_path(row: dict[str, Any]) -> str | None:
     return f"institution/{safe}" if safe else None
 
 
-def institution_page(
-    row: dict[str, Any], findings: list[dict[str, Any]], *, path: str
-) -> Page:
+def institution_page(row: dict[str, Any], findings: list[dict[str, Any]], *, path: str) -> Page:
     """One institution: its grade, every field's disclosure state, and any implausible values."""
     name = _name_of(row)
     letter = row.get("letter")
@@ -199,7 +198,7 @@ def institution_page(
         for finding in findings:
             peers = finding.get("peers")
             verdict = (
-                f"<p class=\"peers\">Peer check, "
+                f'<p class="peers">Peer check, '
                 f"{html.escape(str(peers.get('group', 'unknown group')))}: "
                 f"{html.escape(str(peers.get('verdict', '')))}</p>"
                 if isinstance(peers, dict)
@@ -211,14 +210,14 @@ def institution_page(
                 f"<li><strong>{_rationale_link(label, label, depth=2)}</strong> published as "
                 f"<code>{html.escape(json.dumps(finding.get('value')))}</code>."
                 f"{verdict}"
-                f"<p class=\"why\">{html.escape(str(finding.get('rationale', '')))}</p></li>"
+                f'<p class="why">{html.escape(str(finding.get("rationale", "")))}</p></li>'
             )
         findings_html = (
             "<h2>Values that do not look like measurements</h2>"
             "<p>These were published, so they are not gaps. They fall outside the credible range "
             "for their field, which is a judgement this project made and states in full so it can "
             "be argued with.</p>"
-            f"<ul class=\"findings\">{''.join(items)}</ul>"
+            f'<ul class="findings">{"".join(items)}</ul>'
         )
 
     state_link = (
@@ -278,8 +277,7 @@ def state_page(summary: dict[str, Any], rows: list[dict[str, Any]]) -> Page:
         )
 
     worst = "".join(
-        f"<li>{_rationale_link(str(label), str(label), depth=2)}: "
-        f"{int(count)} institutions</li>"
+        f"<li>{_rationale_link(str(label), str(label), depth=2)}: {int(count)} institutions</li>"
         for label, count in summary.get("worst_fields", [])
     )
     ungradeable_note = (
@@ -326,6 +324,7 @@ def methodology_page() -> Page:
     grade is arguing with a stated rule rather than guessing at one, which is the difference
     between a scorecard and an accusation.
     """
+
     def bound(value: float | None, *, upper: bool) -> str:
         if value is None:
             return "no upper bound" if upper else "no lower bound"
@@ -365,7 +364,7 @@ def methodology_page() -> Page:
     scorecard_sections = "".join(render(f) for f in FIELDS)
     ipeds_sections = "".join(render(f) for f in IPEDS_FIELDS)
     classifications = "".join(
-        f"<tr><th scope=\"row\"><span class=\"tag tag-{d.value.replace('_', '-')}\">"
+        f'<tr><th scope="row"><span class="tag tag-{d.value.replace("_", "-")}">'
         f"{html.escape(_DISCLOSURE_COPY[d][0])}</span></th>"
         f"<td>{html.escape(_DISCLOSURE_COPY[d][1])}</td>"
         f"<td>{'yes' if d.counts_against_publisher else 'no'}</td></tr>"
@@ -417,6 +416,12 @@ comparable institutions published and attack the peer definition, the sample, or
 All three are better arguments to be having than one about where a constant was set.</p>
 <p>Where the peers turn out to publish the same value, the verdict says so and the finding
 argues against itself. That is intended and is not suppressed.</p>
+<p>A peer claim is only made where at least {MIN_PEERS} comparable institutions exist
+<em>and</em> at least {MIN_PEERS} of them published the field. Both counts, because the second is
+what the comparison is made out of: a group of fifty in which six published a number supports a
+claim about six, and the finding says so instead of borrowing the confidence of the fifty. Below
+either bar the finding is still reported and still links here; it simply arrives without a peer
+comparison attached, because an unsupported comparison is worse than none.</p>
 
 <h2>Letter bands</h2>
 <p>A, 95% and above. B, 85%. C, 70%. D, 50%. F below that. Fixed rather than curved, because
@@ -533,7 +538,7 @@ def national_page(payload: dict[str, Any]) -> Page:
         items = "".join(
             f"<li>{html.escape(str(row.get('name') or 'Unnamed institution'))}"
             f"{html.escape(' (' + str(row.get('state')) + ')') if row.get('state') else ''}"
-            f"{'' if row.get('unit_id') else ' <span class=\"tag\">no unit id published</span>'}"
+            f"{'' if row.get('unit_id') else ' <span class="tag">no unit id published</span>'}"
             "</li>"
             for row in listed
             if isinstance(row, dict)
@@ -548,6 +553,18 @@ def national_page(payload: dict[str, Any]) -> Page:
             "are not listed.</p>"
             f'<ul class="gaps">{items}</ul>'
         )
+
+    # Read off the table rather than written into the sentence. The paragraph below explains the
+    # applicable column by naming the narrowest and widest disclosure in it, and those two numbers
+    # move every collection year; hardcoded, the prose would go on citing 2023's denominators
+    # underneath a table showing another year's, which is the failure this page exists to describe.
+    reach = sorted(int(f.get("applicable", 0)) for f in fields)
+    spread = (
+        f"A disclosure that reaches {reach[0]:,} institutions and a disclosure that reaches "
+        f"{reach[-1]:,} produce"
+        if len(reach) >= 2 and reach[0] != reach[-1]
+        else "Two disclosures that reach different numbers of institutions produce"
+    )
 
     lede = html.escape(scope.sentence) if scope else "This run did not state its coverage."
     ungradeable = int(payload.get("ungradeable", 0))
@@ -575,9 +592,8 @@ applicable column, never scored as failures.</caption>
 <th scope="col">Requirement</th></tr></thead>
 <tbody>{rows}</tbody>
 </table>
-<p>The middle column is the whole argument. A disclosure that reaches 1,998 institutions and a
-disclosure that reaches 5,988 produce very different-looking failure counts from the same
-underlying behaviour, and a table that showed only the failures would rank them wrongly.</p>
+<p>The middle column is the whole argument. {spread} very different-looking failure counts from the
+same underlying behaviour, and a table that showed only the failures would rank them wrongly.</p>
 {ungradeable_note}
 
 <h2>Named findings</h2>
@@ -618,12 +634,12 @@ def home_page(report: dict[str, Any], *, has_national: bool = False) -> Page:
     )
     states = "".join(
         f'<li><a href="state/{html.escape(slug(str(s.get("label", ""))))}/">'
-        f'{html.escape(str(s.get("label", "")))}</a> '
-        f'({int(s.get("graded", 0))}, {html.escape(_pct(s.get("mean_score")))})</li>'
+        f"{html.escape(str(s.get('label', '')))}</a> "
+        f"({int(s.get('graded', 0))}, {html.escape(_pct(s.get('mean_score')))})</li>"
         for s in sorted(by_state, key=lambda s: str(s.get("label", "")))
     )
     artifacts = "".join(
-        f"<li><a href=\"{html.escape(_institution_path(f) or '')}/\">"
+        f'<li><a href="{html.escape(_institution_path(f) or "")}/">'
         f"{html.escape(_name_of(f))}</a> publishes "
         f"{_rationale_link(str(f.get('field', '')), str(f.get('field', '')), depth=1)} as "
         f"<code>{html.escape(json.dumps(f.get('value')))}</code></li>"
