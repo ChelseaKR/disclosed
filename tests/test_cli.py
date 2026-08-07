@@ -139,9 +139,7 @@ class TestGrade:
         assert scope["kind"] == "sample"
         assert scope["coverage"] != 1.0
 
-    def test_a_replayed_source_is_labelled_sample_not_national(
-        self, tmp_path: Path
-    ) -> None:
+    def test_a_replayed_source_is_labelled_sample_not_national(self, tmp_path: Path) -> None:
         """--source is a replay of a capture and must never be affected by this fix."""
         source = tmp_path / "records.json"
         source.write_text(json.dumps(_RECORDS))
