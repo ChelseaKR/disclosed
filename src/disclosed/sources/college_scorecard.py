@@ -125,6 +125,15 @@ def iter_institutions(*, limit: int | None = None) -> Iterator[dict[str, Any]]:
 
     Args:
         limit: Stop after this many records. ``None`` walks the full ~6,300 institutions.
+
+    Raises:
+        ScorecardError: ``limit`` is ``None`` and a page comes back with missing or empty
+            ``results`` before the API's own ``metadata.total`` says every institution has
+            arrived. A well-formed HTTP 200 that carries nothing is not evidence a national walk
+            is finished; the caller asked to be paged to exhaustion and a page that cannot confirm
+            that happened is the same defect as a page that never arrived at all. This cannot fire
+            when ``limit`` is given: a caller who asked to stop early gets exactly the records that
+            arrived before wherever the walk stopped, same as always.
     """
     seen = 0
     page = 0
@@ -132,6 +141,18 @@ def iter_institutions(*, limit: int | None = None) -> Iterator[dict[str, Any]]:
         payload = fetch_page(page)
         results = payload.get("results")
         if not isinstance(results, list) or not results:
+            metadata = payload.get("metadata")
+            total = metadata.get("total") if isinstance(metadata, dict) else None
+            confirmed_exhausted = isinstance(total, int) and seen >= total
+            if limit is None and not confirmed_exhausted:
+                total_desc = f"the API's stated total of {total}" if isinstance(total, int) else (
+                    "an unknown total; this page carried no usable metadata either"
+                )
+                raise ScorecardError(
+                    f"College Scorecard page {page} returned no usable results after {seen} "
+                    f"institutions, short of {total_desc}. A full walk that cannot confirm it "
+                    "reached the end is reported as a failure, not as a national count."
+                )
             return
         for record in results:
             if isinstance(record, dict):

@@ -94,6 +94,61 @@ class TestGrade:
         assert not out.exists()
         assert "429" in capsys.readouterr().err
 
+    def test_a_truncated_walk_exits_nonzero_rather_than_publishing_national(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Issue #1: a walk that stops early -- a well-formed page carrying nothing, before
+        metadata.total was reached -- must reach the caller as a failure, not as a completed
+        national run. ``iter_institutions`` now raises ScorecardError for exactly this instead of
+        returning silently; this test proves that failure propagates through `grade` the same way
+        a transport failure already does, and nothing is written."""
+
+        def truncated(limit: int | None = None) -> Any:
+            yield _RECORDS[0]
+            raise college_scorecard.ScorecardError(
+                "College Scorecard page 1 returned no usable results after 1 institutions, "
+                "short of the API's stated total of 6300."
+            )
+
+        monkeypatch.setattr(college_scorecard, "iter_institutions", truncated)
+        out = tmp_path / "report.json"
+        assert cli.main(["grade", "--out", str(out)]) == 1
+        assert not out.exists()
+        err = capsys.readouterr().err
+        assert "fetch failed, no report written" in err
+        assert "short of the API's stated total" in err
+
+    def test_a_national_run_is_labelled_national_with_full_coverage(
+        self, stub_source: None, tmp_path: Path
+    ) -> None:
+        """Regression guard: a genuinely exhausted walk with no --source and no --limit must keep
+        reporting national/coverage 1.0 exactly as before this fix."""
+        out = tmp_path / "report.json"
+        assert cli.main(["grade", "--out", str(out)]) == 0
+        scope = json.loads(out.read_text())["scope"]
+        assert scope["kind"] == "national"
+        assert scope["coverage"] == 1.0
+
+    def test_a_limited_run_is_labelled_sample_not_national(
+        self, stub_source: None, tmp_path: Path
+    ) -> None:
+        """--limit is a deliberate sample and must never be affected by this fix."""
+        out = tmp_path / "report.json"
+        assert cli.main(["grade", "--limit", "1", "--out", str(out)]) == 0
+        scope = json.loads(out.read_text())["scope"]
+        assert scope["kind"] == "sample"
+        assert scope["coverage"] != 1.0
+
+    def test_a_replayed_source_is_labelled_sample_not_national(
+        self, tmp_path: Path
+    ) -> None:
+        """--source is a replay of a capture and must never be affected by this fix."""
+        source = tmp_path / "records.json"
+        source.write_text(json.dumps(_RECORDS))
+        out = tmp_path / "report.json"
+        assert cli.main(["grade", "--source", str(source), "--out", str(out)]) == 0
+        assert json.loads(out.read_text())["scope"]["kind"] == "sample"
+
     def test_a_source_file_that_is_not_a_list_is_refused(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
