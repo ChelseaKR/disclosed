@@ -16,6 +16,7 @@ import pytest
 
 from disclosed import cli, site
 from disclosed.fields import ALL_FIELDS, FIELDS
+from disclosed.peers import MIN_PEERS
 
 _REPORT: dict[str, Any] = {
     "scope": {
@@ -194,6 +195,19 @@ class TestFindingsLinkToTheirReasoning:
         methodology = _text(_build(tmp_path) / "methodology" / "index.html")
         for field in FIELDS:
             assert field.rationale[:60] in methodology
+
+    def test_the_methodology_states_the_rule_behind_a_withheld_peer_comparison(
+        self, tmp_path: Path
+    ) -> None:
+        """"Too few to draw a conclusion" is a judgement, and every judgement here is published.
+
+        A reader who follows a finding's link expecting to find why no peer comparison was made
+        used to find nothing: the page described the peer group in full and never mentioned that
+        a claim is withheld below a threshold, or what the threshold was.
+        """
+        methodology = _text(_build(tmp_path) / "methodology" / "index.html")
+        assert f"at least {MIN_PEERS} comparable institutions exist" in methodology
+        assert f"at least {MIN_PEERS} of them published the field" in methodology
 
 
 class TestDeterminism:

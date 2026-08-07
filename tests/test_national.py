@@ -17,6 +17,7 @@ import pytest
 from disclosed import cli, national, site
 from disclosed.fields import IPEDS_FIELDS
 from disclosed.scope import NATIONAL, SAMPLE, Scope, scope_from_payload
+from disclosed.site import national_page
 
 _NATIONAL_SCOPE: dict[str, Any] = {
     "kind": NATIONAL,
@@ -267,6 +268,47 @@ class TestTheNationalPage:
         )
         assert "are not national" in home
         assert 'href="national/"' in home
+
+    def test_the_paragraph_explaining_the_table_reads_its_numbers_off_the_table(
+        self, tmp_path: Path
+    ) -> None:
+        """The two denominators it names are 2023's, and 2023 is not a permanent condition.
+
+        This paragraph used to cite 1,998 and 5,988 as literals sitting directly under a table
+        rendered from whatever run was passed in. Every collection year moves both, so the prose
+        was one regeneration away from explaining a table using another year's numbers, which is
+        the same species of error as a caveat hardcoded into a template.
+        """
+        labels = [f.label for f in IPEDS_FIELDS]
+        athletics = "Equity in athletics disclosure"
+        payload = national.build(
+            {
+                **_REPORT,
+                "grades": [
+                    {"unit_id": "1", "fields": dict.fromkeys(labels, "reported")},
+                    {
+                        "unit_id": "2",
+                        "fields": {
+                            label: "not_applicable" if label == athletics else "reported"
+                            for label in labels
+                        },
+                    },
+                ],
+            }
+        )
+        page = national_page(payload).body
+        assert "A disclosure that reaches 1 institutions and a disclosure that reaches 2" in page
+        assert "1,998" not in page and "5,988" not in page
+
+    def test_when_every_disclosure_reaches_the_same_number_the_sentence_names_none(self) -> None:
+        """There is no spread to point at, so the paragraph makes the point without figures
+        rather than printing the same number twice as though it were a contrast."""
+        labels = [f.label for f in IPEDS_FIELDS]
+        payload = national.build(
+            {**_REPORT, "grades": [{"unit_id": "1", "fields": dict.fromkeys(labels, "reported")}]}
+        )
+        page = national_page(payload).body
+        assert "Two disclosures that reach different numbers of institutions produce" in page
 
     def test_a_field_that_reached_nobody_prints_words_not_a_percentage(
         self, tmp_path: Path

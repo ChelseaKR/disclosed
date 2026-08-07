@@ -31,6 +31,7 @@ from typing import Any, Final
 
 from .disclosure import Disclosure
 from .fields import FIELDS, IPEDS_FIELDS, Field, field_by_label
+from .peers import MIN_PEERS
 from .scope import Scope, scope_from_payload
 
 __all__ = ["Page", "build", "slug"]
@@ -417,6 +418,12 @@ comparable institutions published and attack the peer definition, the sample, or
 All three are better arguments to be having than one about where a constant was set.</p>
 <p>Where the peers turn out to publish the same value, the verdict says so and the finding
 argues against itself. That is intended and is not suppressed.</p>
+<p>A peer claim is only made where at least {MIN_PEERS} comparable institutions exist
+<em>and</em> at least {MIN_PEERS} of them published the field. Both counts, because the second is
+what the comparison is made out of: a group of fifty in which six published a number supports a
+claim about six, and the finding says so instead of borrowing the confidence of the fifty. Below
+either bar the finding is still reported and still links here; it simply arrives without a peer
+comparison attached, because an unsupported comparison is worse than none.</p>
 
 <h2>Letter bands</h2>
 <p>A, 95% and above. B, 85%. C, 70%. D, 50%. F below that. Fixed rather than curved, because
@@ -549,6 +556,18 @@ def national_page(payload: dict[str, Any]) -> Page:
             f'<ul class="gaps">{items}</ul>'
         )
 
+    # Read off the table rather than written into the sentence. The paragraph below explains the
+    # applicable column by naming the narrowest and widest disclosure in it, and those two numbers
+    # move every collection year; hardcoded, the prose would go on citing 2023's denominators
+    # underneath a table showing another year's, which is the failure this page exists to describe.
+    reach = sorted(int(f.get("applicable", 0)) for f in fields)
+    spread = (
+        f"A disclosure that reaches {reach[0]:,} institutions and a disclosure that reaches "
+        f"{reach[-1]:,} produce"
+        if len(reach) >= 2 and reach[0] != reach[-1]
+        else "Two disclosures that reach different numbers of institutions produce"
+    )
+
     lede = html.escape(scope.sentence) if scope else "This run did not state its coverage."
     ungradeable = int(payload.get("ungradeable", 0))
     ungradeable_note = (
@@ -575,9 +594,8 @@ applicable column, never scored as failures.</caption>
 <th scope="col">Requirement</th></tr></thead>
 <tbody>{rows}</tbody>
 </table>
-<p>The middle column is the whole argument. A disclosure that reaches 1,998 institutions and a
-disclosure that reaches 5,988 produce very different-looking failure counts from the same
-underlying behaviour, and a table that showed only the failures would rank them wrongly.</p>
+<p>The middle column is the whole argument. {spread} very different-looking failure counts from the
+same underlying behaviour, and a table that showed only the failures would rank them wrongly.</p>
 {ungradeable_note}
 
 <h2>Named findings</h2>
