@@ -156,6 +156,29 @@ class TestGrade:
             assert finding["name"] is None
 
 
+class TestTheCommittedReport:
+    def test_it_reproduces_from_the_committed_capture(self, tmp_path: Path) -> None:
+        """The report and the capture it claims to describe, checked against each other.
+
+        ``data/report.json`` is where every published figure about the sample comes from, and
+        until this existed nothing tied it to ``data/sample.json``. CI regrades the capture on
+        every push and throws the result away into ``/tmp``, which proves the pipeline runs and
+        proves nothing about the file the repository ships: a rule could change, or the committed
+        report could be edited by hand, and both the export test and the replay job would stay
+        green while the citable artifact described a grading run nobody could reproduce.
+
+        Compared as parsed JSON rather than as bytes, so that a reformat is not a failure while a
+        changed number is.
+        """
+        root = Path(__file__).resolve().parent.parent
+        out = tmp_path / "report.json"
+        assert cli.main(
+            ["grade", "--source", str(root / "data" / "sample.json"), "--out", str(out)]
+        ) == 0
+        committed = json.loads((root / "data" / "report.json").read_text(encoding="utf-8"))
+        assert json.loads(out.read_text(encoding="utf-8")) == committed
+
+
 class TestSnapshotAndDrift:
     def _report(self, tmp_path: Path, stub: None) -> Path:
         out = tmp_path / "report.json"
