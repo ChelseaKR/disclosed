@@ -78,8 +78,32 @@ def built(tmp_path: Path) -> Path:
     return tmp_path
 
 
+# The fixture renders one page of every kind the generator produces: home, methodology, national,
+# one state, and one institution page per graded record. A floor rather than an exact count, so
+# that adding a page kind does not fail here, but a build that rendered nothing does.
+_EXPECTED_PAGES: int = 6
+
+
 def _pages(root: Path) -> list[Path]:
-    return sorted(root.rglob("index.html"))
+    """Every generated page, refusing to return a set too small to have proved anything.
+
+    Every check in this module is a loop over this list with the assertion inside the loop, so a
+    build that rendered nothing would satisfy all of them without a single page being read, and
+    the suite would go green over a site that does not exist. That is precisely the failure the
+    Lighthouse gate in ``.github/workflows/accessibility.yml`` already refuses — "a pass over a
+    partial set is not a pass" — and it is worse here, because the browser job at least names the
+    five pages it expects while this one took whatever the glob happened to find.
+
+    Asserting in a helper rather than in each test is deliberate: the alternative is remembering to
+    add a guard to every future test, and a check that depends on being remembered is the kind this
+    project keeps finding other people's bugs in.
+    """
+    found = sorted(root.rglob("index.html"))
+    assert len(found) >= _EXPECTED_PAGES, (
+        f"the fixture built {len(found)} pages, fewer than the {_EXPECTED_PAGES} this suite exists "
+        "to audit; every assertion below is inside a loop over them and would pass vacuously"
+    )
+    return found
 
 
 def _relative_luminance(hex_colour: str) -> float:
@@ -142,6 +166,32 @@ class TestContrast:
             "#79b8ff", "#cfcfcf", "#bbb", "#bbbbbb", "#6fbf73", "#ff8a80", "#ffab7a", "#e3e3e3",
         }
         assert declared <= checked, f"unchecked colours: {sorted(declared - checked)}"
+
+
+class TestTheSuiteActuallyAuditsSomething:
+    """That the checks below have subjects, asserted once rather than assumed everywhere.
+
+    ``all([])`` is ``True`` and a ``for`` loop over an empty list runs no assertions, so most of
+    this module is capable of reporting success over nothing at all. :func:`_pages` stops the
+    whole-site version of that; these stop the per-feature version, where the pages exist but no
+    longer contain the element a check was written for.
+    """
+
+    def test_one_page_of_every_kind_is_audited(self, built: Path) -> None:
+        relative = {p.parent.relative_to(built).as_posix() for p in _pages(built)}
+        assert {".", "methodology", "national", "state/CA", "institution/1", "institution/2"} <= (
+            relative
+        )
+
+    def test_at_least_one_data_table_is_audited(self, built: Path) -> None:
+        """Otherwise the caption and row-header checks are ``all([])`` on every page."""
+        tables = sum(len(TestTableSemantics()._parse(page).captions) for page in _pages(built))
+        assert tables > 0
+
+    def test_at_least_one_nav_and_one_column_header_are_audited(self, built: Path) -> None:
+        text = "".join(page.read_text(encoding="utf-8") for page in _pages(built))
+        assert re.findall(r"<nav[^>]*>", text)
+        assert re.findall(r"<th\b[^>]*>", text)
 
 
 class TestLandmarksAndNavigation:
