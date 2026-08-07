@@ -194,6 +194,10 @@ def _cmd_grade(args: argparse.Namespace) -> int:
         print("no institutions returned; refusing to write an empty report", file=sys.stderr)
         return 1
     grades = [grade_institution(r) for r in records]
+    # Safe to read off the flags alone: a fetch with no --source and no --limit that has reached
+    # this line did not stop until iter_institutions confirmed metadata.total was met. Any earlier
+    # stop it could not confirm raised ScorecardError above instead of returning, so there is no
+    # longer a code path where an unexhausted walk reaches _scorecard_scope claiming otherwise.
     scope = _scorecard_scope(grades, walked_the_api=not args.source and not args.limit)
     payload = _grade_payload(grades, records, scope=scope)
     Path(args.out).write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")

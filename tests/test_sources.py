@@ -132,10 +132,12 @@ class TestIterInstitutions:
         )
         assert [r["id"] for r in college_scorecard.iter_institutions()] == [1, 2]
 
-    def test_missing_metadata_does_not_loop_forever(
+    def test_missing_metadata_raises_rather_than_reporting_a_completed_walk(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """A malformed payload must terminate rather than page indefinitely."""
+        """A malformed payload must terminate rather than page indefinitely -- but a walk that
+        cannot show it reached the end is a failure, not a quiet 1-institution success. This is
+        the second shape from issue #1: a 200 with no metadata at all mid-walk."""
         pages = [
             _FakeResponse(json.dumps({"results": [{"id": 1}]})),
             _FakeResponse(json.dumps({"results": []})),
@@ -144,4 +146,72 @@ class TestIterInstitutions:
         monkeypatch.setattr(
             college_scorecard.urllib.request, "urlopen", lambda url, timeout=0: next(it)
         )
-        assert [r["id"] for r in college_scorecard.iter_institutions()] == [1]
+        with pytest.raises(college_scorecard.ScorecardError, match="page 1"):
+            list(college_scorecard.iter_institutions())
+
+    def test_missing_metadata_does_not_loop_forever_when_limited(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The same malformed payload, but the caller asked to stop early: a deliberate --limit
+        run keeps whatever arrived and returns silently, exactly as before this fix."""
+        pages = [
+            _FakeResponse(json.dumps({"results": [{"id": 1}]})),
+            _FakeResponse(json.dumps({"results": []})),
+        ]
+        it = iter(pages)
+        monkeypatch.setattr(
+            college_scorecard.urllib.request, "urlopen", lambda url, timeout=0: next(it)
+        )
+        assert [r["id"] for r in college_scorecard.iter_institutions(limit=5)] == [1]
+
+    def test_results_run_out_before_total_raises_when_walking_to_exhaustion(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Issue #1's first reproduction: two good pages, then a well-formed HTTP 200 carrying an
+        empty ``results`` list well short of ``metadata.total``. A 200 with nothing in it is not
+        evidence the walk finished, so a national run must fail loudly rather than publish 3 of
+        6,300 institutions as the whole country."""
+        pages = [
+            _page([{"id": 1}, {"id": 2}], total=6300),
+            _page([{"id": 3}], total=6300),
+            _page([], total=6300),
+        ]
+        it = iter(pages)
+        monkeypatch.setattr(
+            college_scorecard.urllib.request, "urlopen", lambda url, timeout=0: next(it)
+        )
+        with pytest.raises(college_scorecard.ScorecardError, match="page 2") as caught:
+            list(college_scorecard.iter_institutions())
+        assert "3" in str(caught.value)
+        assert "6300" in str(caught.value)
+
+    def test_error_payload_mid_walk_raises_when_walking_to_exhaustion(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Issue #1's second reproduction: a 200 carrying ``{"errors": [...]}`` instead of
+        ``results``, partway through a national walk."""
+        pages = [
+            _page([{"id": 1}, {"id": 2}], total=6300),
+            _FakeResponse(json.dumps({"errors": ["rate governor engaged"]})),
+        ]
+        it = iter(pages)
+        monkeypatch.setattr(
+            college_scorecard.urllib.request, "urlopen", lambda url, timeout=0: next(it)
+        )
+        with pytest.raises(college_scorecard.ScorecardError, match="page 1"):
+            list(college_scorecard.iter_institutions())
+
+    def test_limit_short_circuits_even_when_results_run_out_first(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A deliberate --limit is a sample by request. Running out of results before reaching it
+        is not the anomaly this fix guards against, and must keep returning silently."""
+        pages = [
+            _page([{"id": 1}, {"id": 2}], total=6300),
+            _page([], total=6300),
+        ]
+        it = iter(pages)
+        monkeypatch.setattr(
+            college_scorecard.urllib.request, "urlopen", lambda url, timeout=0: next(it)
+        )
+        assert [r["id"] for r in college_scorecard.iter_institutions(limit=50)] == [1, 2]
