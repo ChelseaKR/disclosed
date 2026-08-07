@@ -151,7 +151,7 @@ FIELDS: Final[tuple[Field, ...]] = (
         rationale=(
             "A rate is a proportion, so anything outside 0 to 1 is a unit error rather than a "
             "measurement. An exact zero is treated as an artifact because an institution that "
-            "graduated nobody in the cohort would not still be reporting; three institutions in a "
+            "graduated nobody in the cohort would not still be reporting; two institutions in a "
             "600-school sample publish exactly zero here."
         ),
         weight=1.5,
