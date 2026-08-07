@@ -267,9 +267,7 @@ def _cmd_drift(args: argparse.Namespace) -> int:
         # An unmeasured rate prints as words. Through a percent format it would have printed as
         # "+0.00", which reads as "we checked and nothing moved" rather than "we could not check".
         rate = (
-            "  rate unmeasured"
-            if d.rate_change is None
-            else f"{d.rate_change * 100:+7.2f} points"
+            "  rate unmeasured" if d.rate_change is None else f"{d.rate_change * 100:+7.2f} points"
         )
         print(
             f"  {flag} {d.field_label:34} {d.direction:>6} {rate}   "

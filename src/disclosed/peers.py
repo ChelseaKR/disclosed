@@ -125,9 +125,7 @@ def peer_group_for(record: dict[str, Any]) -> tuple[str, tuple[Any, Any, Any]]:
     return f"{sector} {level}-predominant institutions in {state}", (ownership, predominant, state)
 
 
-def peer_context(
-    record: dict[str, Any], field_key: str, corpus: list[dict[str, Any]]
-) -> PeerGroup:
+def peer_context(record: dict[str, Any], field_key: str, corpus: list[dict[str, Any]]) -> PeerGroup:
     """Describe how an institution's value for one field compares with its peers.
 
     The institution itself is excluded from its own peer group, so a value cannot help justify
@@ -141,8 +139,12 @@ def peer_context(
         r
         for r in corpus
         if r.get("id") != own_id
-        and (r.get("school.ownership"), r.get("school.degrees_awarded.predominant"),
-             r.get("school.state")) == key
+        and (
+            r.get("school.ownership"),
+            r.get("school.degrees_awarded.predominant"),
+            r.get("school.state"),
+        )
+        == key
     ]
     values = [
         float(r[field_key])

@@ -199,7 +199,7 @@ class TestFindingsLinkToTheirReasoning:
     def test_the_methodology_states_the_rule_behind_a_withheld_peer_comparison(
         self, tmp_path: Path
     ) -> None:
-        """"Too few to draw a conclusion" is a judgement, and every judgement here is published.
+        """ "Too few to draw a conclusion" is a judgement, and every judgement here is published.
 
         A reader who follows a finding's link expecting to find why no peer comparison was made
         used to find nothing: the page described the peer group in full and never mentioned that
@@ -243,9 +243,7 @@ class TestHostileInput:
         assert "&lt;script&gt;" in page
         assert "&amp; Sons" in page
 
-    def test_a_traversing_unit_id_writes_inside_the_output_directory(
-        self, tmp_path: Path
-    ) -> None:
+    def test_a_traversing_unit_id_writes_inside_the_output_directory(self, tmp_path: Path) -> None:
         report = json.loads(json.dumps(_REPORT))
         report["grades"][0]["unit_id"] = "../../escaped"
         out = _build(tmp_path, report)
@@ -286,15 +284,17 @@ class TestStructure:
             assert not checker.errors, f"{page}: {checker.errors}"
             assert not checker.stack, f"{page}: unclosed {checker.stack}"
 
-    def test_one_page_per_institution_state_plus_home_and_methodology(
-        self, tmp_path: Path
-    ) -> None:
-        pages = site.build(
-            _REPORT, tmp_path / "s", origin="https://example.test", generated="x"
-        )
+    def test_one_page_per_institution_state_plus_home_and_methodology(self, tmp_path: Path) -> None:
+        pages = site.build(_REPORT, tmp_path / "s", origin="https://example.test", generated="x")
         paths = {p.path for p in pages}
-        assert paths == {"", "methodology", "state/CA", "institution/1", "institution/2",
-                         "institution/3"}
+        assert paths == {
+            "",
+            "methodology",
+            "state/CA",
+            "institution/1",
+            "institution/2",
+            "institution/3",
+        }
 
     def test_sitemap_and_robots_are_written(self, tmp_path: Path) -> None:
         out = _build(tmp_path)
@@ -325,8 +325,12 @@ class TestSiteCommand:
         report = tmp_path / "report.json"
         report.write_text(json.dumps(_REPORT))
         out = tmp_path / "out"
-        assert cli.main(["site", "--report", str(report), "--out", str(out),
-                         "--generated", "2026-08-05"]) == 0
+        assert (
+            cli.main(
+                ["site", "--report", str(report), "--out", str(out), "--generated", "2026-08-05"]
+            )
+            == 0
+        )
         assert (out / "index.html").exists()
         assert "built 6 pages" in capsys.readouterr().out
 

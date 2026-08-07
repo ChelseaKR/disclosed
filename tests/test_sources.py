@@ -123,18 +123,14 @@ class TestIterInstitutions:
         )
         assert list(college_scorecard.iter_institutions()) == []
 
-    def test_non_dict_rows_are_skipped_not_yielded(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_non_dict_rows_are_skipped_not_yielded(self, monkeypatch: pytest.MonkeyPatch) -> None:
         it = iter([_page([{"id": 1}, "junk", {"id": 2}], total=2)])  # type: ignore[list-item]
         monkeypatch.setattr(
             college_scorecard.urllib.request, "urlopen", lambda url, timeout=0: next(it)
         )
         assert [r["id"] for r in college_scorecard.iter_institutions()] == [1, 2]
 
-    def test_missing_metadata_does_not_loop_forever(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_missing_metadata_does_not_loop_forever(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """A malformed payload must terminate rather than page indefinitely."""
         pages = [
             _FakeResponse(json.dumps({"results": [{"id": 1}]})),

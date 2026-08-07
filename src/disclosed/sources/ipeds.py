@@ -193,9 +193,7 @@ def parse_directory(archive: bytes) -> list[dict[str, Any]]:
     return records
 
 
-def load_directory(
-    *, year: int = DEFAULT_YEAR, cache: Path | None = None
-) -> list[dict[str, Any]]:
+def load_directory(*, year: int = DEFAULT_YEAR, cache: Path | None = None) -> list[dict[str, Any]]:
     """Fetch and parse the institutional directory, using a cached archive when available.
 
     Args:

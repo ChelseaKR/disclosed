@@ -230,12 +230,25 @@ class TestTheNationalPage:
             },
             "institutions": 1,
             "ungradeable": 0,
-            "overall": {"label": "all", "graded": 1, "ungradeable": 0, "mean_score": 1.0,
-                        "worst_fields": []},
+            "overall": {
+                "label": "all",
+                "graded": 1,
+                "ungradeable": 0,
+                "mean_score": 1.0,
+                "worst_fields": [],
+            },
             "by_state": [],
             "implausible": [],
-            "grades": [{"unit_id": "1", "name": "A College", "state": "CA", "score": 1.0,
-                        "letter": "A", "fields": {}}],
+            "grades": [
+                {
+                    "unit_id": "1",
+                    "name": "A College",
+                    "state": "CA",
+                    "score": 1.0,
+                    "letter": "A",
+                    "fields": {},
+                }
+            ],
         }
         site.build(
             report,
@@ -314,13 +327,29 @@ class TestTheNationalPage:
         self, tmp_path: Path
     ) -> None:
         payload = national.build(
-            {**_REPORT, "grades": [{"unit_id": "1",
-                                    "fields": {"Net price calculator": "not_applicable"}}]}
+            {
+                **_REPORT,
+                "grades": [{"unit_id": "1", "fields": {"Net price calculator": "not_applicable"}}],
+            }
         )
         site.build(
-            {"institutions": 0, "ungradeable": 0, "overall": {}, "by_state": [],
-             "implausible": [], "grades": [{"unit_id": "1", "name": "x", "state": "CA",
-                                            "score": None, "letter": None, "fields": {}}]},
+            {
+                "institutions": 0,
+                "ungradeable": 0,
+                "overall": {},
+                "by_state": [],
+                "implausible": [],
+                "grades": [
+                    {
+                        "unit_id": "1",
+                        "name": "x",
+                        "state": "CA",
+                        "score": None,
+                        "letter": None,
+                        "fields": {},
+                    }
+                ],
+            },
             tmp_path,
             generated="test",
             national=payload,

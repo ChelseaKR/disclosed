@@ -12,13 +12,17 @@ license = { text = "Apache-2.0" }
 authors = [{ name = "Chelsea Kelly-Reif" }]
 dependencies = []
 
-[project.optional-dependencies]
+# Dev tooling lives in a PEP 735 dependency group (CODE-QUALITY-STANDARD section 5), not in
+# optional-dependencies: nothing downstream may ever install the linters by accident, and
+# `uv sync` installs them by default for anyone working on the repo. Floors match the
+# portfolio-wide minimums; raising them is fine, lowering them is not.
+[dependency-groups]
 dev = [
   "pytest>=8",
   "pytest-cov>=5",
   "hypothesis>=6",
-  "mypy>=1.11",
-  "ruff>=0.6",
+  "mypy>=1.18",
+  "ruff>=0.15",
 ]
 
 [project.scripts]
@@ -47,7 +51,7 @@ max-complexity = 10
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=disclosed --cov-branch --cov-fail-under=90"
+addopts = "--strict-markers --strict-config --import-mode=importlib --cov=disclosed --cov-branch --cov-fail-under=90"
 
 [tool.coverage.run]
 source = ["src/disclosed"]

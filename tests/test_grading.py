@@ -43,9 +43,10 @@ class TestInstitutionGrade:
     def test_absent_key_is_treated_like_an_explicit_null(self) -> None:
         record = dict(_COMPLETE)
         del record["latest.cost.tuition.in_state"]
-        assert grade_institution(record).score == grade_institution(
-            _with(**{"latest.cost.tuition.in_state": None})
-        ).score
+        assert (
+            grade_institution(record).score
+            == grade_institution(_with(**{"latest.cost.tuition.in_state": None})).score
+        )
 
     def test_suppression_leaves_the_denominator_rather_than_scoring_zero(self) -> None:
         """A suppressed field must not drag the grade down; it is removed from the question."""
@@ -179,9 +180,7 @@ class TestDrift:
         earlier = Snapshot(
             "a", 1000, {"Enrollment": 900}, {"Enrollment": 100}, {"Enrollment": 1000}
         )
-        later = Snapshot(
-            "b", 1000, {"Enrollment": 895}, {"Enrollment": 105}, {"Enrollment": 1000}
-        )
+        later = Snapshot("b", 1000, {"Enrollment": 895}, {"Enrollment": 105}, {"Enrollment": 1000})
         (drift,) = compare(earlier, later)
         assert not drift.is_systemic
 

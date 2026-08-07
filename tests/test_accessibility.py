@@ -42,26 +42,54 @@ _REPORT: dict[str, Any] = {
         "worst_fields": [["Admission rate", 1]],
     },
     "by_state": [
-        {"label": "CA", "graded": 1, "ungradeable": 1, "mean_score": 0.5,
-         "worst_fields": [["Admission rate", 1]]}
+        {
+            "label": "CA",
+            "graded": 1,
+            "ungradeable": 1,
+            "mean_score": 0.5,
+            "worst_fields": [["Admission rate", 1]],
+        }
     ],
     "implausible": [],
     "grades": [
-        {"unit_id": "1", "name": "Graded College", "state": "CA", "score": 0.5, "letter": "D",
-         "fields": {"Admission rate": "missing", "Enrollment": "reported"}},
-        {"unit_id": "2", "name": "Suppressed College", "state": "CA", "score": None,
-         "letter": None, "fields": {"Admission rate": "suppressed"}},
+        {
+            "unit_id": "1",
+            "name": "Graded College",
+            "state": "CA",
+            "score": 0.5,
+            "letter": "D",
+            "fields": {"Admission rate": "missing", "Enrollment": "reported"},
+        },
+        {
+            "unit_id": "2",
+            "name": "Suppressed College",
+            "state": "CA",
+            "score": None,
+            "letter": None,
+            "fields": {"Admission rate": "suppressed"},
+        },
     ],
 }
 
 _NATIONAL: dict[str, Any] = {
-    "scope": {"kind": "national", "source": "IPEDS directory", "institutions": 1, "states": 1,
-              "universe": 1, "coverage": 1.0, "note": "The whole directory."},
+    "scope": {
+        "kind": "national",
+        "source": "IPEDS directory",
+        "institutions": 1,
+        "states": 1,
+        "universe": 1,
+        "coverage": 1.0,
+        "note": "The whole directory.",
+    },
     "ungradeable": 0,
     "contradictions": [],
     "grades": [
-        {"unit_id": "1", "name": "Gap College", "state": "CA",
-         "fields": {"Net price calculator": "missing"}}
+        {
+            "unit_id": "1",
+            "name": "Gap College",
+            "state": "CA",
+            "fields": {"Net price calculator": "missing"},
+        }
     ],
 }
 
@@ -161,9 +189,29 @@ class TestContrast:
         shipping unchecked. The whole point of a contrast test is that it notices new colours."""
         declared = set(re.findall(r"#[0-9a-fA-F]{3,6}", site._STYLE))
         checked = {
-            "#ffffff", "#fff", "#131313", "#1a1a1a", "#0b5cad", "#333", "#333333", "#555",
-            "#555555", "#14691f", "#3f7d20", "#8a5a00", "#a8421f", "#96110f", "#e9e9e9",
-            "#79b8ff", "#cfcfcf", "#bbb", "#bbbbbb", "#6fbf73", "#ff8a80", "#ffab7a", "#e3e3e3",
+            "#ffffff",
+            "#fff",
+            "#131313",
+            "#1a1a1a",
+            "#0b5cad",
+            "#333",
+            "#333333",
+            "#555",
+            "#555555",
+            "#14691f",
+            "#3f7d20",
+            "#8a5a00",
+            "#a8421f",
+            "#96110f",
+            "#e9e9e9",
+            "#79b8ff",
+            "#cfcfcf",
+            "#bbb",
+            "#bbbbbb",
+            "#6fbf73",
+            "#ff8a80",
+            "#ffab7a",
+            "#e3e3e3",
         }
         assert declared <= checked, f"unchecked colours: {sorted(declared - checked)}"
 

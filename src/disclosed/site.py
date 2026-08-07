@@ -163,9 +163,7 @@ def _institution_path(row: dict[str, Any]) -> str | None:
     return f"institution/{safe}" if safe else None
 
 
-def institution_page(
-    row: dict[str, Any], findings: list[dict[str, Any]], *, path: str
-) -> Page:
+def institution_page(row: dict[str, Any], findings: list[dict[str, Any]], *, path: str) -> Page:
     """One institution: its grade, every field's disclosure state, and any implausible values."""
     name = _name_of(row)
     letter = row.get("letter")
@@ -200,7 +198,7 @@ def institution_page(
         for finding in findings:
             peers = finding.get("peers")
             verdict = (
-                f"<p class=\"peers\">Peer check, "
+                f'<p class="peers">Peer check, '
                 f"{html.escape(str(peers.get('group', 'unknown group')))}: "
                 f"{html.escape(str(peers.get('verdict', '')))}</p>"
                 if isinstance(peers, dict)
@@ -212,14 +210,14 @@ def institution_page(
                 f"<li><strong>{_rationale_link(label, label, depth=2)}</strong> published as "
                 f"<code>{html.escape(json.dumps(finding.get('value')))}</code>."
                 f"{verdict}"
-                f"<p class=\"why\">{html.escape(str(finding.get('rationale', '')))}</p></li>"
+                f'<p class="why">{html.escape(str(finding.get("rationale", "")))}</p></li>'
             )
         findings_html = (
             "<h2>Values that do not look like measurements</h2>"
             "<p>These were published, so they are not gaps. They fall outside the credible range "
             "for their field, which is a judgement this project made and states in full so it can "
             "be argued with.</p>"
-            f"<ul class=\"findings\">{''.join(items)}</ul>"
+            f'<ul class="findings">{"".join(items)}</ul>'
         )
 
     state_link = (
@@ -279,8 +277,7 @@ def state_page(summary: dict[str, Any], rows: list[dict[str, Any]]) -> Page:
         )
 
     worst = "".join(
-        f"<li>{_rationale_link(str(label), str(label), depth=2)}: "
-        f"{int(count)} institutions</li>"
+        f"<li>{_rationale_link(str(label), str(label), depth=2)}: {int(count)} institutions</li>"
         for label, count in summary.get("worst_fields", [])
     )
     ungradeable_note = (
@@ -327,6 +324,7 @@ def methodology_page() -> Page:
     grade is arguing with a stated rule rather than guessing at one, which is the difference
     between a scorecard and an accusation.
     """
+
     def bound(value: float | None, *, upper: bool) -> str:
         if value is None:
             return "no upper bound" if upper else "no lower bound"
@@ -366,7 +364,7 @@ def methodology_page() -> Page:
     scorecard_sections = "".join(render(f) for f in FIELDS)
     ipeds_sections = "".join(render(f) for f in IPEDS_FIELDS)
     classifications = "".join(
-        f"<tr><th scope=\"row\"><span class=\"tag tag-{d.value.replace('_', '-')}\">"
+        f'<tr><th scope="row"><span class="tag tag-{d.value.replace("_", "-")}">'
         f"{html.escape(_DISCLOSURE_COPY[d][0])}</span></th>"
         f"<td>{html.escape(_DISCLOSURE_COPY[d][1])}</td>"
         f"<td>{'yes' if d.counts_against_publisher else 'no'}</td></tr>"
@@ -540,7 +538,7 @@ def national_page(payload: dict[str, Any]) -> Page:
         items = "".join(
             f"<li>{html.escape(str(row.get('name') or 'Unnamed institution'))}"
             f"{html.escape(' (' + str(row.get('state')) + ')') if row.get('state') else ''}"
-            f"{'' if row.get('unit_id') else ' <span class=\"tag\">no unit id published</span>'}"
+            f"{'' if row.get('unit_id') else ' <span class="tag">no unit id published</span>'}"
             "</li>"
             for row in listed
             if isinstance(row, dict)
@@ -636,12 +634,12 @@ def home_page(report: dict[str, Any], *, has_national: bool = False) -> Page:
     )
     states = "".join(
         f'<li><a href="state/{html.escape(slug(str(s.get("label", ""))))}/">'
-        f'{html.escape(str(s.get("label", "")))}</a> '
-        f'({int(s.get("graded", 0))}, {html.escape(_pct(s.get("mean_score")))})</li>'
+        f"{html.escape(str(s.get('label', '')))}</a> "
+        f"({int(s.get('graded', 0))}, {html.escape(_pct(s.get('mean_score')))})</li>"
         for s in sorted(by_state, key=lambda s: str(s.get("label", "")))
     )
     artifacts = "".join(
-        f"<li><a href=\"{html.escape(_institution_path(f) or '')}/\">"
+        f'<li><a href="{html.escape(_institution_path(f) or "")}/">'
         f"{html.escape(_name_of(f))}</a> publishes "
         f"{_rationale_link(str(f.get('field', '')), str(f.get('field', '')), depth=1)} as "
         f"<code>{html.escape(json.dumps(f.get('value')))}</code></li>"

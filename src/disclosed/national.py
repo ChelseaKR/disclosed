@@ -191,9 +191,7 @@ def build(report: dict[str, Any], *, fields: tuple[Field, ...] = IPEDS_FIELDS) -
         "scope": scope.as_dict(),
         "fields": [c.as_dict() for c in coverage_for(grades, fields=fields)],
         "gaps": {
-            label: [
-                {"unit_id": g.unit_id, "name": g.name, "state": g.state} for g in institutions
-            ]
+            label: [{"unit_id": g.unit_id, "name": g.name, "state": g.state} for g in institutions]
             for label, institutions in named_gaps(grades, fields=fields).items()
         },
         "contradictions": report.get("contradictions", []),

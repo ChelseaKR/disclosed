@@ -1,0 +1,58 @@
+# Local hooks mirroring the CI gates.
+#
+# Setup (once):
+#   uv sync
+#   .venv/bin/python -m pip install pre-commit   # or: pipx install pre-commit
+#   pre-commit install                           # fast hooks on every commit
+#   pre-commit install --hook-type pre-push      # the full verify gate before push
+#
+# pre-commit (fast): file hygiene, ruff lint + format, secret scan on the staged diff.
+# pre-push (full):   `make verify`, the exact gate CI runs.
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-commit]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^data/
+      - id: end-of-file-fixer
+        # data/dataset.csv is RFC 4180 CRLF and a test asserts it byte for byte; a hook that
+        # "fixes" its line endings would break the export contract, not improve hygiene.
+        exclude: ^data/
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=1500"] # the IPEDS zips in data/ are a committed capture just over 1 MB
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+        exclude: ^data/
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Keep equal to the ruff version resolved in uv.lock so the hook and `make verify` can
+    # never disagree about what is clean. Bump both together.
+    rev: v0.16.2
+    hooks:
+      - id: ruff
+        files: ^(src|tests)/
+      - id: ruff-format
+        files: ^(src|tests)/
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks # secret scan over the staged diff, redacted output
+
+  - repo: local
+    hooks:
+      # The single local gate, identical to CI (CONTRIBUTING.md). Runs the project's own venv
+      # explicitly; a bare `python` would resolve whatever is first on $PATH.
+      - id: verify
+        name: make verify (lint, format check, strict mypy, tests with coverage floor)
+        entry: make verify
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        always_run: true

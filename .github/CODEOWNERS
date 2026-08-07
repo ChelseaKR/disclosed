@@ -1,0 +1,7 @@
+# Route every change to the maintainer, and name the security-critical paths explicitly so a
+# future co-maintainer arrangement can narrow the wildcard without losing the workflow gate.
+* @ChelseaKR
+/.github/workflows/ @ChelseaKR
+/.github/dependabot.yml @ChelseaKR
+/SECURITY.md @ChelseaKR
+/uv.lock @ChelseaKR
