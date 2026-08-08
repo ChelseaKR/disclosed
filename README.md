@@ -6,6 +6,12 @@ There are many tools that will tell you a college's graduation rate. There is no
 how many colleges did not report one, or which fields quietly stopped being published this year.
 That is what this grades.
 
+**Status:** Beta, pre-release (`0.1.0.dev0`). The five-way classification, both federal
+adapters, and drift measurement are complete and tested behind a 90% branch-coverage gate.
+There are deliberately no tagged releases: nothing here is consumed downstream, and [ADR
+0001](docs/adr/0001-no-versioned-release.md) records why a release pipeline with nothing to
+release would be exactly the kind of gate that never fails.
+
 The distinction matters because the two failures look identical on a page. A college with a 0%
 admission rate and a college that never reported an admission rate both render as a blank or a zero
 in most tools, and a reader cannot tell them apart. In a 600-institution sample of the College
@@ -238,7 +244,7 @@ make national   # reduce that to the committed national artifact
 
 Python 3.12+, no runtime dependencies. Strict mypy, ruff, and a 90% branch-coverage gate.
 `make verify` is the single local gate and the same target CI runs; `CONTRIBUTING.md` has the
-setup. Status: Beta, pre-release (`0.1.0.dev0`), no tagged releases yet.
+setup.
 
 ## AI-assisted development
 
