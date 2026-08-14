@@ -15,9 +15,9 @@ release would be exactly the kind of gate that never fails.
 The distinction matters because the two failures look identical on a page. A college with a 0%
 admission rate and a college that never reported an admission rate both render as a blank or a zero
 in most tools, and a reader cannot tell them apart. In a 600-institution sample of the College
-Scorecard, **64% publish no admission rate at all**, and separately, **one institution publishes an
-admission rate of exactly zero** — which is not a school that admitted nobody, it is a reporting
-artifact that survived because zero is a legal number.
+Scorecard, **387 of the 600, or 64.5%, publish no admission rate at all**, and separately, **one
+institution publishes an admission rate of exactly zero** — which is not a school that admitted
+nobody, it is a reporting artifact that survived because zero is a legal number.
 
 ## What it does
 
@@ -51,8 +51,8 @@ that stopped, and reporting only the losses would make this an argument rather t
 
 ```sh
 disclosed grade --out data/report.json
-disclosed snapshot --taken 2026-08-05 --out data/snapshots/2026-08-05.json
-disclosed drift data/snapshots/ipeds-2021.json data/snapshots/ipeds-2023.json
+disclosed snapshot --taken 2026-08-05 --out data/snapshots/scorecard/2026-08-05.json
+disclosed drift data/snapshots/ipeds/2021.json data/snapshots/ipeds/2023.json
 ```
 
 Snapshots are small enough to commit, so the record of what stopped being published lives in git
@@ -106,9 +106,10 @@ calculator for 34 of them**, a calculator that
 the two is missing is not something a blank cell can tell you, and the finding says so rather than
 picking the more dramatic reading.
 
-Getting to 34 rather than 62 is the applicability rule doing its job: graduate-only institutions,
-system offices, closures, and institutions taking no federal aid are outside the statute and leave
-the denominator instead of being marked down.
+Getting to 34 rather than 213 is the applicability rule doing its job. **213** of the 6,163
+directory rows carry no calculator address; graduate-only institutions, institutions taking no
+federal aid, system offices, and closures account for the other **179**. They are outside the
+statute and leave the denominator instead of being marked down.
 
 ### The rule is the hard part, not the threshold
 
@@ -202,11 +203,11 @@ disclosed national --report data/crosscheck.json --out data/national.json
 disclosed site --report data/report.json --national data/national.json --out site --generated 2026-08-05
 ```
 
-`data/national.json` is 100 KB and committed; the 2.5 MB run it reduces is not, because it is
-regenerable in a minute from two public archives that need no key. Without `--national` the site
-builds with no national page and makes no national claim anywhere, which is the right default: a
-missing corpus should show up as missing figures, not as sample figures with the qualifier
-quietly dropped.
+`data/national.json` is just under 100 KB and committed; the 3 MB run it reduces is not, because
+it is regenerable in a minute from two public archives that need no key. Without `--national` the
+site builds with no national page and makes no national claim anywhere, which is the right
+default: a missing corpus should show up as missing figures, not as sample figures with the
+qualifier quietly dropped.
 
 A run recorded before `scope` existed says so on the page rather than being assumed complete.
 
