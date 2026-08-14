@@ -30,7 +30,9 @@ from pathlib import Path
 from typing import Any, Final
 
 from .disclosure import Disclosure
+from .drift import SYSTEMIC_THRESHOLD
 from .fields import FIELDS, IPEDS_FIELDS, Field, field_by_label
+from .grading import BANDS, BELOW_EVERY_BAND
 from .peers import MIN_PEERS
 from .scope import Scope, scope_from_payload
 
@@ -325,11 +327,6 @@ def methodology_page() -> Page:
     between a scorecard and an accusation.
     """
 
-    def bound(value: float | None, *, upper: bool) -> str:
-        if value is None:
-            return "no upper bound" if upper else "no lower bound"
-        return html.escape(f"{value:,.4g}")
-
     def render(field: Field) -> str:
         if field.text_is_a_value:
             # A URL column has no credible range to state; what it has is a rule about who the
@@ -346,8 +343,8 @@ def methodology_page() -> Page:
         else:
             zero = "a credible measurement" if field.zero_is_credible else "treated as an artifact"
             terms = (
-                f"Credible range: {bound(field.credible_min, upper=False)} to "
-                f"{bound(field.credible_max, upper=True)}. An exact zero is {zero}."
+                f"Credible range: {_bound(field.credible_min, upper=False)} to "
+                f"{_bound(field.credible_max, upper=True)}. An exact zero is {zero}."
             )
         return (
             f'<section id="{field.anchor}">'
@@ -357,6 +354,18 @@ def methodology_page() -> Page:
             f'<p class="bounds">{terms} Weight {field.weight:g}.</p>'
             f"</section>"
         )
+
+    # Printed from the constants that decide these things, never typed beside them. A grade band
+    # and a drift threshold are the two numbers on this page that a graded institution is most
+    # likely to check a specific decision against, and a page that states one figure while the
+    # grader applies another is the failure this whole page exists to make impossible.
+    first_threshold, first_letter = BANDS[0]
+    bands = " ".join(
+        [f"{first_letter}, {first_threshold:.0%} and above."]
+        + [f"{letter}, {threshold:.0%}." for threshold, letter in BANDS[1:]]
+        + [f"{BELOW_EVERY_BAND} below that."]
+    )
+    systemic = f"{SYSTEMIC_THRESHOLD * 100:g}"
 
     # Every field this project knows about is documented here, not only the ones in the report
     # being rendered. Findings link to these anchors by label, and a link into a rationale that
@@ -424,7 +433,7 @@ either bar the finding is still reported and still links here; it simply arrives
 comparison attached, because an unsupported comparison is worse than none.</p>
 
 <h2>Letter bands</h2>
-<p>A, 95% and above. B, 85%. C, 70%. D, 50%. F below that. Fixed rather than curved, because
+<p>{bands} Fixed rather than curved, because
 grading on a curve would hide a field-wide collapse in reporting: if everyone stopped publishing
 graduation rates tomorrow, a curve would report that as normal.</p>
 
@@ -442,14 +451,14 @@ institutions to 6,163, so 130 fewer published a web address, and that was report
 closed; they did not stop reporting. The one real movement in the period, the athletics disclosure
 rising from 57.1% to 59.4%, ranked fourth and was never flagged, because 52 is a small number next
 to 130.</p>
-<p>A change is called systemic when that rate moves by at least 2 percentage points. The threshold
-is a judgement call, stated here so a reader can disagree with it, and set low because a
+<p>A change is called systemic when that rate moves by at least {systemic} percentage points. The
+threshold is a judgement call, stated here so a reader can disagree with it, and set low because a
 coordinated stop-reporting event is newsworthy well before it touches a majority of institutions.
 Three real collection years say it is roughly right: every year-on-year movement in these six
 disclosures sits under one point except the athletics disclosure, which rose 1.75 points in a year
-and 2.26 across two. At 2% the bar flags that and nothing else. At 1% it would report ordinary
-annual churn as policy; at 5% it would have found nothing in three years of federal data, which is
-not a measurement but a way of never having to say anything.</p>
+and 2.26 across two. At {systemic}% the bar flags that and nothing else. At 1% it would report
+ordinary annual churn as policy; at 5% it would have found nothing in three years of federal data,
+which is not a measurement but a way of never having to say anything.</p>
 <p>Drift is reported in both directions: fields that <em>started</em> being reported are as real a
 finding as fields that stopped, and reporting only the losses would make this an argument rather
 than a measurement. A field whose rate cannot be computed in either run is reported as unmeasured
@@ -493,6 +502,26 @@ can be checked.</p>
         ),
         body=body,
     )
+
+
+def _bound(value: float | None, *, upper: bool) -> str:
+    """Render one end of a credible range, in a notation a prospective student will read.
+
+    Never ``g``. Past four significant digits it switches to exponent form and the thousands
+    separator stops applying, so four of the six Scorecard ceilings were published as ``5e+05``,
+    ``4e+05``, ``1.5e+05`` and ``2.5e+05`` on the one page whose entire job is to be argued with by
+    people who are not statisticians. The rationale directly above each of them says "$1,000" and
+    "aggregate federal borrowing limits" in plain words, and then the generated line underneath
+    said ``4e+05``.
+
+    Fixed-point with the trailing zeros trimmed rather than ``,.0f``, so that a bound which is not
+    a whole number stays honest. Every bound defined today is integral and ``,.0f`` would be
+    correct for all of them; it would also silently round a future credible range of 0.5 to "0",
+    which is a rule misstated on the page that states the rules.
+    """
+    if value is None:
+        return "no upper bound" if upper else "no lower bound"
+    return html.escape(f"{value:,.4f}".rstrip("0").rstrip("."))
 
 
 def _share(numerator: int, denominator: int) -> str:
