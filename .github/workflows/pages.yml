@@ -4,6 +4,12 @@ name: publish-site
 # data/report.json and data/national.json, both of which are committed. So this workflow needs
 # no network, no API key, and no secrets, and the published pages are reproducible from the
 # commit they were built at.
+#
+# The origin stamped into the 616 canonical links, the sitemap and robots.txt is taken from the
+# deploy target the Pages API reports, not from a constant in the source. Issue #2 was those
+# URLs naming a host that served a 404, and the reason it went unnoticed for so long is that
+# nothing in the build compared the two. `check_site_origin.py` now does, and fails the build
+# when they disagree.
 
 on:
   push:
@@ -21,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # Read-only, and only so `configure-pages` can ask where this site is served from.
+      pages: read
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -30,16 +38,40 @@ jobs:
           python-version: "3.12"
       - name: Install
         run: python -m pip install -e .
+
+      # Ask where this site is actually served from, before rendering anything that claims it.
+      - id: pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+
+      - name: Resolve the deploy target
+        env:
+          # Via the environment rather than inline `${{ }}`, so the value is data and never
+          # becomes part of the script.
+          BASE_URL: ${{ steps.pages.outputs.base_url }}
+        run: |
+          base_url="${BASE_URL%/}"
+          if [ -z "$base_url" ]; then
+            echo "::error::Pages did not report a base URL, so there is nothing to stamp into" \
+                 "the canonical links. Refusing to publish a site that names an origin nobody" \
+                 "confirmed."
+            exit 1
+          fi
+          echo "SITE_ORIGIN=$base_url" >> "$GITHUB_ENV"
+          echo "Deploy target: $base_url"
+
       - name: Render the site from committed data
         run: >
           python -m disclosed.cli site
           --report data/report.json
           --national data/national.json
           --out site
+          --origin "$SITE_ORIGIN"
           --generated "$(date -u +%F)"
       - name: Fail if the render produced nothing
         run: test -s site/index.html
-      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+      - name: Fail if the site's URLs disagree with the deploy target
+        run: python .github/scripts/check_site_origin.py site "$SITE_ORIGIN"
+
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: site
