@@ -33,16 +33,32 @@ from typing import Final
 from .disclosure import Disclosure
 from .fields import FIELDS, Field
 
-__all__ = ["FieldResult", "GroupSummary", "InstitutionGrade", "grade_institution", "summarize"]
+__all__ = [
+    "BANDS",
+    "FieldResult",
+    "GroupSummary",
+    "InstitutionGrade",
+    "grade_institution",
+    "summarize",
+]
 
 # Letter bands. Chosen so that a B means "a reader can mostly use this record" rather than
 # "above average", because grading on a curve would hide a field-wide collapse in reporting.
-_BANDS: Final[tuple[tuple[float, str], ...]] = (
+#
+# Public because the methodology page prints them, and it prints them from here. A published band
+# table typed into a template is a rule stated where nothing enforces it, next to a grader that is
+# free to move underneath it; an institution reading "C, 70%" is owed the threshold the code
+# actually applied to it.
+BANDS: Final[tuple[tuple[float, str], ...]] = (
     (0.95, "A"),
     (0.85, "B"),
     (0.70, "C"),
     (0.50, "D"),
 )
+
+# What an institution below every band gets. Named rather than repeated as a literal in the
+# grader and again in the sentence the methodology page renders.
+BELOW_EVERY_BAND: Final[str] = "F"
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,10 +123,10 @@ class GroupSummary:
 
 
 def _letter(score: float) -> str:
-    for threshold, letter in _BANDS:
+    for threshold, letter in BANDS:
         if score >= threshold:
             return letter
-    return "F"
+    return BELOW_EVERY_BAND
 
 
 def _identity(record: dict[str, object], key: str) -> str | None:
