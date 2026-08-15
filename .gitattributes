@@ -2,3 +2,9 @@
 # this, git's end-of-line normalization rewrites the file on checkout on some platforms and the
 # assertion fails for a reason that has nothing to do with the data.
 data/dataset.csv -text
+
+# The IPEDS archives are inputs a test replays byte for byte. Marked binary explicitly rather than
+# left to git's content sniffing, because a zip that gets end-of-line normalized on any platform
+# stops being the file NCES published and the replay fails for a reason unrelated to the data.
+data/HD*.zip binary
+data/IC*.zip binary

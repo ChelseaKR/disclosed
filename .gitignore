@@ -13,6 +13,13 @@ dist/
 # Built output. The site is regenerated from data/report.json on every run, so committing it
 # would put two copies of the same claim in the repo and let them disagree.
 site/
-data/HD*.zip
-data/IC*.zip
+
+# The IPEDS archives are NOT ignored. data/HD*.zip and data/IC*.zip are 4.1 MB of public federal
+# data with no key, no quota and no terms, and committing them is what makes data/national.json
+# and data/snapshots/ipeds/*.json checkable by a reader rather than only by their author. Before
+# they were committed, every input to the national artifact was ignored, so nobody who cloned this
+# repository could regenerate the file that carries every national figure the site publishes.
+#
+# The full crosscheck payload stays ignored: it is 2.9 MB, it is byte-reproducible from the two
+# archives above in under a second, and it is an intermediate rather than a claim.
 data/crosscheck.json
