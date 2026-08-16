@@ -9,11 +9,20 @@ name: accessibility
 # regression, not a rounding difference: every point below 100 is a specific element a specific
 # person cannot use.
 #
-# The budgets in lighthouse-budget.json are the other half. Every resource type except the
-# document itself is budgeted at zero, which is not an aspiration: the site genuinely has no
-# scripts, no external stylesheets, no fonts, no images and no third-party requests, and the
-# budget exists so that adding one is a build failure rather than a decision nobody noticed. A
-# page about undisclosed information should not be quietly shipping a tracker.
+# lighthouse-budget.json is NOT the other half, and was described here for weeks as though it
+# were. `--budget-path` never makes Lighthouse exit non-zero, the scoring step below reads only
+# the accessibility category, and lighthouse@12 (12.8.2) emits no budget audit at all: a run
+# against a budget file with every line set to zero exited 0, scored accessibility 1, and its
+# report contained no audit whose key mentions "budget". Four of the five audits here ask for
+# --only-categories=accessibility, which does not even collect the resource summary.
+#
+# The resource-count budget the README actually argues for -- no scripts, no external
+# stylesheets, no fonts, no images, no third-party requests, because a page about undisclosed
+# information should not be quietly shipping a tracker -- is enforced statically over every one
+# of the 616 generated pages in `make verify`, by
+# tests/test_accessibility.py::TestTheResourceBudget. The flag is left below because the budget
+# file is still the readable statement of intent and lighthouse may enforce it again one day; it
+# is not counted as a gate anywhere.
 
 on:
   push:

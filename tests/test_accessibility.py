@@ -5,9 +5,13 @@ the rest of this project rather than a separate one bolted on. These run in ``ma
 no browser and no network, so a regression fails the build rather than waiting for somebody to
 remember to audit the site.
 
-They do not replace a real audit. Contrast ratios, landmark structure and table semantics are what
-a static checker can prove; whether the prose makes sense to a screen reader user is not, and the
-Lighthouse budget in ``lighthouse-budget.json`` is what carries the rest.
+They do not replace a real audit. Contrast ratios, landmark structure, table semantics and the
+resource budget are what a static checker can prove; whether the prose makes sense to a screen
+reader user is not, and the Lighthouse job in ``.github/workflows/accessibility.yml`` is what
+carries the part that needs a rendering engine.
+
+The resource budget moved in here from ``lighthouse-budget.json``, which turned out to enforce
+nothing at all. :class:`TestTheResourceBudget` says how that was measured.
 """
 
 from __future__ import annotations
@@ -338,6 +342,101 @@ class TestTableSemantics:
             text = page.read_text(encoding="utf-8")
             for header in re.findall(r"<th\b[^>]*>", text):
                 assert "scope=" in header, f"{page}: {header}"
+
+
+class TestTheResourceBudget:
+    """Zero subresources of any kind, on every page, checked from the built bytes.
+
+    ``lighthouse-budget.json`` budgets every non-document resource type at zero, and the README
+    said that made adding one "a build failure rather than a decision nobody noticed". It did
+    not. Lighthouse's ``--budget-path`` produces a ``performance-budget`` audit and never a
+    non-zero exit, the scoring step in ``.github/workflows/accessibility.yml`` reads only
+    ``categories.accessibility.score``, and Lighthouse 12 does not emit the budget audits at all:
+    a run of ``lighthouse@12`` (12.8.2) against a budget file with every line set to zero exited
+    **0**, scored accessibility **1**, and its report contained **no audit whose key mentions
+    "budget"**. Four of the five audited pages ask for ``--only-categories=accessibility``, which
+    does not even collect ``resource-summary``. The budget file was enforced by nothing.
+
+    So it is enforced here instead, and more completely: this runs over every page the generator
+    produces rather than one of each of five kinds, needs no browser, and fails in ``make
+    verify`` where the person who added the tracker is still looking at the diff.
+
+    Scope, stated rather than implied. This checks the resource *counts*, which are the claim the
+    README actually makes: no scripts, no external stylesheets, no fonts, no images, no
+    third-party requests. It does not check the transfer-size or timing budgets, which need a
+    browser and a network to mean anything. Those are still unenforced.
+    """
+
+    # Anything that makes the browser go and fetch something. `<a>` is deliberately absent: the
+    # pages link out to Cornell's US Code and to the source agencies, and an outbound link is not
+    # a request the page makes.
+    _FETCHING_TAGS = frozenset(
+        {
+            "script",
+            "img",
+            "picture",
+            "source",
+            "video",
+            "audio",
+            "track",
+            "iframe",
+            "embed",
+            "object",
+            "frame",
+            "applet",
+        }
+    )
+
+    # `<link>` fetches for every relation except these. `canonical` and `alternate` are metadata:
+    # they name a URL, they do not retrieve one.
+    _INERT_LINK_RELS = frozenset({"canonical", "alternate"})
+
+    class _Resources(html.parser.HTMLParser):
+        def __init__(self, fetching: frozenset[str], inert_rels: frozenset[str]) -> None:
+            super().__init__()
+            self._fetching = fetching
+            self._inert_rels = inert_rels
+            self.requests: list[str] = []
+
+        def handle_starttag(self, tag: str, attrs: Any) -> None:
+            attributes = {name: (value or "") for name, value in attrs}
+            if tag in self._fetching:
+                self.requests.append(f"<{tag}>")
+            elif tag == "link":
+                rel = attributes.get("rel", "").strip().lower()
+                if rel not in self._inert_rels:
+                    self.requests.append(f'<link rel="{rel}">')
+            if "srcset" in attributes or "background" in attributes:
+                self.requests.append(
+                    f"<{tag} {'srcset' if 'srcset' in attributes else 'background'}>"
+                )
+
+    def _requests(self, page: Path) -> list[str]:
+        parser = self._Resources(self._FETCHING_TAGS, self._INERT_LINK_RELS)
+        parser.feed(page.read_text(encoding="utf-8"))
+        return parser.requests
+
+    def test_no_page_fetches_anything_but_itself(self, built: Path) -> None:
+        offenders = {
+            page.relative_to(built).as_posix(): found
+            for page in _pages(built)
+            if (found := self._requests(page))
+        }
+        assert not offenders, (
+            "lighthouse-budget.json budgets every non-document resource type at zero and the "
+            f"site now requests these: {offenders}. A page about undisclosed information should "
+            "not be quietly shipping a tracker. If the resource is genuinely wanted, change the "
+            "budget file and this test in the same commit, so the decision is visible."
+        )
+
+    def test_no_stylesheet_reaches_off_the_page(self, built: Path) -> None:
+        """The CSS is inline, so the budget's zero-stylesheet line is only true while nothing
+        inside it fetches. ``@import`` and ``url()`` are both requests the count would miss."""
+        for page in _pages(built):
+            for block in re.findall(r"<style\b[^>]*>(.*?)</style>", page.read_text("utf-8"), re.S):
+                assert "@import" not in block, page
+                assert "url(" not in block, page
+                assert "@font-face" not in block, page
 
 
 class TestMeaningIsNeverCarriedByColourAlone:

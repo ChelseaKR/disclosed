@@ -9,7 +9,8 @@ optional CI stages.
 
 Working, pre-release (`0.1.0.dev0`, status: Beta). Both federal adapters are live, the drift
 measurement has three real IPEDS collection years behind it, the national corpus is committed,
-and the site holds a Lighthouse accessibility score of 100 under zero resource budgets. Next
+and the site holds a Lighthouse accessibility score of 100 and ships no subresource of any
+kind. Next
 milestones, in order:
 
 1. **Credential Registry (CTDL) access.** The public search endpoint returns `x-total: 0` for
@@ -39,7 +40,8 @@ Per QUALITY-AND-METRICS-STANDARD's ledger shape. Values as measured 2026-08-07.
 | Branch coverage | >= 90% | `pytest --cov --cov-branch --cov-fail-under=90` in `make verify` and CI | AUTO |
 | Lint, format, types | zero findings | ruff check + ruff format --check + strict mypy in `make verify` and CI | AUTO |
 | Lighthouse accessibility | == 100 on all five page classes | `.github/workflows/accessibility.yml`; missing report or missing category fails | AUTO |
-| Resource budgets | 0 of every non-document type | `lighthouse-budget.json` in the same workflow | AUTO |
+| Resource counts | 0 of every non-document type, on every page | `tests/test_accessibility.py::TestTheResourceBudget` in `make verify` | AUTO |
+| Resource transfer sizes and timings | as stated in `lighthouse-budget.json` | **nothing** - `--budget-path` never fails a Lighthouse run and Lighthouse 12 emits no budget audit; recorded here rather than claimed as a gate | NONE |
 | Static WCAG checks | zero violations | `tests/test_accessibility.py` (contrast both themes, landmarks, headings, table semantics, colour-independence) in `make verify` | AUTO |
 | Committed artifacts match their generators | byte-for-byte | tests tying `data/dataset.csv` / `data/national.json` to the code that writes them | AUTO |
 | SHA-pinned `uses:` | 100% | full 40-char SHAs in all workflows; Dependabot keeps them current | AUTO |
@@ -57,5 +59,5 @@ Evaluation row in the README conformance table).
 | Stage | Applicable? | Gate |
 |---|---|---|
 | 6. a11y | **Applicable** | Static WCAG suite in `make verify` + Lighthouse 100 gate in `accessibility.yml` |
-| 7. perf | **Applicable (budget form)** | `lighthouse-budget.json` zero budgets enforced in `accessibility.yml`; no load-test surface exists (static files, no server) |
+| 7. perf | **Applicable (budget form)** | Zero-subresource budget enforced statically over every page in `make verify`; the transfer-size and timing lines of `lighthouse-budget.json` are enforced by nothing and the ledger row says so. No load-test surface exists (static files, no server) |
 | 8. responsible | **Applicable** | `docs/RESPONSIBLE-TECH-AUDITS.md`; the ethics constraints are code (classifier, scope refusals) and are tested |
