@@ -96,15 +96,41 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # Staged BEFORE the comparison, because `git diff` compares the index and the working tree
+      # and an untracked file is in neither. Every daily snapshot is a new path, so the old shape
+      # of this step -- `git diff --quiet -- data/snapshots/` ahead of the `git add` -- was asking
+      # git a question that could only ever be answered "unchanged". It answered that ten days
+      # running while the run above graded 6,273 institutions each time, and the record this
+      # project's entire drift argument depends on was written to a runner and thrown away. The
+      # comparison a new file can fail is the index against HEAD, which is what `--cached` is.
       - name: Commit the snapshot
+        env:
+          TAKEN: ${{ steps.snap.outputs.taken }}
         run: |
-          taken="${{ steps.snap.outputs.taken }}"
-          if git diff --quiet --exit-code -- data/snapshots/; then
-            echo "Snapshot for ${taken} is unchanged; nothing to commit."
+          git add data/snapshots/
+          if git diff --cached --quiet --exit-code -- data/snapshots/; then
+            echo "Snapshot for ${TAKEN} is byte-identical to the committed one; nothing to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/snapshots/
-          git commit -m "data: per-field disclosure snapshot ${taken} [skip ci]"
+          git commit -m "data: per-field disclosure snapshot ${TAKEN} [skip ci]"
           git push
+
+      # The post-condition, checked rather than assumed. A step that reports success without
+      # having done anything is the failure this repository exists to name, and the previous
+      # version of the step above was exactly that for ten consecutive runs. This one asserts the
+      # effect: today's snapshot is in the history, not merely on the runner's disk.
+      - name: Fail if the snapshot never reached the history
+        env:
+          TAKEN: ${{ steps.snap.outputs.taken }}
+        run: |
+          path="data/snapshots/scorecard/${TAKEN}.json"
+          if ! git ls-files --error-unmatch -- "${path}" >/dev/null 2>&1; then
+            echo "::error title=Snapshot not committed::${path} was written by this run but is \
+          not tracked. The daily series is the only evidence behind every drift claim this \
+          project makes, so a run that grades the country and commits nothing is a failed run, \
+          not a quiet one."
+            exit 1
+          fi
+          echo "${path} is committed."
