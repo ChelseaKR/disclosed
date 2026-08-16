@@ -68,5 +68,9 @@ jobs:
       - name: pip-audit the locked set
         run: |
           python -m pip install "pip-audit==2.10.1" "uv==0.12.1"
-          uv export --frozen --no-emit-project --output-file /tmp/disclosed-locked.txt
+          # --locked, not --frozen. `--frozen` exports the lockfile without checking it against
+          # pyproject.toml, so a stale lock would be audited clean while the set anyone actually
+          # installs went unexamined. An audit of the wrong dependency set is worse than no audit,
+          # because it comes with a green check.
+          uv export --locked --no-emit-project --output-file /tmp/disclosed-locked.txt
           pip-audit --strict --requirement /tmp/disclosed-locked.txt

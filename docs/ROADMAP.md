@@ -12,9 +12,18 @@ measurement has three real IPEDS collection years behind it, the national corpus
 and the site holds a Lighthouse accessibility score of 100 under zero resource budgets. Next
 milestones, in order:
 
-1. **Credential Registry (CTDL) access.** The public search endpoint returns `x-total: 0` for
-   every query shape tried; the adapter stays unwritten until access is confirmed (README,
-   Sources). No stub adapters.
+1. **Credential Registry (CTDL) adapter.** No longer blocked, and it never was. Probed
+   unauthenticated on 2026-08-15: `GET /ce-registry/search?resource_type=credential` returns
+   HTTP 200 with `x-total: 133346`, `?resource_type=organization` returns 34,082, and
+   `GET /ce-registry/envelopes?page=N&per_page=1` returns 200 with `x-total: 395878` and a full
+   `decoded_resource` per envelope. `/robots.txt` 404s, so no crawl directives are published.
+   The old note read an `x-total: 0` as a locked door; the filter parameter is `resource_type`
+   and an unmatched value is answered 200-with-zero rather than with an error, so the zero meant
+   "your query matched nothing" (README, "The zero in the Credential Registry row was our own
+   failure mode"). The adapter is unwritten because nobody has written it, which is a different
+   status and belongs in a different sentence. First question for whoever does: in a
+   200-organization sample only 8 records mentioned IPEDS at all, so measure the join rate to
+   the two federal corpora before designing around it.
 2. **Veterans-page grading rule.** The IPEDS characteristics file could supply an
    applicability rule, but no universal publication duty exists, so it stays ungraded until a
    defensible rule does (README).

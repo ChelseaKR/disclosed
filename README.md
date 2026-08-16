@@ -169,10 +169,33 @@ stop-reporting event is newsworthy well before it touches a majority of institut
 | --- | --- | --- |
 | College Scorecard | **Live** | Public API. `DEMO_KEY` works for small runs; set `DATA_GOV_API_KEY` for a higher rate limit. |
 | IPEDS | **Live** | Public bulk directory file, no key and no quota. Adds required disclosures the Scorecard doesn't carry, and lets the same institution be checked against two federal sources. |
-| Credential Registry (CTDL) | Blocked | The public search endpoint returns `x-total: 0` for every query shape tried; it appears to require an API key. Adapter deliberately not stubbed in until access is confirmed. |
+| Credential Registry (CTDL) | **Open, adapter unwritten** | Public and unauthenticated. `GET /ce-registry/search?resource_type=credential` answered 200 with `x-total: 133346` on 2026-08-15 with no key and no headers; `/ce-registry/envelopes` answered 200 with `x-total: 395878` and a full `decoded_resource` per envelope. This row previously said "blocked", and that was our error, not theirs: see below. |
 
 A partial fetch is treated as a failure, not as data. Truncation would understate disclosure across
 every institution that never arrived, which looks identical to a real reporting collapse.
+
+### The zero in the Credential Registry row was our own failure mode
+
+For weeks this table recorded the Credential Registry as blocked behind an API key, on the
+evidence that its search endpoint "returns `x-total: 0` for every query shape tried". It does
+return that, for the shapes that were tried. The registry filters on `resource_type`, and a
+request carrying an unrecognized parameter or an unmatched value is answered **HTTP 200 with
+`x-total: 0`** rather than with an error: `?type=ceterms:Credential` and
+`?resource_type=bogus_value` both return zero, while `?resource_type=credential` returns
+133,346 and `?resource_type=organization` returns 34,082. Nothing was ever locked.
+
+A zero that means "your filter matched nothing" was read as a measurement of what is available.
+That is the exact confusion this project exists to name, one level up: absence of a value and
+absence of a query are not the same absence, and a source that reports both as `0` will be
+misread by anyone who does not already know which one they are looking at. It was misread here,
+in the repository that grades other people for it, and the misreading stopped work on a third
+source for weeks.
+
+`/robots.txt` 404s, so the registry publishes no crawl directives (RFC 9309 §2.2.3 treats a 4xx
+as unrestricted). Whether a CTDL adapter can be joined to the two federal corpora is a separate
+and still-open question: in the first 200 organizations
+(`?resource_type=organization&per_page=100`, pages 1 and 2, fetched the same day) only 8 records
+mentioned IPEDS at all, so the join rate has to be measured before anything is built on it.
 
 IPEDS states absence three different ways, all negative integers: `-1` not reported, `-2` not
 applicable, `-3` not available. They are not interchangeable and only the first counts against an
@@ -269,7 +292,7 @@ skips.
 | Responsible-Tech Framework | Applies - audit record in `docs/RESPONSIBLE-TECH-AUDITS.md`; the ethics constraints (suppression never punished, no grade is not a zero, refuse-to-overclaim scope) are code and are tested |
 | Code Quality | Applies - ruff (incl. bandit `S` rules, complexity <= 10) + `ruff format --check` + strict mypy + pytest with a 90% branch-coverage floor; `uv.lock` and `.python-version` committed; dev deps in a PEP 735 group |
 | Security & Supply-Chain | Applies - gitleaks, semgrep, and pip-audit as blocking CI gates (`.github/workflows/security.yml`); all actions SHA-pinned; Dependabot for deps and action pins; ASVS L1 declared in `docs/RESPONSIBLE-TECH-AUDITS.md` |
-| CI/CD | Applies - `verify.yml` runs `make verify` verbatim (local/CI parity) with `uv sync --frozen` as the lockfile-drift check; workflows are permission-scoped. Branch protection is a GitHub settings action, recorded as open in `docs/RESPONSIBLE-TECH-AUDITS.md` |
+| CI/CD | Applies - `verify.yml` runs `make verify` verbatim (local/CI parity) with `uv lock --check` as the lockfile-drift check and `uv sync --locked` as the install; workflows are permission-scoped. Branch protection is a GitHub settings action, recorded as open in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | Observability | Applies - Tier C (CLI producing a static build; no hosted runtime): declared in `docs/ROADMAP.md` |
 | Accessibility | Applies - static WCAG suite in `make verify` (`tests/test_accessibility.py`), Lighthouse accessibility == 100 on all five page classes with zero resource budgets (`.github/workflows/accessibility.yml`, `lighthouse-budget.json`). Human walkthrough and ACR remain open, recorded honestly in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | Internationalization | Applies - deferred to the first public release, with the entry point recorded (`docs/I18N.md`) |
