@@ -16,13 +16,29 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-      # uv sync --frozen is the lockfile-drift check: CI refuses to resolve anything the
-      # committed uv.lock does not already pin, so the toolchain that gates a merge is the
-      # toolchain the lockfile says it is.
-      - name: Install
-        run: |
-          python -m pip install "uv==0.12.1"
-          uv sync --frozen
+      # `uv sync --frozen` was here, described as the lockfile-drift check. It is not one, and
+      # this was measured rather than reasoned about. On a copy of this project with a
+      # dependency added to pyproject.toml and uv.lock left untouched, under the same
+      # uv 0.12.1 this workflow pins:
+      #
+      #   uv lock --check    exit 1   ("the lockfile is not up-to-date with pyproject.toml")
+      #   uv sync --locked   exit 1   (same)
+      #   uv sync --frozen   exit 0   (installed the stale set and said nothing)
+      #
+      # `--frozen` means "install from the lock without consulting pyproject.toml at all", so
+      # it cannot notice the two disagreeing; that is the whole point of the flag. It is the
+      # right flag for a deploy and the wrong one for a gate.
+      #
+      # The check is separated from the install so the failure names itself. Note also why
+      # `make verify` runs .venv/bin/python rather than `uv run`: a bare `uv run` re-locks
+      # silently, so a gate invoked that way repairs the drift it was asked to detect and then
+      # passes.
+      - name: Install uv
+        run: python -m pip install "uv==0.12.1"
+      - name: Check the lockfile against pyproject.toml
+        run: uv lock --check
+      - name: Install exactly what the lockfile pins
+        run: uv sync --locked
       - name: Verify (lint, format check, strict typecheck, tests with coverage floor)
         run: make verify
 
