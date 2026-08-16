@@ -19,8 +19,11 @@ Two rules make this gate hard to defeat by accident:
 * Figures are compared as the strings the README prints, so a rounding change fails here rather
   than being absorbed into a comparison of floats nobody reads.
 
-Figures that cannot be derived from committed bytes at all live in
-:class:`TestTheRawDirectoryFigures`, which says so out loud instead of pretending to check them.
+Every figure this module states is derived from bytes committed to this repository. There is no
+skipped class and no conditional gate: the six IPEDS archives in ``data/`` are tracked, and
+``.gitignore`` says at length why. If an input goes missing the suite fails, because a test that
+turns a missing input into a green check is the failure this project exists to describe in other
+people's data.
 """
 
 from __future__ import annotations
@@ -30,8 +33,6 @@ import re
 import tomllib
 from pathlib import Path
 from typing import Any
-
-import pytest
 
 from disclosed import drift
 from disclosed.sources import ipeds
@@ -301,19 +302,26 @@ class TestTheCitationFile:
         assert "Apache License" in licence and "Version 2.0, January 2004" in licence
 
 
-@pytest.mark.skipif(
-    not (_DATA / "HD2023.zip").exists(),
-    reason=(
-        "data/HD2023.zip is not committed, so these two figures are reproducible with a stated "
-        "command (`make crosscheck`) rather than from committed bytes. This is the one gap in "
-        "this file and it is stated rather than hidden: commit the archive and these checks run."
-    ),
-)
 class TestTheRawDirectoryFigures:
     """The two figures taken from the directory file itself rather than from a graded artifact.
 
-    They are the evidence for why an applicability rule was needed at all, so they are worth
-    checking whenever the archive is present.
+    They are the evidence for why an applicability rule was needed at all.
+
+    This class used to carry a ``skipif`` whose reason said ``data/HD2023.zip`` is not committed,
+    and called itself "the one gap in this file". The archive was committed in `a94812f`, before
+    the skip was written, so the sentence was untrue the day it was typed. The behaviour was
+    fine, the predicate was ``exists()`` and the file exists; what was wrong is that the module
+    whose whole job is to make the README's numbers checkable told an auditing reader that two of
+    them were not.
+
+    The skip is gone rather than reworded. A guard that turns a missing input into a green check
+    is the same shape as the failure this project was built to name: a suppressed value and a
+    missing one look identical on a page, and a skipped test and a passing one look identical on
+    a badge. ``README.md`` already makes the argument in the IPEDS loader's voice, that a load
+    which cannot read the characteristics file fails rather than returning directory-only
+    records, "because a field that silently stops being graded looks on the page exactly like a
+    field everybody suddenly started reporting". If the archive ever goes missing, this suite
+    should say so out loud.
     """
 
     def _directory(self) -> list[dict[str, Any]]:
