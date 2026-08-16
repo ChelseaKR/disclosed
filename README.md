@@ -252,10 +252,20 @@ audible version of printing an absence as a bare number. And every table row now
 `<th scope="row">`, because without one a screen reader reading the third cell of the four
 hundredth row announces a classification with nothing attached to say whose it is.
 
-`lighthouse-budget.json` budgets every resource type except the document at **zero**. That is not
-an aspiration: there are no scripts, no external stylesheets, no fonts, no images and no
-third-party requests, and the budget exists so that adding one is a build failure rather than a
-decision nobody noticed.
+There are no scripts, no external stylesheets, no fonts, no images and no third-party requests,
+and adding one is a build failure rather than a decision nobody noticed. That is enforced in
+`make verify`, over **every** generated page, by parsing the built HTML for anything that would
+make a browser fetch a second file.
+
+It used to be attributed to `lighthouse-budget.json`, which budgets every non-document resource
+type at zero and enforced none of it. `--budget-path` never makes Lighthouse exit non-zero, the
+scoring step reads only the accessibility category, and Lighthouse 12 emits no budget audit at
+all: a `lighthouse@12` (12.8.2) run against a budget file with every line set to zero exited 0,
+scored accessibility 1, and produced no audit whose key even contains the word "budget". Four of
+the five pages that job audits ask only for the accessibility category, which does not collect
+the resource summary either. A gate that cannot fail is worse than no gate, because the badge is
+the same colour. The budget file stays as the declaration of intent; the enforcement is now
+somewhere it can fail.
 
 ## Development
 
@@ -294,13 +304,13 @@ skips.
 | Security & Supply-Chain | Applies - gitleaks, semgrep, and pip-audit as blocking CI gates (`.github/workflows/security.yml`); all actions SHA-pinned; Dependabot for deps and action pins; ASVS L1 declared in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | CI/CD | Applies - `verify.yml` runs `make verify` verbatim (local/CI parity) with `uv lock --check` as the lockfile-drift check and `uv sync --locked` as the install; workflows are permission-scoped. Branch protection is a GitHub settings action, recorded as open in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | Observability | Applies - Tier C (CLI producing a static build; no hosted runtime): declared in `docs/ROADMAP.md` |
-| Accessibility | Applies - static WCAG suite in `make verify` (`tests/test_accessibility.py`), Lighthouse accessibility == 100 on all five page classes with zero resource budgets (`.github/workflows/accessibility.yml`, `lighthouse-budget.json`). Human walkthrough and ACR remain open, recorded honestly in `docs/RESPONSIBLE-TECH-AUDITS.md` |
+| Accessibility | Applies - static WCAG suite in `make verify` (`tests/test_accessibility.py`), including the zero-subresource budget on every generated page; Lighthouse accessibility == 100 on all five page classes (`.github/workflows/accessibility.yml`). Human walkthrough and ACR remain open, recorded honestly in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | Internationalization | Applies - deferred to the first public release, with the entry point recorded (`docs/I18N.md`) |
 | AI Evaluation | N/A - no LLM or model component; every classification is a deterministic rule with a committed rationale |
 | Documentation | Applies - `CHANGELOG.md`, `CITATION.cff`, `SECURITY.md`, `CONTRIBUTING.md`, ADR log (`docs/adr/`), roadmap and metrics ledger (`docs/ROADMAP.md`) |
 | Quality & Metrics | Applies - metrics ledger with AUTO/REVIEW gates in `docs/ROADMAP.md` |
 | Release & Versioning | N/A - nothing versioned is released; committed data plus a rebuildable static site, no downstream consumers (`docs/adr/0001-no-versioned-release.md`) |
-| Performance | Applies - `lighthouse-budget.json` budgets every non-document resource at zero, enforced in CI; no server-side surface to load-test |
+| Performance | Applies - zero non-document subresources on every page, enforced in `make verify` (`tests/test_accessibility.py::TestTheResourceBudget`); `lighthouse-budget.json` states the same budget but Lighthouse enforces none of it, see Accessibility above. Transfer-size and timing budgets remain unenforced. No server-side surface to load-test |
 | Incident Response | Applies - no incidents to date; postmortems will live in `docs/incidents/` |
 | Data Governance | Applies - public federal datasets only, each payload names its source and coverage in its `scope` block; data inventory in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | AI-Development Measurement | Applies - declared in `docs/ROADMAP.md` metrics ledger |
