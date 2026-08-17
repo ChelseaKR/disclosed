@@ -18,11 +18,19 @@ name: accessibility
 #
 # The resource-count budget the README actually argues for -- no scripts, no external
 # stylesheets, no fonts, no images, no third-party requests, because a page about undisclosed
-# information should not be quietly shipping a tracker -- is enforced statically over every one
-# of the 616 generated pages in `make verify`, by
-# tests/test_accessibility.py::TestTheResourceBudget. The flag is left below because the budget
-# file is still the readable statement of intent and lighthouse may enforce it again one day; it
-# is not counted as a gate anywhere.
+# information should not be quietly shipping a tracker -- is enforced statically in
+# `make verify`, by tests/test_accessibility.py. The flag is left below because the budget file
+# is still the readable statement of intent and lighthouse may enforce it again one day; it is
+# not counted as a gate anywhere.
+#
+# That paragraph used to say the budget was enforced "over every one of the 616 generated
+# pages", and it was not. TestTheResourceBudget runs over a six-page fixture: one page of each
+# kind, from a two-institution report with no implausible finding in it, so the markup the home
+# page and the institution pages render around a finding was never parsed by anything. A
+# tracker added to that branch shipped past the suite. TestTheResourceBudgetOverThePublishedSite
+# now renders the committed report and the committed national artifact -- the same bytes
+# pages.yml uploads, all 616 pages -- and parses every one, and that test checks the count above
+# against the build rather than leaving it as a number in a comment.
 
 on:
   push:

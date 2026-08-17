@@ -17,6 +17,7 @@ nothing at all. :class:`TestTheResourceBudget` says how that was measured.
 from __future__ import annotations
 
 import html.parser
+import json
 import re
 from itertools import pairwise
 from pathlib import Path
@@ -114,6 +115,25 @@ def built(tmp_path: Path) -> Path:
 # one state, and one institution page per graded record. A floor rather than an exact count, so
 # that adding a page kind does not fail here, but a build that rendered nothing does.
 _EXPECTED_PAGES: int = 6
+
+# The committed report and the committed national artifact: the exact bytes `pages.yml` renders
+# and uploads. Rendered whole in TestTheResourceBudgetOverThePublishedSite below.
+_DATA = Path(__file__).resolve().parent.parent / "data"
+_WORKFLOWS = Path(__file__).resolve().parent.parent / ".github" / "workflows"
+
+
+@pytest.fixture(scope="module")
+def published(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """The published site, built from the committed artifacts, once for the whole module."""
+    out = tmp_path_factory.mktemp("published")
+    site.build(
+        json.loads((_DATA / "report.json").read_text(encoding="utf-8")),
+        out,
+        origin="https://example.test",
+        generated="2026-08-05",
+        national=json.loads((_DATA / "national.json").read_text(encoding="utf-8")),
+    )
+    return out
 
 
 def _pages(root: Path) -> list[Path]:
@@ -452,3 +472,67 @@ class TestMeaningIsNeverCarriedByColourAlone:
         page = (built / "institution" / "1" / "index.html").read_text(encoding="utf-8")
         assert "Not reported" in page
         assert "Reported" in page
+
+
+class TestTheResourceBudgetOverThePublishedSite:
+    """The same budget, over the site that is actually published rather than a fixture of it.
+
+    ``.github/workflows/accessibility.yml`` said the budget was "enforced statically over every
+    one of the 616 generated pages in ``make verify``". It was not, and the gap was not a
+    quibble about wording. ``make verify`` never built 616 pages: :class:`TestTheResourceBudget`
+    runs over the six-page fixture at the top of this module, whose report carries two
+    institutions, no implausible finding, and therefore none of the markup the home page and the
+    institution pages render around a finding -- the ``<code>`` block holding a published value,
+    the peer verdict, the rationale. A subresource introduced into that branch would have shipped
+    past a suite claiming to have checked every page.
+
+    So the committed report is rendered here, with the committed national artifact beside it, and
+    every page of the result is parsed. It is the same bytes ``pages.yml`` uploads. It costs about
+    half a second, which is a poor reason to have been checking a fixture instead.
+
+    The page count itself is a published figure -- two workflows and the README cite it -- so it
+    is checked against the build rather than trusted, the same way ``tests/test_doc_counts.py``
+    treats every number in the README.
+    """
+
+    def test_the_build_renders_the_finding_markup_the_fixture_never_reaches(self) -> None:
+        """The reason this class exists, asserted rather than assumed.
+
+        If the committed report ever stops carrying an implausible value, the pages below stop
+        differing from the fixture in the way that motivated auditing them, and this should say
+        so rather than going on quietly passing over a build that no longer proves anything.
+        """
+        report = json.loads((_DATA / "report.json").read_text(encoding="utf-8"))
+        assert report["implausible"], (
+            "data/report.json carries no implausible finding, so the published build no longer "
+            "renders the findings markup that the fixture at the top of this module omits."
+        )
+
+    def test_every_page_of_the_published_site_is_audited(self, published: Path) -> None:
+        """The count the prose cites, recomputed from the report the prose is about."""
+        pages = sorted(published.rglob("index.html"))
+        assert len(pages) > _EXPECTED_PAGES
+        for stating in (
+            _WORKFLOWS / "accessibility.yml",
+            _WORKFLOWS / "pages.yml",
+            _WORKFLOWS.parent.parent / "README.md",
+        ):
+            text = stating.read_text(encoding="utf-8")
+            assert re.search(rf"\b{len(pages)}\b", text), (
+                f"{stating.name} no longer states the page count as {len(pages)}. The committed "
+                "report renders that many pages; prose explaining itself with another number is "
+                "describing a build that does not exist."
+            )
+
+    def test_no_published_page_fetches_anything_but_itself(self, published: Path) -> None:
+        budget = TestTheResourceBudget()
+        offenders = {
+            page.relative_to(published).as_posix(): found
+            for page in sorted(published.rglob("index.html"))
+            if (found := budget._requests(page))
+        }
+        assert not offenders, (
+            f"the published site requests these: {offenders}. There are no scripts, no "
+            "external stylesheets, no fonts, no images and no third-party requests, and the "
+            "README says adding one is a build failure, not a decision nobody noticed."
+        )

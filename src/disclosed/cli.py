@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from . import crosswalk, dataset, national, site
+from .disclosure import CLASSIFICATIONS
 from .drift import Snapshot, compare
 from .fields import IPEDS_FIELDS
 from .grading import InstitutionGrade, grade_institution, summarize
@@ -228,6 +229,14 @@ def _cmd_snapshot(args: argparse.Namespace) -> int:
             reported.setdefault(label, 0)
             missing.setdefault(label, 0)
             applicable.setdefault(label, 0)
+            if state not in CLASSIFICATIONS:
+                # A word this version does not know. Reports outlive the code that wrote them, so
+                # one will arrive eventually, and the tempting reading -- "not suppressed, so it
+                # counts" -- puts it in the denominator without ever putting it in the numerator.
+                # Every drift rate for the field then falls, by an amount that has nothing to do
+                # with what any institution published, and the drift module's whole argument is
+                # about denominators that move for reasons the measurement cannot see.
+                continue
             # The denominator every drift rate divides by, counted the same way the grade counts
             # it: suppressed and inapplicable institutions were never asked and leave it.
             if state not in ("suppressed", "not_applicable"):

@@ -254,8 +254,12 @@ hundredth row announces a classification with nothing attached to say whose it i
 
 There are no scripts, no external stylesheets, no fonts, no images and no third-party requests,
 and adding one is a build failure rather than a decision nobody noticed. That is enforced in
-`make verify`, over **every** generated page, by parsing the built HTML for anything that would
-make a browser fetch a second file.
+`make verify`, by parsing the built HTML for anything that would make a browser fetch a second
+file: once over a fixture holding one page of every kind, and once over the whole published
+site, all 616 pages of it, rendered from `data/report.json` and `data/national.json`. The second
+pass exists because the fixture's report carries no implausible finding, so the markup both the
+home page and the institution pages render around a finding was never parsed by anything, and a
+tracker added to that branch would have shipped past a suite that said it checked every page.
 
 It used to be attributed to `lighthouse-budget.json`, which budgets every non-document resource
 type at zero and enforced none of it. `--budget-path` never makes Lighthouse exit non-zero, the
@@ -300,8 +304,8 @@ skips.
 | Standard | State |
 |---|---|
 | Responsible-Tech Framework | Applies - audit record in `docs/RESPONSIBLE-TECH-AUDITS.md`; the ethics constraints (suppression never punished, no grade is not a zero, refuse-to-overclaim scope) are code and are tested |
-| Code Quality | Applies - ruff (incl. bandit `S` rules, complexity <= 10) + `ruff format --check` + strict mypy + pytest with a 90% branch-coverage floor; `uv.lock` and `.python-version` committed; dev deps in a PEP 735 group |
-| Security & Supply-Chain | Applies - gitleaks, semgrep, and pip-audit as blocking CI gates (`.github/workflows/security.yml`); all actions SHA-pinned; Dependabot for deps and action pins; ASVS L1 declared in `docs/RESPONSIBLE-TECH-AUDITS.md` |
+| Code Quality | Applies - ruff (incl. bandit `S` rules, complexity <= 10) + `ruff format --check` + strict mypy + pytest with a 90% branch-coverage floor, over `src`, `tests` **and** `.github/scripts`; `uv.lock` and `.python-version` committed; dev deps in a PEP 735 group |
+| Security & Supply-Chain | Applies - gitleaks, semgrep, and pip-audit as blocking CI gates (`.github/workflows/security.yml`), with no severity floor and no `.semgrepignore` exclusions, both of which had been quietly making the SAST pass unfailable; all actions SHA-pinned; Dependabot for deps and action pins; ASVS L1 declared in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | CI/CD | Applies - `verify.yml` runs `make verify` verbatim (local/CI parity) with `uv lock --check` as the lockfile-drift check and `uv sync --locked` as the install; workflows are permission-scoped. Branch protection is a GitHub settings action, recorded as open in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | Observability | Applies - Tier C (CLI producing a static build; no hosted runtime): declared in `docs/ROADMAP.md` |
 | Accessibility | Applies - static WCAG suite in `make verify` (`tests/test_accessibility.py`), including the zero-subresource budget on every generated page; Lighthouse accessibility == 100 on all five page classes (`.github/workflows/accessibility.yml`). Human walkthrough and ACR remain open, recorded honestly in `docs/RESPONSIBLE-TECH-AUDITS.md` |
@@ -310,7 +314,7 @@ skips.
 | Documentation | Applies - `CHANGELOG.md`, `CITATION.cff`, `SECURITY.md`, `CONTRIBUTING.md`, ADR log (`docs/adr/`), roadmap and metrics ledger (`docs/ROADMAP.md`) |
 | Quality & Metrics | Applies - metrics ledger with AUTO/REVIEW gates in `docs/ROADMAP.md` |
 | Release & Versioning | N/A - nothing versioned is released; committed data plus a rebuildable static site, no downstream consumers (`docs/adr/0001-no-versioned-release.md`) |
-| Performance | Applies - zero non-document subresources on every page, enforced in `make verify` (`tests/test_accessibility.py::TestTheResourceBudget`); `lighthouse-budget.json` states the same budget but Lighthouse enforces none of it, see Accessibility above. Transfer-size and timing budgets remain unenforced. No server-side surface to load-test |
+| Performance | Applies - zero non-document subresources, enforced in `make verify` over one page of every kind and again over all 616 pages of the committed build (`tests/test_accessibility.py`); `lighthouse-budget.json` states the same budget but Lighthouse enforces none of it, see Accessibility above. Transfer-size and timing budgets remain unenforced. No server-side surface to load-test |
 | Incident Response | Applies - no incidents to date; postmortems will live in `docs/incidents/` |
 | Data Governance | Applies - public federal datasets only, each payload names its source and coverage in its `scope` block; data inventory in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | AI-Development Measurement | Applies - declared in `docs/ROADMAP.md` metrics ledger |

@@ -198,6 +198,36 @@ class TestNationalArtifact:
         )
         assert (coverage.applicable, coverage.missing, coverage.reported) == (0, 0, 0)
 
+    def test_a_classification_this_version_does_not_know_is_not_counted_as_a_failure(self) -> None:
+        """A word from a newer vintage of this code is a limitation here, not a gap there.
+
+        Counted as "not suppressed, therefore applicable", it lands in the denominator and never
+        in ``reported``, so the published national reporting rate for the field falls. Nothing
+        about any institution changed; the reader of the file got older. That is this project's
+        own shortcoming rendered on the page as institutions having disclosed less, which is the
+        substitution it exists to object to, so an unknown word is counted exactly where an
+        absent field is counted: nowhere.
+        """
+        calculator = tuple(f for f in IPEDS_FIELDS if f.label == "Net price calculator")
+        rows = [
+            {"unit_id": "1", "fields": {"Net price calculator": "reported"}},
+            {"unit_id": "2", "fields": {"Net price calculator": "embargoed"}},
+        ]
+        (coverage,) = national.coverage_for(rows, fields=calculator)
+        assert (coverage.applicable, coverage.reported, coverage.missing) == (1, 1, 0)
+        assert coverage.share_reported == 1.0, (
+            "the institution whose classification this version cannot read was counted as one "
+            "that failed to publish"
+        )
+
+    def test_a_population_of_only_unknown_classifications_has_no_rate_at_all(self) -> None:
+        """The end of the same argument. Nothing was measured, so nothing is reported as 0%."""
+        calculator = tuple(f for f in IPEDS_FIELDS if f.label == "Net price calculator")
+        rows = [{"unit_id": "1", "fields": {"Net price calculator": "embargoed"}}]
+        (coverage,) = national.coverage_for(rows, fields=calculator)
+        assert coverage.applicable == 0
+        assert coverage.share_reported is None
+
     def test_only_statute_backed_fields_name_the_institutions(self) -> None:
         """Naming a college for falling short of a standard nobody enacted is a pillory."""
         gaps = national.named_gaps(_GRADES)

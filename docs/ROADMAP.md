@@ -47,14 +47,14 @@ Per QUALITY-AND-METRICS-STANDARD's ledger shape. Values as measured 2026-08-07.
 | Metric | Target | Measured by | Gate |
 |---|---|---|---|
 | Branch coverage | >= 90% | `pytest --cov --cov-branch --cov-fail-under=90` in `make verify` and CI | AUTO |
-| Lint, format, types | zero findings | ruff check + ruff format --check + strict mypy in `make verify` and CI | AUTO |
+| Lint, format, types | zero findings | ruff check + ruff format --check + strict mypy in `make verify` and CI, over `src`, `tests` and `.github/scripts` | AUTO |
 | Lighthouse accessibility | == 100 on all five page classes | `.github/workflows/accessibility.yml`; missing report or missing category fails | AUTO |
-| Resource counts | 0 of every non-document type, on every page | `tests/test_accessibility.py::TestTheResourceBudget` in `make verify` | AUTO |
+| Resource counts | 0 of every non-document type, on every page | `tests/test_accessibility.py::TestTheResourceBudget` (one page of each kind) and `::TestTheResourceBudgetOverThePublishedSite` (all 616 pages of the committed build), both in `make verify` | AUTO |
 | Resource transfer sizes and timings | as stated in `lighthouse-budget.json` | **nothing** - `--budget-path` never fails a Lighthouse run and Lighthouse 12 emits no budget audit; recorded here rather than claimed as a gate | NONE |
 | Static WCAG checks | zero violations | `tests/test_accessibility.py` (contrast both themes, landmarks, headings, table semantics, colour-independence) in `make verify` | AUTO |
 | Committed artifacts match their generators | byte-for-byte | tests tying `data/dataset.csv` / `data/national.json` to the code that writes them | AUTO |
 | SHA-pinned `uses:` | 100% | full 40-char SHAs in all workflows; Dependabot keeps them current | AUTO |
-| Secret / SAST / dependency scan | zero unwaived findings | `.github/workflows/security.yml` (gitleaks, semgrep, pip-audit), blocking | AUTO |
+| Secret / SAST / dependency scan | zero unwaived findings | `.github/workflows/security.yml` (gitleaks, semgrep, pip-audit), blocking, with no severity floor on semgrep and no `.semgrepignore` exclusions; the three waived findings carry an inline `nosemgrep` and a reason | AUTO |
 | Snapshot cadence | daily, or a loud failure | `.github/workflows/snapshot.yml` | AUTO |
 | Drift threshold | 2 points of rate, reviewed against new collection years | README "Drift is a change in rate" section records the calibration | REVIEW |
 | Rationale disputability | every credible range carries a written rationale | `src/disclosed/fields.py`; reviewed when a range changes | REVIEW |

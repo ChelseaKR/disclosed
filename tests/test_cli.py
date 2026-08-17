@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from disclosed import cli
+from disclosed import cli, drift
 from disclosed.sources import college_scorecard
 
 _RECORDS: list[dict[str, Any]] = [
@@ -253,6 +253,40 @@ class TestSnapshotAndDrift:
         assert data["institutions"] == 2
         assert data["reported"]["In-state tuition"] == 2
         assert data["missing"]["Median earnings 10 years after entry"] == 1
+
+    def test_a_classification_this_version_does_not_know_stays_out_of_the_denominator(
+        self, tmp_path: Path
+    ) -> None:
+        """A report written by a newer version must not read as institutions disclosing less.
+
+        Reports outlive the code that reads them, and the tempting rule -- "it is not suppressed
+        and not inapplicable, so it belongs in the denominator" -- puts an unrecognized word into
+        the divisor of every drift rate for that field without ever putting it in the numerator.
+        The rate falls by an amount that has nothing to do with what any institution published,
+        and this module's whole argument is about denominators that move for reasons the
+        measurement cannot see. So an unknown word is treated exactly like a field the row never
+        carried: counted nowhere, and the rate reported as unmeasurable rather than as a drop.
+        """
+        report = tmp_path / "report.json"
+        report.write_text(
+            json.dumps(
+                {
+                    "grades": [
+                        {"unit_id": "1", "fields": {"Admission rate": "embargoed"}},
+                        {"unit_id": "2", "fields": {"Admission rate": "embargoed"}},
+                    ]
+                }
+            )
+        )
+        snap = tmp_path / "snap.json"
+        assert (
+            cli.main(["snapshot", "--report", str(report), "--taken", "x", "--out", str(snap)]) == 0
+        )
+        data = json.loads(snap.read_text())
+        assert data["applicable"]["Admission rate"] == 0
+        assert data["reported"]["Admission rate"] == 0
+        assert data["missing"]["Admission rate"] == 0
+        assert drift.Snapshot(**data).rate("Admission rate") is None
 
     def test_drift_reports_no_change_between_identical_snapshots(
         self, stub_source: None, tmp_path: Path, capsys: pytest.CaptureFixture[str]

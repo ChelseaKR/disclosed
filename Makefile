@@ -5,9 +5,16 @@ PYTHON ?= .venv/bin/python
 
 verify: lint typecheck test
 
+# .github/scripts is in the gate for the same reason data/HD2023.zip is in the repository: the
+# thing that decides whether the published site may name the host it names cannot be the one
+# file nobody checks. check_site_origin.py sat outside `src` and was therefore outside the lint,
+# outside strict mypy, and outside the coverage floor, so the 98% on the badge was 98% of the
+# code that was being looked at.
+LINTED = src tests .github/scripts
+
 lint:
-	$(PYTHON) -m ruff check src tests
-	$(PYTHON) -m ruff format --check src tests
+	$(PYTHON) -m ruff check $(LINTED)
+	$(PYTHON) -m ruff format --check $(LINTED)
 
 typecheck:
 	$(PYTHON) -m mypy

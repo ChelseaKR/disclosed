@@ -34,3 +34,24 @@ file is the human-readable one.
   figures.
 - Drift no longer reports a shrinking directory as a reporting collapse.
 - Site claims are computed from the report payload rather than from constants.
+- **The SAST gate could not fail.** `semgrep --severity=ERROR` ran 141 rules and found nothing;
+  the same scan without the floor runs 321 and finds three, all `WARNING`, and all of them the
+  `urllib` calls the job was added to watch. The floor is gone and the three are waived at their
+  lines with the reason written beside them. `semgrep scan ... src tests` was also skipping
+  every one of the fifteen test modules, silently, under semgrep's bundled ignore list; a
+  repository `.semgrepignore` takes the scan from 15 targets to 30.
+- **The site-origin guard was outside every gate it protects.** `.github/scripts/` sat outside
+  the ruff targets, outside strict mypy's `files`, and outside the coverage source, so the one
+  executable deciding whether the published site may name the origin it names was the only
+  Python file here that nothing read. It is now linted, typed, and covered, with tests that
+  break each of its three checks in turn.
+- **The zero-subresource budget was audited over a fixture, not the site.** The claim was
+  "every one of the 616 generated pages in `make verify`"; `make verify` built six, from a
+  report with no implausible finding in it, so the markup rendered around a finding was never
+  parsed. The committed report and national artifact are now rendered whole and every page of
+  the result is checked, and the page count in the prose is checked against the build.
+- **An unrecognized classification word counted against institutions.** A report written by a
+  newer version puts a word the reader does not know into `fields`; both aggregators counted it
+  as applicable-but-not-reported, so the published national rate and every drift rate for that
+  field fell for a reason that had nothing to do with any publisher. It is now counted exactly
+  where an absent field is counted: nowhere.

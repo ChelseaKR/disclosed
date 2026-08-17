@@ -210,6 +210,11 @@ def load_directory(*, year: int = DEFAULT_YEAR, cache: Path | None = None) -> li
 
     url = directory_url(year)
     try:
+        # Waived for the reason stated at the same call in the Scorecard adapter: the scheme and
+        # host come from BASE_URL and the only variable part is an integer collection year, so no
+        # input can turn this into a `file://` read. Stated at the line rather than silenced by a
+        # severity floor over the whole scan.
+        # nosemgrep: dynamic-urllib-use-detected
         with urllib.request.urlopen(url, timeout=_TIMEOUT) as response:  # noqa: S310
             archive: bytes = response.read()
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
@@ -262,6 +267,8 @@ def load_characteristics(
 
     url = characteristics_url(year)
     try:
+        # Same waiver, same reason: fixed scheme and host, one integer year.
+        # nosemgrep: dynamic-urllib-use-detected
         with urllib.request.urlopen(url, timeout=_TIMEOUT) as response:  # noqa: S310
             archive: bytes = response.read()
     except (urllib.error.URLError, TimeoutError, OSError) as exc:

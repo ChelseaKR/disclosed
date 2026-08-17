@@ -35,10 +35,13 @@ repos:
     # never disagree about what is clean. Bump both together.
     rev: v0.16.2
     hooks:
+      # Same set the Makefile lints. `.github/scripts` is in it because the site-origin guard
+      # lives there and was, until it was added, the one Python file in the repository that no
+      # gate read.
       - id: ruff
-        files: ^(src|tests)/
+        files: ^(src|tests|\.github/scripts)/
       - id: ruff-format
-        files: ^(src|tests)/
+        files: ^(src|tests|\.github/scripts)/
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1

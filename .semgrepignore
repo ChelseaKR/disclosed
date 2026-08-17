@@ -1,0 +1,15 @@
+# Nothing is ignored, and that is the whole content of this file.
+#
+# It exists because semgrep ships a default ignore list and applies it when a project supplies
+# none, and that list excludes test directories. `.github/workflows/security.yml` invokes the
+# scan as `semgrep scan ... src tests`, so the `tests` argument read as a promise that the test
+# files were scanned. They were not: measured on this repository under the pinned semgrep
+# 1.169.0, the same command reported "Targets scanned: 15" with "Files matching .semgrepignore
+# patterns: 15" -- every one of the fifteen test modules skipped, silently, while the command
+# line named them. With this file present the same scan reports 30 targets.
+#
+# A scan that quietly drops half of what it was pointed at is the failure this project exists to
+# describe: the run succeeds, the badge is green, and nothing says which half was examined.
+#
+# If something here ever does need excluding, add it below with the reason, so the exclusion is a
+# decision somebody made rather than a default nobody read.
