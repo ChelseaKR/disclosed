@@ -89,6 +89,14 @@ def fetch_page(
     last_status: int | None = None
     for attempt in range(attempts):
         try:
+            # Two scanners flag this call for the same reason -- urllib honours `file://`, so a
+            # caller-controlled URL could read a local path -- and one fact answers both: the
+            # scheme and host are fixed in BASE_URL, and everything after the `?` is urlencoded
+            # into the query string, so nothing reachable from outside this module can change
+            # what is fetched or how. Waived here, at the line, rather than by raising the
+            # severity floor of the whole scan: a waiver a reviewer can see is a decision, and a
+            # threshold that hides every finding the scan has is not.
+            # nosemgrep: dynamic-urllib-use-detected
             with urllib.request.urlopen(url, timeout=_TIMEOUT) as response:  # noqa: S310
                 payload = json.load(response)
         except urllib.error.HTTPError as exc:

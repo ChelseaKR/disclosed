@@ -28,7 +28,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .disclosure import Disclosure
+from .disclosure import CLASSIFICATIONS, Disclosure
 from .fields import IPEDS_FIELDS, Field
 from .scope import Scope, scope_from_payload
 
@@ -107,6 +107,15 @@ def coverage_for(
     A field absent from a row is not counted in any bucket. A row that never carried a field has
     not told us that the institution failed it, and inventing a classification here would be the
     null-versus-zero bug arriving through the back door.
+
+    A classification word this code does not recognise is treated the same way, and for the same
+    reason. Reports outlive the versions that wrote them, so a word from a newer vintage will
+    eventually arrive here; counted as anything, it lands in ``applicable`` without landing in
+    ``reported``, which quietly lowers the published reporting rate for that field. That is this
+    project's own limitation showing up on the page as institutions having disclosed less, which
+    is the exact substitution it exists to object to. :mod:`disclosed.site` already refuses to
+    guess at an unknown word on an institution's page and says "unrecognized classification"
+    instead; the counts owe a reader the same restraint.
     """
     coverages: list[FieldCoverage] = []
     for field in fields:
@@ -116,7 +125,7 @@ def coverage_for(
             if not isinstance(published, dict):
                 continue
             state = published.get(field.label)
-            if isinstance(state, str):
+            if isinstance(state, str) and state in CLASSIFICATIONS:
                 counts[state] = counts.get(state, 0) + 1
         applicable = sum(v for k, v in counts.items() if k not in _OUT_OF_DENOMINATOR)
         coverages.append(

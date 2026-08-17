@@ -34,7 +34,11 @@ packages = ["src/disclosed"]
 [tool.mypy]
 strict = true
 python_version = "3.12"
-files = ["src"]
+# `.github/scripts` alongside `src`, because check_site_origin.py is the gate that decides
+# whether the published site may name the origin it names, and it was the one executable here
+# that no gate looked at: outside the lint targets, outside `files`, outside the coverage
+# source. A coverage floor is a floor over its denominator, and that file was not in it.
+files = ["src", ".github/scripts"]
 
 [tool.ruff]
 line-length = 100
@@ -51,7 +55,10 @@ max-complexity = 10
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--strict-markers --strict-config --import-mode=importlib --cov=disclosed --cov-branch --cov-fail-under=90"
+# Bare `--cov`, so the measured set is the one named in [tool.coverage.run] below and there is
+# one place to change it. `--cov=disclosed` named the package, which quietly meant the coverage
+# floor could never see anything that is not in it.
+addopts = "--strict-markers --strict-config --import-mode=importlib --cov --cov-branch --cov-fail-under=90"
 
 [tool.coverage.run]
-source = ["src/disclosed"]
+source = ["src/disclosed", ".github/scripts"]

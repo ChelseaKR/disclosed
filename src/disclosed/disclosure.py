@@ -25,7 +25,7 @@ from collections.abc import Mapping
 from enum import Enum
 from typing import Final
 
-__all__ = ["SUPPRESSION_MARKERS", "Disclosure", "classify"]
+__all__ = ["CLASSIFICATIONS", "SUPPRESSION_MARKERS", "Disclosure", "classify"]
 
 # Values that mean "we know this and are withholding it", as opposed to "we never had it".
 # College Scorecard emits the literal string ``PrivacySuppressed`` in some vintages; IPEDS uses
@@ -75,6 +75,14 @@ class Disclosure(Enum):
         ``NOT_APPLICABLE`` leaves the denominator. Missing and implausible both count.
         """
         return self in (Disclosure.MISSING, Disclosure.IMPLAUSIBLE)
+
+
+# Every word this project will ever write into the ``fields`` mapping of a report, as a set the
+# readers of that mapping can check against. A reader is entitled to meet a word it does not
+# know -- a report written by a newer version than the code reading it -- and what it must not do
+# is guess. :mod:`disclosed.site` already says "unrecognized classification" on the page rather
+# than rendering the row as a gap; the aggregators use this for the same reason, one level up.
+CLASSIFICATIONS: Final[frozenset[str]] = frozenset(d.value for d in Disclosure)
 
 
 def _normalize(text: str) -> str:
