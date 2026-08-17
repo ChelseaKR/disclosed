@@ -7,7 +7,7 @@ it, and no test ever ran it. The one thing standing between the published site a
 616 canonical links naming a host that served a 404 -- was the least-checked file here.
 
 That is the coverage-gate failure in its purest form: not a module scoring badly, but a module
-outside the denominator, so the 98% on the badge was 98% of the code that was looking.
+outside the denominator, so the 98% the coverage report prints was 98% of the code it looked at.
 
 Each test below runs the real script over a real rendered site and asserts a specific way it
 must refuse. The three checks it makes can break independently -- a page can self-canonicalise
