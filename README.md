@@ -317,7 +317,7 @@ skips.
 | Performance | Applies - zero non-document subresources, enforced in `make verify` over one page of every kind and again over all 616 pages of the committed build (`tests/test_accessibility.py`); `lighthouse-budget.json` states the same budget but Lighthouse enforces none of it, see Accessibility above. Transfer-size and timing budgets remain unenforced. No server-side surface to load-test |
 | Incident Response | Applies - no incidents to date; postmortems will live in `docs/incidents/` |
 | Data Governance | Applies - public federal datasets only, each payload names its source and coverage in its `scope` block; data inventory in `docs/RESPONSIBLE-TECH-AUDITS.md` |
-| AI-Development Measurement | Applies - declared in `docs/ROADMAP.md` metrics ledger |
+| AI Development Measurement | Applies - declared in `docs/ROADMAP.md` metrics ledger |
 
 ## License
 
