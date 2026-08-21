@@ -24,10 +24,24 @@ file can fail, and it checks afterwards that the commit actually happened.
 The second chapter was quieter still. With the diff fixed, five more runs (2026-08-16 to
 2026-08-20) wrote the snapshot, committed it, and were rejected by master's protections for
 lacking the checks they require of every commit. A sixteenth run recorded a ``verify`` status
-on its own commit and was rejected for lacking the other four. The job now pushes the commit to
-a staging ref, dispatches the real gate workflows on it, waits for them, and only then pushes
-to master (ADR 0003). :class:`TestTheDailySnapshotIsGatedByTheRealChecks` pins the order and,
-just as importantly, pins that no step in the job records a check itself.
+on its own commit and was rejected for lacking the other four (ADR 0002).
+
+The third chapter is the one that looked finished and was not. ADR 0003 dispatched the real gate
+workflows on a staging ref, watched them with ``gh run watch --exit-status``, and only then
+pushed -- no self-recorded status anywhere, every check earned by the workflow that owns it. It
+merged as PR #26 with all of that pinned by tests and green in CI, and was rejected on its first
+real run (32473991532) and its first rerun, both times seconds after ``gh api
+.../check-runs`` showed all five checks green on the exact SHA being pushed. A check run's check
+suite is scoped to the branch that triggered it; ``snapshot/staging`` having five green checks on
+a SHA says nothing to a requirement bound to ``master``, however identical the SHA. Commit
+statuses carry no such scoping, which is why the sixteenth run's single self-recorded status
+worked when five real, correctly-SHA'd check runs did not (ADR 0004).
+
+So the job keeps the dispatch-and-watch from ADR 0003 -- nothing here grades anything locally,
+and a failing gate still fails the job before anything is pushed -- and adds back a status per
+job, posted only after that job's own run has been watched to completion, quoting the run that
+earned it. :class:`TestTheDailySnapshotIsGatedByTheRealChecks` pins that the status always
+follows the watch it is transcribing and never substitutes for it.
 """
 
 from __future__ import annotations
@@ -137,11 +151,18 @@ class TestTheDailySnapshotIsGatedByTheRealChecks:
     """The route by which a bot commit satisfies protections that name no bypass actor.
 
     master requires five checks from the Actions app on every commit: ``verify`` and ``replay``
-    from verify.yml and the three scans in security.yml. The job earns them the only honest way
-    there is: it stages the commit on an unprotected ref, dispatches those two workflows on it,
-    waits for them, and pushes. Run 32466145742 tried the other way -- run the gate locally and
-    record a ``verify`` status -- and was refused for the four checks it had not run, which is
-    the right outcome and the reason the first test below asserts an absence.
+    from verify.yml and the three scans in security.yml, each pinned to a specific app id. The
+    job stages the commit on an unprotected ref, dispatches those two workflows on it, and waits
+    for them with ``gh run watch --exit-status`` -- none of that is graded locally, and a failing
+    gate still fails the job before anything is pushed. Run 32466145742 tried recording a status
+    for a gate it ran itself and was refused for the four checks it had not run, which is the
+    right outcome. Run 32473991532, dispatched and watched exactly as this class expects, was
+    *also* refused, twice, with all five checks verifiably green on the SHA via the API: a check
+    run's check suite belongs to the branch that triggered it, and ``snapshot/staging`` having
+    five green checks says nothing to a requirement bound to ``master`` (ADR 0004). So the job
+    transcribes each dispatched job's already-earned result to a commit status -- which carries
+    no such branch scoping -- and the tests below pin that this only ever happens *after* the run
+    producing that result has been watched to completion, never as a substitute for it.
     """
 
     def _index(self, pattern: str) -> int:
@@ -154,13 +175,52 @@ class TestTheDailySnapshotIsGatedByTheRealChecks:
         )
         return found[0]
 
-    def test_the_job_never_records_a_check_it_did_not_run(self) -> None:
-        """A status written by the job that wants to push is an assertion, not a check. The
-        gates record their own results or the push fails."""
-        for line in _steps(_WORKFLOW):
-            assert "/statuses/" not in line, line
-            assert "state=success" not in line, line
-            assert "check-runs" not in line, line
+    def test_a_status_is_posted_only_after_its_run_is_watched_to_completion(self) -> None:
+        """The transcription step, not a self-graded assertion: nothing is posted about a run
+        that has not already been watched to a successful exit."""
+        watched = self._index(r'^gh run watch "\$\{run_id\}" --exit-status$')
+        posted = self._index(r'--method POST "repos/\$\{GITHUB_REPOSITORY\}/statuses/\$\{sha\}"')
+        assert watched < posted, (
+            "a status is posted before the dispatched run it is supposed to be quoting has been "
+            "watched to completion, which makes it an assertion rather than a receipt."
+        )
+
+    def test_a_status_is_never_posted_for_a_job_that_did_not_itself_succeed(self) -> None:
+        """`gh run watch` exiting zero is the workflow's verdict, not each job's. This is the
+        second check, against the job list the dispatched run actually reported."""
+        lines = _steps(_WORKFLOW)
+        guard = next(
+            i for i, line in enumerate(lines) if 'if [ "${job_conclusion}" != "success" ]' in line
+        )
+        assert any("exit 1" in line for line in lines[guard : guard + 6]), (
+            "a job whose own conclusion is not success can still reach the status-posting line "
+            "below this guard."
+        )
+        posted = self._index(r'--method POST "repos/\$\{GITHUB_REPOSITORY\}/statuses/\$\{sha\}"')
+        assert guard < posted
+
+    def test_the_status_context_is_the_jobs_own_name_not_a_hardcoded_guess(self) -> None:
+        """The five required contexts are exactly the five job names verify.yml and security.yml
+        already carry. Reading the name back from the dispatched run's own job list, rather than
+        retyping it here, is what keeps the two in sync if a job is ever renamed."""
+        assert re.search(r'-f context="\$\{job_name\}"', _WORKFLOW)
+        assert re.search(r"\.jobs\[\] \| \[\.name, \.html_url, \.conclusion\]", _WORKFLOW)
+
+    def test_the_status_names_the_run_and_job_that_earned_it(self) -> None:
+        """A status with no target is an assertion. One that links the specific job that produced
+        it is evidence a reader can open and check for themselves."""
+        assert re.search(r'-f target_url="\$\{job_url\}"', _WORKFLOW)
+        assert re.search(
+            r'-f description="passed in \$\{workflow\} run \$\{run_id\}, watched to completion"',
+            _WORKFLOW,
+        )
+
+    def test_the_job_list_read_back_is_the_run_that_was_just_watched(self) -> None:
+        """The jobs transcribed have to belong to the exact dispatched run this iteration
+        waited on, not some other run of the same workflow."""
+        assert re.search(
+            r'repos/\$\{GITHUB_REPOSITORY\}/actions/runs/\$\{run_id\}/jobs"', _WORKFLOW
+        )
 
     def test_the_commit_is_staged_before_the_gates_are_dispatched(self) -> None:
         staged = self._index(r"^run: git push --force origin HEAD:refs/heads/snapshot/staging$")
@@ -216,17 +276,17 @@ class TestTheDailySnapshotIsGatedByTheRealChecks:
         assert pushed < rebuilt
 
     def test_the_token_is_scoped_to_exactly_what_the_route_needs(self) -> None:
-        """contents to push, actions to dispatch the gates and the rebuild. Anything wider is a
-        write the job does not need and nobody reviewed; `statuses` in particular is gone,
-        because the job no longer records anything."""
+        """contents to push, actions to dispatch the gates and the rebuild, statuses to
+        transcribe a job's already-earned result (ADR 0004). Anything wider is a write the job
+        does not need and nobody reviewed."""
         job_permissions = re.search(
             r"permissions:\n((?:\s+\w+: \w+.*\n)+)", _WORKFLOW.split("jobs:", 1)[1]
         )
         assert job_permissions is not None
         # Keys read from the start of each line, so a `word: word` inside the trailing comment
-        # that explains a grant is not mistaken for a third grant.
+        # that explains a grant is not mistaken for a fourth grant.
         granted = dict(re.findall(r"^\s*(\w+): (\w+)", job_permissions.group(1), re.MULTILINE))
-        assert granted == {"contents": "write", "actions": "write"}
+        assert granted == {"contents": "write", "actions": "write", "statuses": "write"}
 
 
 class TestTheDailySnapshotGradesACaptureItCanProve:
