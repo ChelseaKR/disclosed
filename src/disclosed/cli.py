@@ -1,10 +1,11 @@
 """Command line entry point.
 
-``grade`` runs the checks against the College Scorecard and writes a report. ``crosscheck`` does
-the same against the whole IPEDS directory and reports where the two federal sources disagree.
-``snapshot`` reduces either to per-field counts, ``drift`` compares two of those, ``national``
-reduces a population-wide run to the artifact the site's national claims rest on, ``dataset``
-exports CSV, and ``site`` renders a report as static HTML.
+``fetch`` walks the College Scorecard and writes a capture with the provenance of every page.
+``grade`` runs the checks against the College Scorecard, live or from a capture, and writes a
+report. ``crosscheck`` does the same against the whole IPEDS directory and reports where the two
+federal sources disagree. ``snapshot`` reduces either to per-field counts, ``drift`` compares two
+of those, ``national`` reduces a population-wide run to the artifact the site's national claims
+rest on, ``dataset`` exports CSV, and ``site`` renders a report as static HTML.
 
 The reductions exist because the full runs are large and regenerable while the claims made about
 them are small and worth committing. A snapshot is a few hundred bytes, so the record of what
@@ -97,25 +98,36 @@ def _implausible_findings(
     return findings
 
 
-def _scorecard_scope(grades: list[InstitutionGrade], *, walked_the_api: bool) -> Scope:
+def _scorecard_scope(
+    grades: list[InstitutionGrade], *, walked_the_api: bool, captured: str | None = None
+) -> Scope:
     """Describe what a College Scorecard run covered.
 
     ``walked_the_api`` is passed in by the caller rather than guessed from the row count. A run is
     national because the fetch paged the API to exhaustion, not because it came back large; a
-    replay of a capture cannot know what the capture was and is a sample until somebody proves
-    otherwise. Inferring from size would eventually promote a big sample to a national claim.
+    bare replay of a capture cannot know what the capture was and is a sample until somebody
+    proves otherwise. Inferring from size would eventually promote a big sample to a national
+    claim. ``captured`` is the proof for a replay: the date a capture envelope records for a walk
+    whose own provenance confirms exhaustion (:func:`college_scorecard.is_exhaustive`).
     """
     if walked_the_api:
+        note = (
+            f"Replayed from a capture that paged the API to exhaustion on {captured[:10]}, so "
+            "this is every institution the College Scorecard published that day, graded from "
+            "the committed file with no key."
+            if captured
+            else (
+                "The API was paged to exhaustion, so this is every institution the College "
+                "Scorecard publishes rather than a slice of it."
+            )
+        )
         return Scope(
             kind=NATIONAL,
             source="College Scorecard",
             institutions=len(grades),
             states=_states_in(grades),
             universe=len(grades),
-            note=(
-                "The API was paged to exhaustion, so this is every institution the College "
-                "Scorecard publishes rather than a slice of it."
-            ),
+            note=note,
         )
     return Scope(
         kind=SAMPLE,
@@ -162,7 +174,9 @@ def _grade_payload(
     }
 
 
-def _load_records(args: argparse.Namespace) -> list[dict[str, Any]]:
+def _load_records(
+    args: argparse.Namespace,
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
     """Read institution records, from a captured file if given and from the API otherwise.
 
     Replay exists for two reasons that both matter to a project about data integrity. It makes a
@@ -170,20 +184,24 @@ def _load_records(args: argparse.Namespace) -> list[dict[str, Any]]:
     attributable to a change in the rules rather than to the day it was fetched. And it lets CI
     exercise the real shape of the data without spending rate limit on an API that gives DEMO_KEY
     about three pages an hour.
+
+    Returns the records and, for a capture envelope written by ``fetch``, its provenance; a bare
+    record list and a live fetch carry ``None``.
     """
     if args.source:
         raw = json.loads(Path(args.source).read_text(encoding="utf-8"))
-        if not isinstance(raw, list):
-            print(f"{args.source} is not a JSON array of records", file=sys.stderr)
-            return []
-        records = [r for r in raw if isinstance(r, dict)]
-        return records[: args.limit] if args.limit else records
-    return list(college_scorecard.iter_institutions(limit=args.limit))
+        try:
+            records, provenance = college_scorecard.read_capture(raw)
+        except college_scorecard.ScorecardError as exc:
+            print(f"{args.source} is {exc}", file=sys.stderr)
+            return [], None
+        return (records[: args.limit] if args.limit else records), provenance
+    return list(college_scorecard.iter_institutions(limit=args.limit)), None
 
 
 def _cmd_grade(args: argparse.Namespace) -> int:
     try:
-        records = _load_records(args)
+        records, provenance = _load_records(args)
     except college_scorecard.ScorecardError as exc:
         # A failed fetch exits non-zero with the reason on stderr rather than unwinding a
         # traceback. The distinction matters in CI: a scheduled run that cannot reach the API must
@@ -199,7 +217,18 @@ def _cmd_grade(args: argparse.Namespace) -> int:
     # this line did not stop until iter_institutions confirmed metadata.total was met. Any earlier
     # stop it could not confirm raised ScorecardError above instead of returning, so there is no
     # longer a code path where an unexhausted walk reaches _scorecard_scope claiming otherwise.
-    scope = _scorecard_scope(grades, walked_the_api=not args.source and not args.limit)
+    # A replayed capture is national on one condition only: its own provenance proves the walk
+    # reached the API's stated total and the file still holds every record it says it holds.
+    walked = not args.source and not args.limit
+    captured: str | None = None
+    if (
+        provenance is not None
+        and not args.limit
+        and college_scorecard.is_exhaustive(provenance, len(records))
+    ):
+        walked = True
+        captured = str(provenance.get("walked_at") or "an unrecorded day")
+    scope = _scorecard_scope(grades, walked_the_api=walked, captured=captured)
     payload = _grade_payload(grades, records, scope=scope)
     Path(args.out).write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
@@ -212,6 +241,51 @@ def _cmd_grade(args: argparse.Namespace) -> int:
     print(f"  implausible      {len(payload['implausible'])}")
     for label, count in overall["worst_fields"]:
         print(f"    {count:>5} institutions fail: {label}")
+    return 0
+
+
+def _cmd_fetch(args: argparse.Namespace) -> int:
+    """Walk the API and write a capture envelope: records plus the provenance of every page.
+
+    Split from ``grade`` so the expensive, keyed, network-bound step happens once and everything
+    after it -- grading, reducing, rendering -- runs from the file with no key. A capture is the
+    one Scorecard artifact that cannot be regenerated without a key, which is what makes it
+    worth committing and worth recording page by page.
+    """
+    cache_dir = Path(args.cache_dir) if args.cache_dir else None
+    try:
+        capture = college_scorecard.walk(limit=args.limit, cache_dir=cache_dir)
+    except college_scorecard.ScorecardError as exc:
+        print(f"fetch failed, nothing written: {exc}", file=sys.stderr)
+        return 1
+    if not capture.records:
+        print("no institutions returned; refusing to write an empty capture", file=sys.stderr)
+        return 1
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    college_scorecard.write_capture(capture, out)
+    summary = college_scorecard.summarize_capture(capture, out)
+    if args.provenance_out:
+        sidecar = Path(args.provenance_out)
+        sidecar.parent.mkdir(parents=True, exist_ok=True)
+        sidecar.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+
+    cached = sum(1 for p in capture.pages if p.from_cache)
+    stated = "unstated" if capture.total_stated is None else f"{capture.total_stated:,}"
+    # Unreported headers print as words. Through a format they would print as 0 remaining,
+    # which reads as a budget exhausted rather than a budget not mentioned.
+    remaining = summary["ratelimit_remaining_min"]
+    budget = (
+        "not reported by the API"
+        if remaining is None
+        else f"{remaining:,} of {summary['ratelimit_limit']:,} requests left at the lowest point"
+    )
+    print(f"captured {len(capture.records):,} institutions -> {out}")
+    print(f"  exhausted        {'yes' if capture.exhausted else 'no'}; API stated {stated}")
+    print(f"  pages            {len(capture.pages)}, {cached} from cache, {capture.calls} fetched")
+    print(f"  rate limit       {budget}")
+    print(f"  key              {'DEMO_KEY' if capture.demo_key else 'DATA_GOV_API_KEY'}")
+    print(f"  sha256           {summary['capture_sha256']}")
     return 0
 
 
@@ -325,7 +399,7 @@ def _cmd_crosscheck(args: argparse.Namespace) -> int:
         print(f"IPEDS unreadable, nothing written: {exc}", file=sys.stderr)
         return 1
 
-    scorecard = _load_records(args) if args.source else []
+    scorecard = _load_records(args)[0] if args.source else []
     grades = [grade_institution(r, fields=IPEDS_FIELDS) for r in directory]
     overall = summarize(grades, label="all institutions")
     found = crosswalk.contradictions(scorecard, directory) if scorecard else []
@@ -436,6 +510,23 @@ def main(argv: list[str] | None = None) -> int:
         description="Grade institutions on what they disclose, not on how they perform.",
     )
     sub = parser.add_subparsers(dest="command", required=True)
+
+    p_fetch = sub.add_parser(
+        "fetch", help="walk the College Scorecard and write a capture with provenance"
+    )
+    p_fetch.add_argument("--limit", type=int, default=None, help="stop after N institutions")
+    p_fetch.add_argument("--out", required=True, help="capture envelope to write")
+    p_fetch.add_argument(
+        "--cache-dir",
+        default=None,
+        help="directory of per-page bodies; pages found there are served without the network",
+    )
+    p_fetch.add_argument(
+        "--provenance-out",
+        default=None,
+        help="also write the committable provenance summary (calls, digests, rate limit) here",
+    )
+    p_fetch.set_defaults(func=_cmd_fetch)
 
     p_grade = sub.add_parser("grade", help="fetch and grade institutions")
     p_grade.add_argument("--limit", type=int, default=None, help="stop after N institutions")
