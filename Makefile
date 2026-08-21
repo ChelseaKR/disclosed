@@ -25,7 +25,7 @@ test:
 # Walk the College Scorecard once, with provenance, into a capture that everything else can read
 # without a key. Needs DATA_GOV_API_KEY for a full walk; the page cache makes a rerun free.
 fetch:
-	$(PYTHON) -m disclosed.cli fetch --out data/census/scorecard-$(TAKEN).json --cache-dir .cache/scorecard
+	$(PYTHON) -m disclosed.cli fetch --out data/census/scorecard.json --cache-dir .cache/scorecard
 
 grade:
 	$(PYTHON) -m disclosed.cli grade --out data/report.json

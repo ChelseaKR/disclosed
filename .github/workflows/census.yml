@@ -46,16 +46,18 @@ jobs:
             exit 1
           fi
 
+      # One stable path. The day of the walk is inside the file, in its provenance, and a
+      # re-census replaces the file in a commit whose diff names the institutions that moved;
+      # git keeps the old capture, and nothing downstream has to know a date to find the frame.
       - name: Walk the API with provenance
         id: walk
         env:
           DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
         run: |
-          taken="$(date -u +%F)"
-          echo "taken=${taken}" >> "$GITHUB_OUTPUT"
+          echo "taken=$(date -u +%F)" >> "$GITHUB_OUTPUT"
           mkdir -p data/census
           python -m disclosed.cli fetch \
-            --out "data/census/scorecard-${taken}.json" \
+            --out data/census/scorecard.json \
             --cache-dir .cache/scorecard \
             | tee -a "$GITHUB_STEP_SUMMARY"
 
@@ -63,11 +65,9 @@ jobs:
       # the file alone, and the scope it produces has to be national: if the envelope cannot
       # prove exhaustion the walk is not a census and nothing is committed.
       - name: Replay the capture without the key
-        env:
-          TAKEN: ${{ steps.walk.outputs.taken }}
         run: |
           python -m disclosed.cli grade \
-            --source "data/census/scorecard-${TAKEN}.json" --out /tmp/report.json
+            --source data/census/scorecard.json --out /tmp/report.json
           kind="$(python -c "import json; print(json.load(open('/tmp/report.json'))['scope']['kind'])")"
           if [ "${kind}" != "national" ]; then
             echo "::error title=Not a census::The capture replays as '${kind}', not national. \
@@ -77,14 +77,13 @@ jobs:
 
       - name: Refuse to commit a key
         env:
-          TAKEN: ${{ steps.walk.outputs.taken }}
           DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
         run: |
-          if grep -q -- "${DATA_GOV_API_KEY}" "data/census/scorecard-${TAKEN}.json"; then
+          if grep -q -- "${DATA_GOV_API_KEY}" data/census/scorecard.json; then
             echo "::error title=Key in capture::The capture contains the API key. Not committed."
             exit 1
           fi
-          if ! grep -q "api_key=REDACTED" "data/census/scorecard-${TAKEN}.json"; then
+          if ! grep -q "api_key=REDACTED" data/census/scorecard.json; then
             echo "::error title=No provenance::The capture records no redacted request URL."
             exit 1
           fi
