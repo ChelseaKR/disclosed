@@ -645,7 +645,123 @@ The <a href="../methodology/">methodology</a> states the rule behind every row.<
     )
 
 
-def home_page(report: dict[str, Any], *, has_national: bool = False) -> Page:
+def _share_of(count: int, total: int) -> str:
+    return f"{count / total:.1%}" if total else "no institutions"
+
+
+def scorecard_census_page(payload: dict[str, Any]) -> Page:
+    """The full College Scorecard walk, beside the 600-institution sample it does not replace.
+
+    #17 was opened over one fact: every published Scorecard figure came from 600 institutions in
+    13 states, 51% of them Californian, because the API returns institutions grouped by state and
+    the committed capture was the first page and a half. This page is the answer, and it is an
+    addition rather than a correction -- the home page's sample figures are unchanged and still
+    say what they have always said about the 600 institutions they describe. This page says the
+    same six things about every institution the Scorecard publishes, and states the composition
+    of both frames side by side so "how skewed was the sample" has a table instead of a sentence.
+    """
+    scope = scope_from_payload(payload)
+    fields: list[dict[str, Any]] = list(payload.get("fields", []))
+    comp = payload.get("composition") or {}
+    sample_comp = payload.get("sample_composition") or {}
+    comp_total = int(comp.get("institutions", 0))
+    sample_total = int(sample_comp.get("institutions", 0))
+
+    rows = "".join(
+        f'<tr><th scope="row">'
+        f"{_rationale_link(str(f.get('label', '')), str(f.get('label', '')), depth=1)}</th>"
+        f"<td>{int(f.get('applicable', 0)):,}</td>"
+        f"<td>{int(f.get('missing', 0)):,}</td>"
+        f"<td>{html.escape(_share(int(f.get('reported', 0)), int(f.get('applicable', 0))))}</td>"
+        "</tr>"
+        for f in fields
+    )
+
+    census_sectors: dict[str, int] = comp.get("sectors", {})
+    sample_sectors: dict[str, int] = sample_comp.get("sectors", {})
+    sector_labels = sorted(
+        set(census_sectors) | set(sample_sectors), key=lambda label: -census_sectors.get(label, 0)
+    )
+    sector_rows = "".join(
+        f'<tr><th scope="row">{html.escape(str(label))}</th>'
+        f"<td>{sample_sectors.get(label, 0):,}</td>"
+        f"<td>{html.escape(_share_of(sample_sectors.get(label, 0), sample_total))}</td>"
+        f"<td>{census_sectors.get(label, 0):,}</td>"
+        f"<td>{html.escape(_share_of(census_sectors.get(label, 0), comp_total))}</td></tr>"
+        for label in sector_labels
+    )
+
+    state_count_sample = len(sample_comp.get("states", {}))
+    state_count_census = len(comp.get("states", {}))
+    ca_sample = int(sample_comp.get("states", {}).get("CA", 0))
+    ca_census = int(comp.get("states", {}).get("CA", 0))
+    ca_sample_share = _share_of(ca_sample, sample_total)
+    ca_census_share = _share_of(ca_census, comp_total)
+
+    admission = next((f for f in fields if f.get("label") == "Admission rate"), None)
+    headline = ""
+    if admission is not None and admission.get("applicable"):
+        missing = int(admission["missing"])
+        applicable = int(admission["applicable"])
+        headline = (
+            f"<p>In the full census, <strong>{missing:,} of {applicable:,}, or "
+            f"{missing / applicable:.1%}, publish no admission rate at all</strong> -- the same "
+            "question the home page asks of the 600-institution sample, asked here of every "
+            "institution the Scorecard publishes.</p>"
+        )
+
+    lede = html.escape(scope.sentence) if scope else "This run did not state its coverage."
+    body = f"""
+<nav aria-label="Breadcrumb"><a href="../">All institutions</a></nav>
+<h1>The College Scorecard census</h1>
+<p class="lede">{lede}</p>
+<p>The home page's figures are graded from a 600-institution sample and say so. This page grades
+every institution the College Scorecard publishes -- the API paged to exhaustion, proven from the
+walk's own counts rather than assumed from how large the result looks -- and does not replace the
+sample figures, because the sample is a real, separately-interesting slice and silently swapping
+one number for another is the failure this project exists to name in other people's data.</p>
+
+{headline}
+
+<h2>Composition: how skewed was the sample</h2>
+<p>{ca_sample:,} of the sample's {sample_total:,} institutions ({ca_sample_share}) are
+Californian, across {state_count_sample} states. The census, {comp_total:,} institutions across
+{state_count_census} states, puts California at {ca_census_share}.</p>
+<table>
+<caption>Institutions by sector, sample against census.</caption>
+<thead><tr><th scope="col">Sector</th><th scope="col">Sample</th><th scope="col">Sample share</th>
+<th scope="col">Census</th><th scope="col">Census share</th></tr></thead>
+<tbody>{sector_rows}</tbody>
+</table>
+
+<h2>What the census discloses</h2>
+<table>
+<caption>Per-field counts across every institution the Scorecard publishes. Suppressed and
+inapplicable institutions are outside the applicable column, never scored as failures.</caption>
+<thead><tr><th scope="col">Disclosure</th><th scope="col">Institutions it reaches</th>
+<th scope="col">Record carries none</th><th scope="col">Published</th></tr></thead>
+<tbody>{rows}</tbody>
+</table>
+
+<p class="caveat">A field with no statute behind it is this project's opinion about what a college
+ought to publish, not a legal requirement; the <a href="../methodology/">methodology</a> states
+the rationale behind every row. Institutions are counted here and not named, the same rule the
+sample figures on the home page follow.</p>
+"""
+    return Page(
+        path="census",
+        title="The College Scorecard census, in full",
+        description=(
+            "Every institution the College Scorecard publishes, graded the same way as the "
+            "600-institution sample, with both frames' composition stated side by side."
+        ),
+        body=body,
+    )
+
+
+def home_page(
+    report: dict[str, Any], *, has_national: bool = False, has_scorecard_census: bool = False
+) -> Page:
     """The landing page: the thesis, what this run found, and where the numbers stop applying."""
     overall = report.get("overall", {})
     total = int(report.get("institutions", 0))
@@ -707,11 +823,18 @@ def home_page(report: dict[str, Any], *, has_national: bool = False) -> Page:
             if has_national and not scope.is_national
             else ""
         )
+        census_pointer = (
+            ' The <a href="census/">Scorecard census page</a> asks the same questions of every '
+            "institution the College Scorecard publishes, not this sample, and states both "
+            "frames' composition side by side."
+            if has_scorecard_census and not scope.is_national
+            else ""
+        )
         coverage = (
             f'<p class="caveat"><strong>What this run covers.</strong> '
             f"{html.escape(scope.sentence)} {html.escape(scope.note)} A project about undisclosed "
-            f"information should not be coy about the limits of its own sample.{national_pointer}"
-            "</p>"
+            "information should not be coy about the limits of its own sample."
+            f"{national_pointer}{census_pointer}</p>"
         )
     body = f"""
 <h1>disclosed</h1>
@@ -865,6 +988,33 @@ quality, and says so on every page. <a href="{root}methodology/">Methodology</a>
 """
 
 
+def _corpus_pages(
+    report: dict[str, Any],
+    *,
+    national: dict[str, Any] | None,
+    scorecard_census: dict[str, Any] | None,
+) -> list[Page]:
+    """The pages that describe a corpus as a whole, rather than one institution or state.
+
+    Split out of :func:`build` so that adding a third corpus-level page is a change to this
+    function's short body rather than a rise in ``build``'s own branching, which is otherwise the
+    function that walks every institution and writes every file.
+    """
+    pages: list[Page] = [
+        home_page(
+            report,
+            has_national=national is not None,
+            has_scorecard_census=scorecard_census is not None,
+        ),
+        methodology_page(),
+    ]
+    if scorecard_census is not None:
+        pages.append(scorecard_census_page(scorecard_census))
+    if national is not None:
+        pages.append(national_page(national))
+    return pages
+
+
 def build(
     report: dict[str, Any],
     out_dir: Path,
@@ -872,6 +1022,7 @@ def build(
     origin: str = DEFAULT_ORIGIN,
     generated: str,
     national: dict[str, Any] | None = None,
+    scorecard_census: dict[str, Any] | None = None,
 ) -> list[Page]:
     """Render the whole site from a graded report.
 
@@ -886,6 +1037,10 @@ def build(
             national page is written and the site makes no national claim anywhere, which is the
             right default: the absence of a national corpus must show up as the absence of
             national figures, not as sample figures with the qualifier quietly dropped.
+        scorecard_census: A payload as written by ``disclosed census-report``, or ``None``.
+            Without it no census page is written and the site's Scorecard figures describe the
+            600-institution sample only, exactly as before #17 -- the same "absence over
+            assertion" default as ``national``.
 
     Returns:
         Every page written, in the order written. Callers use it to assert page counts without
@@ -898,9 +1053,7 @@ def build(
         if isinstance(unit_id, str) and unit_id:
             findings_by_id.setdefault(unit_id, []).append(finding)
 
-    pages: list[Page] = [home_page(report, has_national=national is not None), methodology_page()]
-    if national is not None:
-        pages.append(national_page(national))
+    pages: list[Page] = _corpus_pages(report, national=national, scorecard_census=scorecard_census)
 
     by_state: dict[str, list[dict[str, Any]]] = {}
     for row in grades:

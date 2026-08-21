@@ -24,24 +24,28 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Final
 
-__all__ = ["COMPARED", "Contradiction", "contradictions"]
+__all__ = ["COMPARED", "OWNERSHIP", "Contradiction", "contradictions"]
 
-_OWNERSHIP: Final[Mapping[str, str]] = {
+OWNERSHIP: Final[Mapping[str, str]] = {
     "1": "public",
     "2": "private nonprofit",
     "3": "private for-profit",
 }
+"""IPEDS ``CONTROL`` and Scorecard ``school.ownership`` are the same three codes, string-keyed
+because the two adapters type this column differently -- the Scorecard sends JSON ``2`` and
+IPEDS sends the CSV string ``"3"``. Public so :mod:`disclosed.frame` can describe a census
+capture's sector mix with the same three names this module uses to describe a disagreement,
+rather than a second table that could name the same code differently."""
 
 
 def _describe_ownership(value: object) -> str:
     """Name a sector code, looking it up as text.
 
-    The two adapters type this column differently: the Scorecard sends JSON ``2`` and IPEDS sends
-    the CSV string ``"3"``. An int-keyed lookup silently rendered every IPEDS side of every
-    disagreement as "unrecognized", which made the one real finding in the corpus look like a
-    parsing bug in this tool rather than a disagreement between two federal collections.
+    An int-keyed lookup silently rendered every IPEDS side of every disagreement as
+    "unrecognized", which made the one real finding in the corpus look like a parsing bug in this
+    tool rather than a disagreement between two federal collections.
     """
-    return f"{_OWNERSHIP.get(str(value).strip(), 'unrecognized')} ({value})"
+    return f"{OWNERSHIP.get(str(value).strip(), 'unrecognized')} ({value})"
 
 
 def _describe_plainly(value: object) -> str:
