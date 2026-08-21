@@ -163,3 +163,18 @@ Appended rather than edited, per the append-only rule above.
   a ninety-day workflow artifact; the provenance summary is committed under
   `data/snapshots/scorecard/provenance/`. Neither holds personal data or the key, and the
   `census` workflow greps the capture for the key and refuses to commit if it is there.
+- **Second correction, same day.** ADR 0003 merged as #26 and was dispatched for real (run
+  32473991532), then rerun once to rule out a fluke. Both were refused by the same rule, both
+  times seconds after `gh api repos/.../commits/<sha>/check-runs` confirmed all five required
+  checks completed and green on the exact SHA being pushed, read back from the API rather than
+  assumed from `gh run watch`'s own exit code. A GitHub Actions check run's check suite belongs
+  to the branch that triggered it; classic branch protection's five contexts are each pinned to
+  `app_id: 15368` (read back from `repos/.../branches/master/protection`), and a check earned by
+  dispatching `verify.yml`/`security.yml` on `snapshot/staging` does not satisfy a requirement
+  bound to `master` for the same SHA. It does not fail loudly, either: `gh run watch
+  --exit-status` returns zero because the dispatched workflow really did pass, and the failure
+  surfaces only at the push two steps later. The job now transcribes each dispatched job's
+  already-earned result to a commit status, posted only after that job has been watched to
+  completion and only when its own reported conclusion is `success`, quoting the run and job that
+  produced it; `docs/adr/0004` supersedes 0003 and the test file pins that the status always
+  follows the watch it is transcribing. Eighteen days are unrecoverable, not sixteen.

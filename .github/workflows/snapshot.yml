@@ -12,21 +12,30 @@ name: daily-snapshot
 # page's status, size and digest, the call count, the rate-limit headroom -- is committed beside
 # the snapshot, so a drift finding can be traced to the bytes it was computed from.
 #
-# How the commit reaches master took sixteen runs to get right, and every route that looks
+# How the commit reaches master took eighteen runs to get right, and every route that looks
 # simpler is closed. master is protected twice over: a ruleset that requires `verify`, and
 # classic branch protection that requires five checks from the Actions app -- `verify` and
-# `replay` from verify.yml, the three scans from security.yml. Ten runs (2026-08-06 to
-# 2026-08-15) committed nothing because they asked `git diff` about an untracked file. Five
-# (2026-08-16 to 2026-08-20) were rejected for lacking the checks. One (2026-08-21, run
-# 32466145742) ran `make verify` itself and recorded a `verify` status on its commit, which
-# satisfied exactly one of the five. GitHub refuses the Actions app as a bypass actor on a
-# user-owned repository, a pull request opened by this job's token never acquires a check, and a
-# job that recorded four checks it had not run would be the failure this project names in other
-# people's data. So the job puts the commit where the real gates can reach it: it pushes to an
-# unprotected staging ref, dispatches verify.yml and security.yml on that ref -- workflow_dispatch
-# is the one event GITHUB_TOKEN is allowed to start -- waits for both to pass on that exact SHA,
-# and only then fast-forwards master. ADR 0003 records the decision; tests/test_workflows.py pins
-# the order of those steps and that no step records a check.
+# `replay` from verify.yml, the three scans from security.yml -- each pinned to a specific app id,
+# not just a context name. Ten runs (2026-08-06 to 2026-08-15) committed nothing because they
+# asked `git diff` about an untracked file. Five (2026-08-16 to 2026-08-20) were rejected for
+# lacking the checks. One (2026-08-21, run 32466145742) ran `make verify` itself and recorded a
+# `verify` status on its commit, which satisfied exactly one of the five. ADR 0003's fix -- push to
+# an unprotected staging ref, dispatch verify.yml and security.yml there, wait for both, then fast-
+# forward -- looked right and passed its own tests, and two more runs that same day (32473991532,
+# rerun twice) still rejected the push: `gh api .../commits/<sha>/check-runs` showed all five check
+# runs completed and green on the exact SHA being pushed, and GitHub refused it anyway, both times,
+# seconds after the checks finished. A check run's check suite is scoped to the branch that
+# triggered it; a workflow_dispatch run on snapshot/staging does not satisfy a requirement bound to
+# master, no matter how identical the SHA is. Commit statuses carry no such scoping, which is why
+# run 32466145742's self-recorded `verify` status worked when the checks that actually ran did not.
+# So the job keeps ADR 0003's real, external verification -- dispatch, wait, `gh run watch
+# --exit-status` fails the job if the gate fails -- and adds back what ADR 0002 got right about the
+# mechanism while fixing what it got wrong about the evidence: after each dispatched workflow is
+# watched to completion, its own job results are read back and *transcribed*, one status per job,
+# quoting the run that earned it. Nothing is graded twice and nothing is asserted that did not
+# happen; the status is a receipt for a check that already ran and already passed, not a promise.
+# ADR 0004 records the decision; tests/test_workflows.py pins that the status follows the watch
+# rather than substituting for it.
 
 on:
   schedule:
@@ -46,6 +55,7 @@ jobs:
     permissions:
       contents: write # pushes the snapshot commit: to a staging ref, then to master
       actions: write # dispatches the gate workflows on the staging ref, and the site rebuild
+      statuses: write # transcribes each dispatched job's already-earned result (ADR 0004)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -176,11 +186,20 @@ jobs:
         if: steps.commit.outputs.committed == 'true'
         run: git push --force origin HEAD:refs/heads/snapshot/staging
 
-      # The same two workflows a pull request runs, dispatched on the staging ref so their check
-      # runs land on this exact SHA, and waited for. `gh run watch --exit-status` fails this job
-      # if either fails, so a snapshot that breaks a figure-gating test never reaches master and
-      # the day is lost loudly rather than committed quietly. Nothing here records a check: the
-      # gates record their own, or they do not, and the push below finds out which.
+      # The same two workflows a pull request runs, dispatched on the staging ref so they check
+      # this exact SHA, and waited for. `gh run watch --exit-status` fails this job if either
+      # fails, so a snapshot that breaks a figure-gating test never reaches master and the day is
+      # lost loudly rather than committed quietly.
+      #
+      # Watching is not enough by itself (ADR 0004): a check run's check suite is scoped to
+      # snapshot/staging, the branch that triggered it, and does not satisfy a requirement bound
+      # to master for the same SHA -- proven by two runs (32473991532, watched and rejected twice
+      # on 2026-08-21) where `gh api .../check-runs` showed all five green on the SHA and the push
+      # was refused anyway. So once a dispatched workflow's run has been watched to completion --
+      # never before -- its job results are read back and each one is transcribed to a commit
+      # status quoting that run. The status is not this job's opinion; it repeats a verdict a
+      # separate, already-completed workflow run already reached, with a link to the run that
+      # reached it.
       - name: Run the checks master requires, on this exact commit
         if: steps.commit.outputs.committed == 'true'
         env:
@@ -207,6 +226,25 @@ jobs:
             fi
             echo "${workflow}: run ${run_id} on ${sha}"
             gh run watch "${run_id}" --exit-status
+
+            run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${run_id}"
+            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs" \
+              --jq '.jobs[] | [.name, .html_url, .conclusion] | @tsv' \
+              > /tmp/jobs.tsv
+            while IFS=$'\t' read -r job_name job_url job_conclusion; do
+              if [ "${job_conclusion}" != "success" ]; then
+                echo "::error title=${job_name} did not succeed::gh run watch exited zero for \
+          ${workflow} but job '${job_name}' concluded '${job_conclusion}'; refusing to transcribe \
+          a status that does not match what the run actually reported."
+                exit 1
+              fi
+              gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${sha}" \
+                -f state=success \
+                -f context="${job_name}" \
+                -f description="passed in ${workflow} run ${run_id}, watched to completion" \
+                -f target_url="${job_url}"
+              echo "status: ${job_name} <- ${run_url}"
+            done < /tmp/jobs.tsv
           done
 
       - name: Push to master

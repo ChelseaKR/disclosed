@@ -1,6 +1,10 @@
 # 0003. The snapshot commit is checked by the gates master requires, dispatched on a staging ref
 
-- Status: Accepted. Supersedes [0002](0002-the-snapshot-earns-its-own-check.md).
+- Status: Superseded by [0004](0004-checks-are-scoped-to-the-branch-they-ran-on.md). Merged as
+  PR #26, then run for real (32473991532) and rejected twice the same way ADR 0002 was: all five
+  checks green on the SHA via the API, push refused anyway. A check run's check suite is scoped
+  to the branch that triggered it, which this ADR did not know and did not test against GitHub
+  itself.
 - Date: 2026-08-21
 - Deciders: Chelsea Kelly-Reif
 

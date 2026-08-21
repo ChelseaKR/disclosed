@@ -76,3 +76,14 @@ file is the human-readable one.
   start. No step records a check. The post-condition checks `origin/master`, not the runner's
   clone. Sixteen graded days remain unrecoverable and are recorded as such (ADR 0003,
   `docs/RESPONSIBLE-TECH-AUDITS.md`).
+- **ADR 0003 also reached nobody, on its first real run.** Merged as #26 and dispatched for real
+  (run 32473991532), the push was refused twice, seconds after `gh api .../check-runs` showed
+  all five required checks green on the exact SHA being pushed. A GitHub Actions check run's
+  check suite is scoped to the branch that triggered it; dispatching `verify.yml` and
+  `security.yml` on `snapshot/staging` earns checks that satisfy nothing bound to `master`, no
+  matter how identical the SHA. Commit statuses carry no such scoping, which is why ADR 0002's
+  rejected single self-recorded status had satisfied the ruleset's one check when five real,
+  correctly-SHA'd check runs did not. The job keeps ADR 0003's real dispatch-and-watch
+  verification and, only after each dispatched job has been watched to completion, transcribes
+  that job's own already-earned result to a commit status quoting the run it came from (ADR
+  0004). Eighteen graded days are now unrecoverable, not sixteen.
