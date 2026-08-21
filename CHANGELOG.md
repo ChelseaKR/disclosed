@@ -55,3 +55,12 @@ file is the human-readable one.
   as applicable-but-not-reported, so the published national rate and every drift rate for that
   field fell for a reason that had nothing to do with any publisher. It is now counted exactly
   where an absent field is counted: nowhere.
+- **The daily snapshot still reached nobody.** With the diff fixed (#18), five more runs
+  (2026-08-16 to 2026-08-20) wrote a snapshot, committed it, and had the push rejected by the
+  `protect-main` ruleset for lacking the `verify` status it requires. The Actions app cannot be
+  a bypass actor on a user-owned repository and a token-opened pull request never acquires a
+  check, so the job now runs `make verify` on its own commit, records the `verify` status on
+  that SHA with a link to the run, fast-forwards master, and dispatches the site rebuild that a
+  token push would otherwise never start. The post-condition now checks `origin/master`, not
+  the runner's clone. Fifteen graded days remain unrecoverable and are recorded as such
+  (ADR 0002, `docs/RESPONSIBLE-TECH-AUDITS.md`).
