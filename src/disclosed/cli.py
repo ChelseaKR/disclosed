@@ -485,13 +485,15 @@ def _cmd_national(args: argparse.Namespace) -> int:
 def _cmd_census_report(args: argparse.Namespace) -> int:
     """Reduce a full College Scorecard census to the artifact the site's census page rests on.
 
-    Two committed inputs, kept apart on purpose: ``--report`` is a graded payload (from
+    Three committed inputs, kept apart on purpose: ``--report`` is a graded payload (from
     ``disclosed grade --source <capture> --out ...``) and carries per-field disclosure; ``--source``
     is the capture itself and carries ``school.state``/``school.ownership`` on every raw record,
-    neither of which a grade keeps. The reduction needs both, because a reader asking "how skewed
-    is this frame" is asking about the capture and a reader asking "who disclosed what" is asking
-    about the grade, and #17 was opened because the answer to the first question was a sentence
-    instead of a table.
+    neither of which a grade keeps; ``--sample`` is the 600-institution capture the site's home
+    page already describes, read here only for its own composition so the artifact can state both
+    frames' skew side by side without a reader needing to load two files and compare them by hand.
+    The reduction needs all three, because a reader asking "how skewed is this frame" is asking
+    about the captures and a reader asking "who disclosed what" is asking about the grade, and #17
+    was opened because the answer to the first question was a sentence instead of a table.
     """
     report = json.loads(Path(args.report).read_text(encoding="utf-8"))
     try:
@@ -505,7 +507,17 @@ def _cmd_census_report(args: argparse.Namespace) -> int:
     except college_scorecard.ScorecardError as exc:
         print(f"{args.source} is {exc}", file=sys.stderr)
         return 1
-    payload = {**coverage, "composition": frame.composition(records)}
+    sample_raw = json.loads(Path(args.sample).read_text(encoding="utf-8"))
+    try:
+        sample_records, _ = college_scorecard.read_capture(sample_raw)
+    except college_scorecard.ScorecardError as exc:
+        print(f"{args.sample} is {exc}", file=sys.stderr)
+        return 1
+    payload = {
+        **coverage,
+        "composition": frame.composition(records),
+        "sample_composition": frame.composition(sample_records),
+    }
     Path(args.out).write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     comp = payload["composition"]
     print(f"census coverage for {payload['scope']['institutions']} institutions -> {args.out}")
@@ -640,6 +652,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_census.add_argument(
         "--source", required=True, help="the capture itself, for school.state/school.ownership"
+    )
+    p_census.add_argument(
+        "--sample",
+        default="data/sample.json",
+        help="the 600-institution sample, read only for its own composition to compare against",
     )
     p_census.add_argument("--out", default="data/scorecard-census.json")
     p_census.set_defaults(func=_cmd_census_report)

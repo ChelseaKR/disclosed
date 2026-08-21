@@ -124,7 +124,11 @@ _WORKFLOWS = Path(__file__).resolve().parent.parent / ".github" / "workflows"
 
 @pytest.fixture(scope="module")
 def published(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """The published site, built from the committed artifacts, once for the whole module."""
+    """The published site, built from the committed artifacts, once for the whole module.
+
+    Same three arguments ``pages.yml`` passes to ``disclosed site``, so a page this fixture never
+    renders is a page the real published site was never audited over either.
+    """
     out = tmp_path_factory.mktemp("published")
     site.build(
         json.loads((_DATA / "report.json").read_text(encoding="utf-8")),
@@ -132,6 +136,7 @@ def published(tmp_path_factory: pytest.TempPathFactory) -> Path:
         origin="https://example.test",
         generated="2026-08-05",
         national=json.loads((_DATA / "national.json").read_text(encoding="utf-8")),
+        scorecard_census=json.loads((_DATA / "scorecard-census.json").read_text(encoding="utf-8")),
     )
     return out
 
@@ -144,7 +149,7 @@ def _pages(root: Path) -> list[Path]:
     the suite would go green over a site that does not exist. That is precisely the failure the
     Lighthouse gate in ``.github/workflows/accessibility.yml`` already refuses — "a pass over a
     partial set is not a pass" — and it is worse here, because the browser job at least names the
-    five pages it expects while this one took whatever the glob happened to find.
+    six pages it expects while this one took whatever the glob happened to find.
 
     Asserting in a helper rather than in each test is deliberate: the alternative is remembering to
     add a guard to every future test, and a check that depends on being remembered is the kind this
@@ -268,7 +273,7 @@ class TestTheSuiteActuallyAuditsSomething:
 
 class TestLandmarksAndNavigation:
     def test_every_page_offers_a_skip_link_that_lands_somewhere(self, built: Path) -> None:
-        """616 pages each open with a breadcrumb. Tabbing past it on every one is the bypass-blocks
+        """617 pages each open with a breadcrumb. Tabbing past it on every one is the bypass-blocks
         failure, and the target has to exist or the link is worse than none."""
         for page in _pages(built):
             text = page.read_text(encoding="utf-8")

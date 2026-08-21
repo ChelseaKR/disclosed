@@ -19,6 +19,16 @@ Scorecard, **387 of the 600, or 64.5%, publish no admission rate at all**, and s
 institution publishes an admission rate of exactly zero** — which is not a school that admitted
 nobody, it is a reporting artifact that survived because zero is a legal number.
 
+That sample is not a random one: the API returns institutions grouped by state, and the committed
+600 arrived from the front of the alphabet, 51% of them Californian. A full census — every
+institution the College Scorecard publishes, walked to exhaustion — puts the same question at
+**4,363 of 6,273, or 69.6%, publish no admission rate at all**, five points higher than the
+sample's figure rather than lower, which is not the direction a reader who assumed the sample
+flattered itself would guess. The
+[Scorecard census page](https://chelseakr.github.io/disclosed/census/) states both frames'
+composition side by side; the sample figure above is unchanged and describes
+the 600 institutions it has always described.
+
 ## What it does
 
 Every value from a publisher is classified before anything else touches it:
@@ -205,32 +215,63 @@ two.
 
 ## What is a sample and what is national
 
-Two corpora, and they are never mixed.
+Three corpora, and they are never mixed.
 
 | | Corpus | Coverage | Fields |
 | --- | --- | --- | --- |
 | **Sample** | College Scorecard | 600 institutions, 13 states, California 51% | earnings, completion, admission, debt, tuition, enrollment |
+| **Census** | College Scorecard | every institution the API returns, 6,273 institutions, 59 states and territories, California 11% | earnings, completion, admission, debt, tuition, enrollment |
 | **National** | IPEDS directory + characteristics | every institution there is, 6,163 | the six public disclosure addresses |
 
-The Scorecard is a paged API, and a run that stops early is a slice. IPEDS publishes a file, so
-grading it grades the population — which is what makes national claims possible at all, and only
-for the fields IPEDS carries.
+Sample and census are the same source and the same six fields; the difference between them is
+entirely whether the walk stopped early or ran to exhaustion, and `scope.kind` in the payload says
+which happened rather than a reader having to guess from the row count. IPEDS is a third, separate
+corpus: it publishes a file rather than a paged API, so grading it grades the population by
+construction, and only for the six disclosure addresses IPEDS itself carries. None of the three is
+substitutable for another, and the site keeps each on its own page for exactly that reason.
+
+**How skewed was the sample, in numbers.** The census answers this directly because it is the
+same source counted completely:
+
+| Sector | Sample (600) | Census (6,273) |
+| --- | --- | --- |
+| Public | 287 (47.8%) | 2,047 (32.6%) |
+| Private nonprofit | 194 (32.3%) | 1,901 (30.3%) |
+| Private for-profit | 119 (19.8%) | 2,325 (37.1%) |
+
+The sample is not just Californian — it is nearly half public institutions, when public
+institutions are under a third of the Scorecard's own population and private for-profits, the
+sample's smallest sector at one-fifth, are its largest at over a third. The
+[census page](https://chelseakr.github.io/disclosed/census/) carries the full sector and state
+tables; `data/scorecard-census.json`'s `composition` and `sample_composition` blocks are the
+committed source of both.
 
 Coverage travels *inside* the report rather than in a paragraph on the page. Every payload carries
 a `scope` block, the site prints its sentence rather than a constant, and `disclosed national`
 **refuses to build** from a run that did not cover the population: there is no correct way to
-relabel a sample, so the only safe answer is to fail.
+relabel a sample, so the only safe answer is to fail. `disclosed census-report` makes the same
+refusal for the Scorecard census.
 
 ```sh
 disclosed national --report data/crosscheck.json --out data/national.json
-disclosed site --report data/report.json --national data/national.json --out site --generated 2026-08-05
+disclosed grade --source data/census/scorecard.json --out /tmp/census-graded.json
+disclosed census-report --report /tmp/census-graded.json --source data/census/scorecard.json \
+  --out data/scorecard-census.json
+disclosed site --report data/report.json --national data/national.json \
+  --scorecard-census data/scorecard-census.json --out site --generated 2026-08-05
 ```
 
 `data/national.json` is just under 100 KB and committed; the 3 MB run it reduces is not, because
-it is regenerable in a minute from two public archives that need no key. Without `--national` the
-site builds with no national page and makes no national claim anywhere, which is the right
-default: a missing corpus should show up as missing figures, not as sample figures with the
-qualifier quietly dropped.
+it is regenerable in a minute from two public archives that need no key. `data/scorecard-census.json`
+is the same shape of artifact for the Scorecard census, reduced from `data/census/scorecard.json` —
+the one Scorecard capture that *is* committed, because unlike the IPEDS archives it cannot be
+regenerated without a key: it carries the provenance of every page the walk fetched (redacted
+request URL, status, byte count, SHA-256, rate-limit headroom), proves its own exhaustion from
+those counts, and is refreshed only by the dispatch-only `census` workflow, deliberately, because
+a re-census changes the population every Scorecard figure on this page is computed on. Without
+`--national` or `--scorecard-census` the site builds without that page and makes no claim on that
+page's behalf, which is the right default: a missing corpus should show up as missing figures, not
+as sample figures with the qualifier quietly dropped.
 
 A run recorded before `scope` existed says so on the page rather than being assumed complete.
 
@@ -256,8 +297,9 @@ There are no scripts, no external stylesheets, no fonts, no images and no third-
 and adding one is a build failure rather than a decision nobody noticed. That is enforced in
 `make verify`, by parsing the built HTML for anything that would make a browser fetch a second
 file: once over a fixture holding one page of every kind, and once over the whole published
-site, all 616 pages of it, rendered from `data/report.json` and `data/national.json`. The second
-pass exists because the fixture's report carries no implausible finding, so the markup both the
+site, all 617 pages of it, rendered from `data/report.json`, `data/national.json` and
+`data/scorecard-census.json`. The second pass exists because the fixture's report carries no
+implausible finding, so the markup both the
 home page and the institution pages render around a finding was never parsed by anything, and a
 tracker added to that branch would have shipped past a suite that said it checked every page.
 
@@ -265,8 +307,8 @@ It used to be attributed to `lighthouse-budget.json`, which budgets every non-do
 type at zero and enforced none of it. `--budget-path` never makes Lighthouse exit non-zero, the
 scoring step reads only the accessibility category, and Lighthouse 12 emits no budget audit at
 all: a `lighthouse@12` (12.8.2) run against a budget file with every line set to zero exited 0,
-scored accessibility 1, and produced no audit whose key even contains the word "budget". Four of
-the five pages that job audits ask only for the accessibility category, which does not collect
+scored accessibility 1, and produced no audit whose key even contains the word "budget". Five of
+the six pages that job audits ask only for the accessibility category, which does not collect
 the resource summary either. A gate that cannot fail is worse than no gate, because the badge is
 the same colour. The budget file stays as the declaration of intent; the enforcement is now
 somewhere it can fail.
@@ -308,13 +350,13 @@ skips.
 | Security & Supply-Chain | Applies - gitleaks, semgrep, and pip-audit as blocking CI gates (`.github/workflows/security.yml`), with no severity floor and no `.semgrepignore` exclusions, both of which had been quietly making the SAST pass unfailable; all actions SHA-pinned; Dependabot for deps and action pins; ASVS L1 declared in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | CI/CD | Applies - `verify.yml` runs `make verify` verbatim (local/CI parity) with `uv lock --check` as the lockfile-drift check and `uv sync --locked` as the install; workflows are permission-scoped. Branch protection is a GitHub settings action, recorded as open in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | Observability | Applies - Tier C (CLI producing a static build; no hosted runtime): declared in `docs/ROADMAP.md` |
-| Accessibility | Applies - static WCAG suite in `make verify` (`tests/test_accessibility.py`), including the zero-subresource budget on every generated page; Lighthouse accessibility == 100 on all five page classes (`.github/workflows/accessibility.yml`). Human walkthrough and ACR remain open, recorded honestly in `docs/RESPONSIBLE-TECH-AUDITS.md` |
+| Accessibility | Applies - static WCAG suite in `make verify` (`tests/test_accessibility.py`), including the zero-subresource budget on every generated page; Lighthouse accessibility == 100 on all six page classes (`.github/workflows/accessibility.yml`). Human walkthrough and ACR remain open, recorded honestly in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | Internationalization | Applies - deferred to the first public release, with the entry point recorded (`docs/I18N.md`) |
 | AI Evaluation | N/A - no LLM or model component; every classification is a deterministic rule with a committed rationale |
 | Documentation | Applies - `CHANGELOG.md`, `CITATION.cff`, `SECURITY.md`, `CONTRIBUTING.md`, ADR log (`docs/adr/`), roadmap and metrics ledger (`docs/ROADMAP.md`) |
 | Quality & Metrics | Applies - metrics ledger with AUTO/REVIEW gates in `docs/ROADMAP.md` |
 | Release & Versioning | N/A - nothing versioned is released; committed data plus a rebuildable static site, no downstream consumers (`docs/adr/0001-no-versioned-release.md`) |
-| Performance | Applies - zero non-document subresources, enforced in `make verify` over one page of every kind and again over all 616 pages of the committed build (`tests/test_accessibility.py`); `lighthouse-budget.json` states the same budget but Lighthouse enforces none of it, see Accessibility above. Transfer-size and timing budgets remain unenforced. No server-side surface to load-test |
+| Performance | Applies - zero non-document subresources, enforced in `make verify` over one page of every kind and again over all 617 pages of the committed build (`tests/test_accessibility.py`); `lighthouse-budget.json` states the same budget but Lighthouse enforces none of it, see Accessibility above. Transfer-size and timing budgets remain unenforced. No server-side surface to load-test |
 | Incident Response | Applies - no incidents to date; postmortems will live in `docs/incidents/` |
 | Data Governance | Applies - public federal datasets only, each payload names its source and coverage in its `scope` block; data inventory in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | AI Development Measurement | Applies - declared in `docs/ROADMAP.md` metrics ledger |

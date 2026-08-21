@@ -1,7 +1,7 @@
 PYTHON ?= .venv/bin/python
 
-.PHONY: verify lint typecheck test fetch grade site dataset crosscheck national snapshot replay \
-        ipeds-snapshots
+.PHONY: verify lint typecheck test fetch grade site dataset crosscheck national census-report \
+        snapshot replay census-replay ipeds-snapshots
 
 verify: lint typecheck test
 
@@ -31,7 +31,7 @@ grade:
 	$(PYTHON) -m disclosed.cli grade --out data/report.json
 
 site:
-	$(PYTHON) -m disclosed.cli site --report data/report.json --national data/national.json --out site --generated $(shell date -u +%F)
+	$(PYTHON) -m disclosed.cli site --report data/report.json --national data/national.json --scorecard-census data/scorecard-census.json --out site --generated $(shell date -u +%F)
 
 dataset:
 	$(PYTHON) -m disclosed.cli dataset --report data/report.json --out data/dataset.csv
@@ -41,6 +41,13 @@ crosscheck:
 
 national:
 	$(PYTHON) -m disclosed.cli national --report data/crosscheck.json --out data/national.json
+
+# Grades the committed full-population capture (no key: `grade --source` reads the file) and
+# reduces it to the artifact the census site page and the README's beside-figure are built from.
+# `census-replay` below is the test this target's output has to pass.
+census-report:
+	$(PYTHON) -m disclosed.cli grade --source data/census/scorecard.json --out /tmp/census-graded.json
+	$(PYTHON) -m disclosed.cli census-report --report /tmp/census-graded.json --source data/census/scorecard.json --out data/scorecard-census.json
 
 snapshot:
 	$(PYTHON) -m disclosed.cli snapshot --taken $(TAKEN) --out data/snapshots/scorecard/$(TAKEN).json
@@ -52,6 +59,14 @@ snapshot:
 replay: crosscheck
 	$(PYTHON) -m disclosed.cli national --report data/crosscheck.json --out /tmp/national.json
 	diff -u data/national.json /tmp/national.json && echo "data/national.json replays exactly"
+
+# Same contract as `replay`, for the Scorecard census: no network and no key, because the capture
+# is committed. `tests/test_census_replay.py` is the pytest form of this same check and is the one
+# that actually gates `make verify`; this target is what you run to see the diff when it fails.
+census-replay:
+	$(PYTHON) -m disclosed.cli grade --source data/census/scorecard.json --out /tmp/census-graded.json
+	$(PYTHON) -m disclosed.cli census-report --report /tmp/census-graded.json --source data/census/scorecard.json --out /tmp/scorecard-census.json
+	diff -u data/scorecard-census.json /tmp/scorecard-census.json && echo "data/scorecard-census.json replays exactly"
 
 # The three-year IPEDS history the systemic threshold is argued from. Same contract as `replay`.
 ipeds-snapshots:

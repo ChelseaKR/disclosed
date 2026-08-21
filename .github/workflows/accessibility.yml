@@ -13,7 +13,7 @@ name: accessibility
 # were. `--budget-path` never makes Lighthouse exit non-zero, the scoring step below reads only
 # the accessibility category, and lighthouse@12 (12.8.2) emits no budget audit at all: a run
 # against a budget file with every line set to zero exited 0, scored accessibility 1, and its
-# report contained no audit whose key mentions "budget". Four of the five audits here ask for
+# report contained no audit whose key mentions "budget". Five of the six audits here ask for
 # --only-categories=accessibility, which does not even collect the resource summary.
 #
 # The resource-count budget the README actually argues for -- no scripts, no external
@@ -24,12 +24,13 @@ name: accessibility
 # not counted as a gate anywhere.
 #
 # That paragraph used to say the budget was enforced "over every one of the 616 generated
-# pages", and it was not. TestTheResourceBudget runs over a six-page fixture: one page of each
+# pages" (the site's total at the time), and it was not. TestTheResourceBudget runs over a
+# six-page fixture: one page of each
 # kind, from a two-institution report with no implausible finding in it, so the markup the home
 # page and the institution pages render around a finding was never parsed by anything. A
 # tracker added to that branch shipped past the suite. TestTheResourceBudgetOverThePublishedSite
 # now renders the committed report and the committed national artifact -- the same bytes
-# pages.yml uploads, all 616 pages -- and parses every one, and that test checks the count above
+# pages.yml uploads, all 617 pages -- and parses every one, and that test checks the count above
 # against the build rather than leaving it as a number in a comment.
 
 on:
@@ -62,6 +63,7 @@ jobs:
           python -m disclosed.cli grade --source data/sample.json --out /tmp/report.json
           python -m disclosed.cli site \
             --report /tmp/report.json --national data/national.json \
+            --scorecard-census data/scorecard-census.json \
             --out site --generated "${GITHUB_SHA}"
 
       - name: Serve it
@@ -72,8 +74,8 @@ jobs:
             sleep 1
           done
 
-      # One page of each kind. They share a shell and a stylesheet, so auditing all 616 would be
-      # 616 audits of the same four templates.
+      # One page of each kind. They share a shell and a stylesheet, so auditing all 617 would be
+      # 617 audits of the same five templates.
       - name: Audit
         run: |
           # The URL goes FIRST. Lighthouse takes it as a positional argument, and with it trailing
@@ -82,7 +84,7 @@ jobs:
             --output=json --output-path=/tmp/home.json --quiet --chrome-flags="--headless" \
             --budget-path=lighthouse-budget.json \
             --only-categories=accessibility,best-practices,seo,performance
-          for page in methodology national state/CA institution/110468; do
+          for page in methodology national census state/CA institution/110468; do
             npx --yes lighthouse@12 "http://127.0.0.1:8000/${page}/" \
               --output=json --output-path="/tmp/$(basename "$page").json" --quiet \
               --chrome-flags="--headless" --budget-path=lighthouse-budget.json \
@@ -96,8 +98,8 @@ jobs:
           # pages had already scored 1. The glob was also the more dangerous shape: had lighthouse
           # written nothing, the loop body would never run and `exit "${fail}"` would exit 0, so a
           # gate that measured zero pages would have reported success.
-          reports="/tmp/home.json /tmp/methodology.json /tmp/national.json /tmp/CA.json /tmp/110468.json"
-          expected=5
+          reports="/tmp/home.json /tmp/methodology.json /tmp/national.json /tmp/census.json /tmp/CA.json /tmp/110468.json"
+          expected=6
           found=0
           fail=0
           for report in ${reports}; do

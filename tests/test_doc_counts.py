@@ -21,9 +21,12 @@ Two rules make this gate hard to defeat by accident:
 
 Every figure this module states is derived from bytes committed to this repository. There is no
 skipped class and no conditional gate: the six IPEDS archives in ``data/`` are tracked, and
-``.gitignore`` says at length why. If an input goes missing the suite fails, because a test that
-turns a missing input into a green check is the failure this project exists to describe in other
-people's data.
+``.gitignore`` says at length why; ``data/census/scorecard.json`` and the
+``data/scorecard-census.json`` it reduces to are tracked for the same reason a step further --
+the capture cannot be regenerated without a key at all, so it is the one artifact in this project
+where "committed" is the only route to "checkable" rather than a convenience on top of it. If an
+input goes missing the suite fails, because a test that turns a missing input into a green check
+is the failure this project exists to describe in other people's data.
 """
 
 from __future__ import annotations
@@ -59,6 +62,7 @@ def _load(name: str) -> Any:
 
 _REPORT: Any = _load("report.json")
 _NATIONAL: Any = _load("national.json")
+_CENSUS: Any = _load("scorecard-census.json")
 _SNAPSHOTS = {
     year: drift.Snapshot(**_load(f"snapshots/ipeds/{year}.json")) for year in (2021, 2022, 2023)
 }
@@ -88,8 +92,10 @@ def _stated(pattern: str) -> list[tuple[str, ...]]:
 
 
 def _field(payload: Any, label: str) -> Any:
+    """One field's row out of a ``fields``-carrying payload -- ``data/national.json`` or
+    ``data/scorecard-census.json``, whichever the caller passed."""
     entry = next((f for f in payload["fields"] if f["label"] == label), None)
-    assert entry is not None, f"{label!r} is no longer a field in data/national.json"
+    assert entry is not None, f"{label!r} is no longer a field in this payload's fields list"
     return entry
 
 
@@ -144,6 +150,100 @@ class TestTheSampleFigures:
         pattern = r"\*\*(\w+) institutions? publishe?s? an admission rate of exactly zero\*\*"
         for (word,) in _stated(pattern):
             assert _WORDS[word] == len(zeros)
+
+
+class TestTheScorecardCensusFigures:
+    """The full Scorecard walk (#17), stated beside the 600-institution sample above, never in
+    place of it. Every number here is read from ``data/scorecard-census.json``, which is itself
+    gated against ``data/census/scorecard.json`` byte-for-byte in ``tests/test_census_replay.py``
+    -- this class only checks that the README's prose matches the committed reduction, not that
+    the reduction matches the capture."""
+
+    def test_the_census_is_actually_national(self) -> None:
+        """The premise the rest of this class relies on. If this is false, every figure below is
+        a mislabeled sample and the README's "walked to exhaustion" claim is untrue."""
+        assert _CENSUS["scope"]["kind"] == "national"
+        assert _CENSUS["scope"]["institutions"] == _CENSUS["scope"]["universe"]
+
+    def test_the_headline_share_is_re_derived_on_the_census_and_stated_beside_the_sample(
+        self,
+    ) -> None:
+        admission = _field(_CENSUS, _ADMISSION)
+        pattern = (
+            rf"\*\*({_N}) of ({_N}), or ([\d.]+)%, publish no admission rate at all\*\*, "
+            r"five points higher than the sample's figure"
+        )
+        for count, total, share in _stated(pattern):
+            assert count == f"{admission['missing']:,}"
+            assert total == f"{admission['applicable']:,}"
+            assert share == f"{admission['missing'] / admission['applicable']:.1%}".rstrip("%")
+
+    def test_the_census_rate_actually_is_five_points_higher_than_the_samples(self) -> None:
+        """ "Five points higher... not lower" is a claim about the sign and the size of the
+        difference, not just about each number separately; both are checked here. The sentence
+        itself is matched by the previous test; this one checks the arithmetic behind the word
+        "five" and the direction "higher"."""
+        _stated(r"five points higher than the sample's figure")  # fails loudly if reworded
+        sample_missing = _classified(_ADMISSION, "missing")
+        sample_rate = sample_missing / len(_REPORT["grades"])
+        census = _field(_CENSUS, _ADMISSION)
+        census_rate = census["missing"] / census["applicable"]
+        assert census_rate > sample_rate, "the census rate is not higher than the sample's"
+        points = (census_rate - sample_rate) * 100
+        assert round(points) == 5, f"the difference rounds to {round(points)} points, not five"
+
+    def test_the_corpus_table_census_row_matches_the_artifact(self) -> None:
+        comp = _CENSUS["composition"]
+        pattern = (
+            r"College Scorecard \| every institution the API returns, ([\d,]+) institutions, "
+            r"(\d+) states and territories, California (\d+)%"
+        )
+        for institutions, states, california in _stated(pattern):
+            assert institutions == f"{_CENSUS['scope']['institutions']:,}"
+            assert states == str(len(comp["states"]))
+            ca_share = comp["states"].get("CA", 0) / comp["institutions"]
+            assert california == f"{ca_share:.0%}".rstrip("%")
+
+    def test_the_sector_comparison_table_matches_both_committed_compositions(self) -> None:
+        sample = _CENSUS["sample_composition"]
+        census = _CENSUS["composition"]
+        pattern = (
+            r"\| (Public|Private nonprofit|Private for-profit) \| ([\d,]+) \(([\d.]+)%\) \| "
+            r"([\d,]+) \(([\d.]+)%\) \|"
+        )
+        rows = _stated(pattern)
+        assert len(rows) == 3, "expected exactly the three sectors this project recognises"
+        sector_key = {
+            "Public": "public",
+            "Private nonprofit": "private nonprofit",
+            "Private for-profit": "private for-profit",
+        }
+        for label, sample_n, sample_pct, census_n, census_pct in rows:
+            key = sector_key[label]
+            sn = sample["sectors"].get(key, 0)
+            cn = census["sectors"].get(key, 0)
+            assert sample_n == f"{sn:,}"
+            assert sample_pct == f"{sn / sample['institutions']:.1%}".rstrip("%")
+            assert census_n == f"{cn:,}"
+            assert census_pct == f"{cn / census['institutions']:.1%}".rstrip("%")
+
+    def test_every_sector_in_the_committed_compositions_appears_in_the_table(self) -> None:
+        """The comparison table has to be the full union of both frames' sectors, not just the
+        ones that happen to be large in one of them -- otherwise a sector present in only one
+        frame could go unmentioned rather than being shown at zero."""
+        all_sectors = set(_CENSUS["composition"]["sectors"]) | set(
+            _CENSUS["sample_composition"]["sectors"]
+        )
+        stated_keys = {
+            "Public": "public",
+            "Private nonprofit": "private nonprofit",
+            "Private for-profit": "private for-profit",
+        }
+        stated_sectors = {
+            stated_keys[label]
+            for (label,) in _stated(r"\| (Public|Private nonprofit|Private for-profit) \|")
+        }
+        assert all_sectors <= stated_sectors, all_sectors - stated_sectors
 
 
 class TestTheNationalFigures:
