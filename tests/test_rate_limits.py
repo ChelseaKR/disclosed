@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import io
 import json
 import urllib.error
 from typing import Any
@@ -12,12 +11,22 @@ import pytest
 from disclosed.sources import college_scorecard
 
 
-class _FakeResponse(io.StringIO):
+class _FakeResponse:
+    """The shape ``urlopen`` returns: a byte body, a status, and headers with ``.get``."""
+
+    def __init__(self, body: str) -> None:
+        self._body = body.encode("utf-8")
+        self.status = 200
+        self.headers: dict[str, str] = {}
+
+    def read(self) -> bytes:
+        return self._body
+
     def __enter__(self) -> _FakeResponse:
         return self
 
     def __exit__(self, *exc: object) -> None:
-        self.close()
+        return None
 
 
 def _ok() -> _FakeResponse:

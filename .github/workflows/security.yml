@@ -28,6 +28,10 @@ on:
   pull_request:
   schedule:
     - cron: "17 10 * * 3" # weekly; catches advisories published after the last code change
+  # Dispatched by the daily snapshot job on its staging ref: master requires these three scans
+  # on every commit, and the snapshot commit earns them here rather than having them recorded
+  # by the job that wants to push (ADR 0003).
+  workflow_dispatch:
 
 permissions:
   contents: read

@@ -1,0 +1,103 @@
+name: census
+
+# Walks the College Scorecard to exhaustion, with provenance, and commits the capture to the
+# branch this was dispatched on. Manual only: a census is a deliberate act that changes the
+# frame every Scorecard figure is computed on, and the decision to take one belongs in a pull
+# request a person opened, not on a timer.
+#
+# The capture is the one Scorecard artifact that cannot be regenerated without a key, which is
+# the argument for committing it (README, "What is a sample and what is national"). Everything
+# downstream of it -- the graded report, the frame artifact, the site -- is regenerable from the
+# committed file in seconds with no key, and the replay step below proves that before anything
+# is committed.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: census
+  cancel-in-progress: false
+
+jobs:
+  walk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # commits data/census/ to the dispatching branch
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: python -m pip install -e .
+
+      - name: Require an API key
+        env:
+          DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
+        run: |
+          if [ -z "${DATA_GOV_API_KEY}" ]; then
+            echo "::error title=Missing DATA_GOV_API_KEY::A census is ~63 pages and DEMO_KEY \
+          allows about three an hour. Refusing to start a walk that would end as a slice."
+            exit 1
+          fi
+
+      # One stable path. The day of the walk is inside the file, in its provenance, and a
+      # re-census replaces the file in a commit whose diff names the institutions that moved;
+      # git keeps the old capture, and nothing downstream has to know a date to find the frame.
+      - name: Walk the API with provenance
+        id: walk
+        env:
+          DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
+        run: |
+          echo "taken=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+          mkdir -p data/census
+          python -m disclosed.cli fetch \
+            --out data/census/scorecard.json \
+            --cache-dir .cache/scorecard \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # The capture has to stand on its own. Graded here with no key in the environment, from
+      # the file alone, and the scope it produces has to be national: if the envelope cannot
+      # prove exhaustion the walk is not a census and nothing is committed.
+      - name: Replay the capture without the key
+        run: |
+          python -m disclosed.cli grade \
+            --source data/census/scorecard.json --out /tmp/report.json
+          kind="$(python -c "import json; print(json.load(open('/tmp/report.json'))['scope']['kind'])")"
+          if [ "${kind}" != "national" ]; then
+            echo "::error title=Not a census::The capture replays as '${kind}', not national. \
+          The walk did not confirm exhaustion, so the file is a slice and is not committed."
+            exit 1
+          fi
+
+      - name: Refuse to commit a key
+        env:
+          DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
+        run: |
+          if grep -q -- "${DATA_GOV_API_KEY}" data/census/scorecard.json; then
+            echo "::error title=Key in capture::The capture contains the API key. Not committed."
+            exit 1
+          fi
+          if ! grep -q "api_key=REDACTED" data/census/scorecard.json; then
+            echo "::error title=No provenance::The capture records no redacted request URL."
+            exit 1
+          fi
+
+      - name: Commit the capture to this branch
+        env:
+          TAKEN: ${{ steps.walk.outputs.taken }}
+        run: |
+          git add data/census/
+          if git diff --cached --quiet --exit-code -- data/census/; then
+            echo "Capture for ${TAKEN} is byte-identical to the committed one; nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: College Scorecard census capture ${TAKEN}, with provenance"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

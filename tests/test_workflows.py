@@ -22,12 +22,12 @@ a test. This asserts the two properties that make the step honest: it compares s
 file can fail, and it checks afterwards that the commit actually happened.
 
 The second chapter was quieter still. With the diff fixed, five more runs (2026-08-16 to
-2026-08-20) wrote the snapshot, committed it, and were rejected by the ``protect-main`` ruleset
-for lacking the ``verify`` status it requires of every commit on master. The job now earns that
-status by running ``make verify`` on the commit and recording the result against the SHA before
-it pushes (ADR 0002). The tests in :class:`TestTheDailySnapshotEarnsItsCheck` pin the order,
-because the honest version and the dishonest version of that step differ only in whether the
-gate runs first.
+2026-08-20) wrote the snapshot, committed it, and were rejected by master's protections for
+lacking the checks they require of every commit. A sixteenth run recorded a ``verify`` status
+on its own commit and was rejected for lacking the other four. The job now pushes the commit to
+a staging ref, dispatches the real gate workflows on it, waits for them, and only then pushes
+to master (ADR 0003). :class:`TestTheDailySnapshotIsGatedByTheRealChecks` pins the order and,
+just as importantly, pins that no step in the job records a check itself.
 """
 
 from __future__ import annotations
@@ -58,6 +58,7 @@ def _read(name: str) -> str:
 _WORKFLOW = _read("snapshot.yml")
 _SECURITY = _read("security.yml")
 _PAGES = _read("pages.yml")
+_VERIFY = _read("verify.yml")
 
 
 def _flat(text: str) -> list[str]:
@@ -132,14 +133,15 @@ class TestTheDailySnapshotCommitCanFail:
         )
 
 
-class TestTheDailySnapshotEarnsItsCheck:
-    """The route by which a bot commit satisfies a ruleset that names no bypass actor.
+class TestTheDailySnapshotIsGatedByTheRealChecks:
+    """The route by which a bot commit satisfies protections that name no bypass actor.
 
-    The ruleset requires a ``verify`` status on every commit that lands on master. The job runs
-    the gate and records the status itself (ADR 0002), and the honest version of that is
-    distinguishable from the dishonest one only by order: the gate has to run before the status
-    is written, and the status has to be written before the push. Both are asserted from the
-    file, the same way the security scans are.
+    master requires five checks from the Actions app on every commit: ``verify`` and ``replay``
+    from verify.yml and the three scans in security.yml. The job earns them the only honest way
+    there is: it stages the commit on an unprotected ref, dispatches those two workflows on it,
+    waits for them, and pushes. Run 32466145742 tried the other way -- run the gate locally and
+    record a ``verify`` status -- and was refused for the four checks it had not run, which is
+    the right outcome and the reason the first test below asserts an absence.
     """
 
     def _index(self, pattern: str) -> int:
@@ -152,37 +154,56 @@ class TestTheDailySnapshotEarnsItsCheck:
         )
         return found[0]
 
-    def test_the_gate_runs_on_the_commit_before_any_status_is_recorded(self) -> None:
-        gate = self._index(r"^run: make verify$")
-        status = self._index(r"repos/\$\{GITHUB_REPOSITORY\}/statuses/")
-        assert gate < status, (
-            "the verify status is recorded before `make verify` runs. A status written ahead of "
-            "the gate is a green check that proves nothing, which is the failure this project "
-            "exists to name in other people's data."
+    def test_the_job_never_records_a_check_it_did_not_run(self) -> None:
+        """A status written by the job that wants to push is an assertion, not a check. The
+        gates record their own results or the push fails."""
+        for line in _steps(_WORKFLOW):
+            assert "/statuses/" not in line, line
+            assert "state=success" not in line, line
+            assert "check-runs" not in line, line
+
+    def test_the_commit_is_staged_before_the_gates_are_dispatched(self) -> None:
+        staged = self._index(r"^run: git push --force origin HEAD:refs/heads/snapshot/staging$")
+        dispatched = self._index(r'^gh workflow run "\$\{workflow\}" --ref snapshot/staging$')
+        assert staged < dispatched, (
+            "the gates are dispatched before the commit exists on the remote, so their check "
+            "runs cannot land on it."
         )
 
-    def test_the_status_is_recorded_before_the_push_and_is_the_context_the_ruleset_names(
-        self,
-    ) -> None:
-        status = self._index(r"repos/\$\{GITHUB_REPOSITORY\}/statuses/")
+    def test_the_gates_dispatched_are_the_ones_master_requires(self) -> None:
+        """verify.yml carries `verify` and `replay`; security.yml carries the three scans. Those
+        five are what classic branch protection on master names, pinned to the Actions app."""
+        loops = [line for line in _steps(_WORKFLOW) if line.startswith("for workflow in ")]
+        assert loops, "the dispatch loop is gone"
+        for loop in loops:
+            assert "verify.yml" in loop and "security.yml" in loop, loop
+
+    def test_the_job_waits_for_the_gates_and_fails_with_them(self) -> None:
+        watched = self._index(r'^gh run watch "\$\{run_id\}" --exit-status$')
         pushed = self._index(r"^git push origin HEAD:master$")
-        assert status < pushed
-        # The `gh api` call is wrapped with backslashes, so each flag is its own line with a
-        # continuation marker after it; matched on the flag, not on the whole line.
-        window = _steps(_WORKFLOW)[status : pushed + 1]
-        assert any(line.startswith("-f context=verify") for line in window), (
-            "the recorded status is not the `verify` context the ruleset requires, so the push "
-            "will be rejected exactly as it was from 2026-08-16 to 2026-08-20."
+        assert watched < pushed, (
+            "master is pushed before the dispatched gates have finished, so a failing gate "
+            "would be discovered after the commit landed rather than before."
         )
-        assert any(line.startswith("-f state=success") for line in window)
 
-    def test_the_status_names_the_run_that_earned_it(self) -> None:
-        """A status with no target is an assertion. One that links the run is evidence."""
-        assert re.search(r"-f target_url=.*GITHUB_RUN_ID", _WORKFLOW)
-        assert re.search(r"-f description=.*make verify passed", _WORKFLOW)
+    def test_the_runs_watched_are_the_ones_on_this_commit(self) -> None:
+        """A stale staging ref from an earlier day has its own runs. Matching on the SHA keeps
+        the job from waiting on, and trusting, somebody else's green."""
+        assert re.search(r'select\(\.headSha == \\"\$\{sha\}\\"\)', _WORKFLOW)
+
+    def test_a_gate_that_never_starts_fails_the_job_rather_than_being_skipped(self) -> None:
+        lines = _steps(_WORKFLOW)
+        missing = next(i for i, line in enumerate(lines) if 'if [ -z "${run_id}" ]; then' in line)
+        assert any("exit 1" in line for line in lines[missing : missing + 6])
+
+    def test_both_gate_workflows_accept_a_dispatch(self) -> None:
+        """Without `workflow_dispatch:` in their triggers the dispatch above is a 422 and the
+        job fails before anything is pushed, which is at least loud. This makes it unnecessary."""
+        for name, text in (("verify.yml", _VERIFY), ("security.yml", _SECURITY)):
+            assert "workflow_dispatch:" in _steps(text), f"{name} cannot be dispatched"
 
     def test_the_staging_ref_is_removed_after_the_push(self) -> None:
-        """The staging ref exists only so a SHA can carry a status before master takes it.
+        """The staging ref exists only so a SHA can carry checks before master takes it.
         Left behind, it is a second copy of master that nothing protects."""
         pushed = self._index(r"^git push origin HEAD:master$")
         deleted = self._index(r"^git push --delete origin refs/heads/snapshot/staging$")
@@ -194,22 +215,63 @@ class TestTheDailySnapshotEarnsItsCheck:
         rebuilt = self._index(r"^run: gh workflow run publish-site --ref master$")
         assert pushed < rebuilt
 
-    def test_the_gate_is_the_same_install_verify_yml_uses(self) -> None:
-        """`make verify` over a different dependency set is a different gate."""
-        for command in ("uv lock --check", "uv sync --locked"):
-            assert self._index(rf"^run: {re.escape(command)}$") < self._index(r"^run: make verify$")
-
     def test_the_token_is_scoped_to_exactly_what_the_route_needs(self) -> None:
-        """contents to push, statuses to record the check, actions to dispatch the rebuild.
-        Anything wider is a write the job does not need and nobody reviewed."""
+        """contents to push, actions to dispatch the gates and the rebuild. Anything wider is a
+        write the job does not need and nobody reviewed; `statuses` in particular is gone,
+        because the job no longer records anything."""
         job_permissions = re.search(
             r"permissions:\n((?:\s+\w+: \w+.*\n)+)", _WORKFLOW.split("jobs:", 1)[1]
         )
         assert job_permissions is not None
         # Keys read from the start of each line, so a `word: word` inside the trailing comment
-        # that explains a grant is not mistaken for a fourth grant.
+        # that explains a grant is not mistaken for a third grant.
         granted = dict(re.findall(r"^\s*(\w+): (\w+)", job_permissions.group(1), re.MULTILINE))
-        assert granted == {"contents": "write", "statuses": "write", "actions": "write"}
+        assert granted == {"contents": "write", "actions": "write"}
+
+
+class TestTheDailySnapshotGradesACaptureItCanProve:
+    """The walk is the only keyed step; everything after it reads the file it wrote.
+
+    The capture carries the provenance of every page and the snapshot's sidecar carries the
+    summary, so a drift finding can be traced to the bytes it was computed from. The grade has
+    to come out national from the file alone, with no key in the environment: a snapshot of a
+    slice would read as a nationwide collapse in reporting.
+    """
+
+    def _index(self, pattern: str) -> int:
+        lines = _steps(_WORKFLOW)
+        found = [i for i, line in enumerate(lines) if re.search(pattern, line)]
+        assert found, f"snapshot.yml has no executable line matching {pattern!r}"
+        return found[0]
+
+    def test_the_walk_precedes_the_grade_and_the_grade_reads_the_file(self) -> None:
+        fetched = self._index(r"^python -m disclosed\.cli fetch \\$")
+        graded = self._index(
+            r"^python -m disclosed\.cli grade --source /tmp/capture\.json --out report\.json$"
+        )
+        assert fetched < graded
+
+    def test_the_provenance_sidecar_is_committed_beside_the_snapshot(self) -> None:
+        """One directory down, so the drift step's glob over the snapshots cannot pick it up."""
+        assert re.search(
+            r'--provenance-out "data/snapshots/scorecard/provenance/\$\{taken\}\.json"', _WORKFLOW
+        )
+        assert re.search(r"ls data/snapshots/scorecard/\*\.json", _WORKFLOW)
+
+    def test_a_capture_that_does_not_replay_as_national_takes_no_snapshot(self) -> None:
+        lines = _steps(_WORKFLOW)
+        guard = 'if [ "${kind}" != "national" ]'
+        checked = next(i for i, line in enumerate(lines) if guard in line)
+        assert any("exit 1" in line for line in lines[checked : checked + 6])
+        assert checked < self._index(r"^python -m disclosed\.cli snapshot \\$")
+
+    def test_the_raw_capture_is_kept_and_its_absence_is_an_error(self) -> None:
+        lines = _steps(_WORKFLOW)
+        kept = next(i for i, line in enumerate(lines) if "uses: actions/upload-artifact@" in line)
+        block = lines[kept : kept + 6]
+        assert "retention-days: 90" in block
+        assert "if-no-files-found: error" in block
+        assert "path: /tmp/capture.json" in block
 
 
 class TestTheSecurityScansCanFail:

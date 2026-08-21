@@ -150,3 +150,16 @@ Appended rather than edited, per the append-only rule above.
   to runners that no longer exist. The job logs print per-field fail counts, which are not the
   per-field reported/missing/applicable counts a snapshot holds, so nothing is reconstructed
   from them.
+- **Correction, same day.** The self-recorded `verify` status above was tried once (run
+  32466145742) and refused: `master` also carries classic branch protection requiring five
+  checks from the Actions app (`verify`, `replay`, and the three `security.yml` scans; `strict`,
+  `enforce_admins` on), read back from the API after the refusal. The job does not record the
+  other four. It now stages its commit on an unprotected ref, dispatches the two gate workflows
+  on that ref, waits for them, and pushes; `docs/adr/0003` supersedes 0002 and the test file
+  asserts that no step records a status or check run. Sixteen days are unrecoverable, not
+  fifteen.
+- **A second item in the data inventory.** Every Scorecard walk now records the provenance of
+  each page (redacted URL, time, status, size, SHA-256, rate-limit headers). The raw capture is
+  a ninety-day workflow artifact; the provenance summary is committed under
+  `data/snapshots/scorecard/provenance/`. Neither holds personal data or the key, and the
+  `census` workflow greps the capture for the key and refuses to commit if it is there.

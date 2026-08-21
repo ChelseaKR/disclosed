@@ -23,3 +23,8 @@ site/
 # The full crosscheck payload stays ignored: it is 2.9 MB, it is byte-reproducible from the two
 # archives above in under a second, and it is an intermediate rather than a claim.
 data/crosscheck.json
+
+# The Scorecard page cache `disclosed fetch --cache-dir` writes. Per-page bodies and their
+# provenance, so a rerun needs no network; the committed capture under data/census/ is the
+# durable record and carries the same provenance inside it.
+.cache/

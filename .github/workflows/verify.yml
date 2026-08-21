@@ -4,6 +4,10 @@ on:
   push:
     branches: [main, master]
   pull_request:
+  # Dispatched by the daily snapshot job on its staging ref, so the commit it is about to push
+  # to master carries this workflow's `verify` and `replay` checks -- the ones master requires
+  # -- earned by the workflow itself rather than recorded by the job (ADR 0003).
+  workflow_dispatch:
 
 permissions:
   contents: read

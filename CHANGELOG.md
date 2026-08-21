@@ -24,6 +24,16 @@ file is the human-readable one.
   Lighthouse accessibility gate at 100 with every non-document resource budgeted at zero.
 - Citable CSV export with a Table Schema generated in the same pass, plus `CITATION.cff`.
 - Daily scheduled snapshot workflow accruing per-field disclosure counts in git.
+- **Provenance for every page the Scorecard adapter fetches.** `disclosed fetch` walks the API
+  and writes a capture envelope: the records, plus for each page the request URL with the key
+  redacted, the fetch time, HTTP status, byte count, SHA-256, attempts, and the rate-limit
+  headers the API returned. `Retry-After` is honoured, consecutive fetches are paused, and a
+  `--cache-dir` lets a rerun touch no network. `grade --source` replays the envelope and labels
+  it national only when its own counts prove the walk was exhaustive; the daily job now grades
+  from such a capture with no key in the environment, keeps the raw capture as a ninety-day
+  artifact, and commits the provenance summary beside each snapshot. A dispatch-only `census`
+  workflow commits a full capture to the branch it was run on, refusing if the replay is not
+  national or the key is in the file.
 - Portfolio standards conformance set: security workflow (gitleaks, semgrep, pip-audit),
   Dependabot config, pre-commit hooks, committed `uv.lock` and `.python-version`, ADR log,
   `SECURITY.md`, `CONTRIBUTING.md`, roadmap metrics ledger, and responsible-tech audit record.
@@ -56,11 +66,13 @@ file is the human-readable one.
   field fell for a reason that had nothing to do with any publisher. It is now counted exactly
   where an absent field is counted: nowhere.
 - **The daily snapshot still reached nobody.** With the diff fixed (#18), five more runs
-  (2026-08-16 to 2026-08-20) wrote a snapshot, committed it, and had the push rejected by the
-  `protect-main` ruleset for lacking the `verify` status it requires. The Actions app cannot be
-  a bypass actor on a user-owned repository and a token-opened pull request never acquires a
-  check, so the job now runs `make verify` on its own commit, records the `verify` status on
-  that SHA with a link to the run, fast-forwards master, and dispatches the site rebuild that a
-  token push would otherwise never start. The post-condition now checks `origin/master`, not
-  the runner's clone. Fifteen graded days remain unrecoverable and are recorded as such
-  (ADR 0002, `docs/RESPONSIBLE-TECH-AUDITS.md`).
+  (2026-08-16 to 2026-08-20) wrote a snapshot, committed it, and had the push rejected by
+  master's protections for lacking the checks they require; a sixteenth recorded a `verify`
+  status on its own commit (ADR 0002) and was refused for the four checks it had not run. The
+  Actions app cannot be a bypass actor on a user-owned repository and a token-opened pull
+  request never acquires a check, so the job now pushes its commit to a staging ref, dispatches
+  `verify.yml` and `security.yml` on that ref, waits for both to pass on that exact SHA,
+  fast-forwards master, and dispatches the site rebuild that a token push would otherwise never
+  start. No step records a check. The post-condition checks `origin/master`, not the runner's
+  clone. Sixteen graded days remain unrecoverable and are recorded as such (ADR 0003,
+  `docs/RESPONSIBLE-TECH-AUDITS.md`).

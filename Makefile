@@ -1,6 +1,6 @@
 PYTHON ?= .venv/bin/python
 
-.PHONY: verify lint typecheck test grade site dataset crosscheck national snapshot replay \
+.PHONY: verify lint typecheck test fetch grade site dataset crosscheck national snapshot replay \
         ipeds-snapshots
 
 verify: lint typecheck test
@@ -21,6 +21,11 @@ typecheck:
 
 test:
 	$(PYTHON) -m pytest --cov --cov-report=term-missing -q
+
+# Walk the College Scorecard once, with provenance, into a capture that everything else can read
+# without a key. Needs DATA_GOV_API_KEY for a full walk; the page cache makes a rerun free.
+fetch:
+	$(PYTHON) -m disclosed.cli fetch --out data/census/scorecard.json --cache-dir .cache/scorecard
 
 grade:
 	$(PYTHON) -m disclosed.cli grade --out data/report.json
