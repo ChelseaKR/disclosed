@@ -55,7 +55,7 @@ Per QUALITY-AND-METRICS-STANDARD's ledger shape. Values as measured 2026-08-07.
 | Committed artifacts match their generators | byte-for-byte | tests tying `data/dataset.csv` / `data/national.json` to the code that writes them | AUTO |
 | SHA-pinned `uses:` | 100% | full 40-char SHAs in all workflows; Dependabot keeps them current | AUTO |
 | Secret / SAST / dependency scan | zero unwaived findings | `.github/workflows/security.yml` (gitleaks, semgrep, pip-audit), blocking, with no severity floor on semgrep and no `.semgrepignore` exclusions; the three waived findings carry an inline `nosemgrep` and a reason | AUTO |
-| Snapshot cadence | daily, or a loud failure | `.github/workflows/snapshot.yml` | AUTO |
+| Snapshot cadence | daily, or a loud failure | `.github/workflows/snapshot.yml`; the post-condition checks `origin/master`, and the job runs `make verify` on its own commit to earn the status the ruleset requires (ADR 0002) | AUTO |
 | Drift threshold | 2 points of rate, reviewed against new collection years | README "Drift is a change in rate" section records the calibration | REVIEW |
 | Rationale disputability | every credible range carries a written rationale | `src/disclosed/fields.py`; reviewed when a range changes | REVIEW |
 

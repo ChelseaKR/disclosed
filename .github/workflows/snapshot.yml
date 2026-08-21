@@ -9,6 +9,19 @@ name: daily-snapshot
 # The full graded report is deliberately NOT committed. It is several megabytes per run and every
 # byte of it is reproducible from the snapshot plus the source, so committing it would trade the
 # readability of the history for nothing.
+#
+# How the commit reaches master is the part that took fifteen runs to get right, and it is worth
+# stating in full because every route that looks simpler is closed. The `protect-main` ruleset
+# requires a passing `verify` status on every commit that lands on master. Ten runs (2026-08-06 to
+# 2026-08-15) committed nothing because they asked `git diff` about an untracked file; the next
+# five (2026-08-16 to 2026-08-20) wrote the snapshot, committed it, and had the push rejected with
+# "Required status check 'verify' is expected". GitHub will not let the github-actions app bypass
+# a ruleset on a user-owned repository (the API answers 422), and a pull request opened by this
+# job's token would never acquire the check, because nothing GITHUB_TOKEN does starts another
+# workflow. So the job earns the check itself: it runs `make verify` verbatim on the commit it is
+# about to push, stages that commit on an unprotected ref so the SHA exists on the remote, records
+# a `verify` status on it that names this run, and only then fast-forwards master. ADR 0002
+# records the decision; tests/test_workflows.py pins the order of those steps.
 
 on:
   schedule:
@@ -26,7 +39,9 @@ jobs:
   snapshot:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # commits data/snapshots/<date>.json
+      contents: write # pushes the snapshot commit: to a staging ref, then to master
+      statuses: write # records the `verify` status the ruleset requires, on the commit it checked
+      actions: write # dispatches publish-site afterwards; a GITHUB_TOKEN push starts nothing
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -36,8 +51,14 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install
-        run: python -m pip install -e .
+      # The same install verify.yml does, because this job runs the same gate further down and a
+      # gate run against a different dependency set is a different gate.
+      - name: Install uv
+        run: python -m pip install "uv==0.12.1"
+      - name: Check the lockfile against pyproject.toml
+        run: uv lock --check
+      - name: Install exactly what the lockfile pins
+        run: uv sync --locked
 
       # Without a key the adapter silently falls back to DEMO_KEY, which allows about three pages
       # an hour. The run would fetch ~300 of ~6,300 institutions and then rate-limit. Better to
@@ -58,7 +79,7 @@ jobs:
       - name: Grade every institution
         env:
           DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
-        run: python -m disclosed.cli grade --out report.json
+        run: .venv/bin/python -m disclosed.cli grade --out report.json
 
       # Into data/snapshots/scorecard/, kept apart from data/snapshots/ipeds/. The two are
       # different populations with no field in common, and a comparison across them would skip
@@ -71,7 +92,7 @@ jobs:
           taken="$(date -u +%F)"
           echo "taken=${taken}" >> "$GITHUB_OUTPUT"
           mkdir -p data/snapshots/scorecard
-          python -m disclosed.cli snapshot \
+          .venv/bin/python -m disclosed.cli snapshot \
             --report report.json \
             --taken "${taken}" \
             --out "data/snapshots/scorecard/${taken}.json"
@@ -91,7 +112,7 @@ jobs:
           {
             echo "## Disclosure drift: $(basename "${previous}" .json) to ${taken}"
             echo '```'
-            python -m disclosed.cli drift \
+            .venv/bin/python -m disclosed.cli drift \
               "${previous}" "data/snapshots/scorecard/${taken}.json"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
@@ -104,23 +125,66 @@ jobs:
       # project's entire drift argument depends on was written to a runner and thrown away. The
       # comparison a new file can fail is the index against HEAD, which is what `--cached` is.
       - name: Commit the snapshot
+        id: commit
         env:
           TAKEN: ${{ steps.snap.outputs.taken }}
         run: |
           git add data/snapshots/
           if git diff --cached --quiet --exit-code -- data/snapshots/; then
             echo "Snapshot for ${TAKEN} is byte-identical to the committed one; nothing to commit."
+            echo "committed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "data: per-field disclosure snapshot ${TAKEN} [skip ci]"
-          git push
+          git commit -m "data: per-field disclosure snapshot ${TAKEN}"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      # The gate, run on the commit that is about to land, exactly as verify.yml would run it on
+      # a pull request. This is what makes the status recorded in the next step true rather than
+      # asserted: a snapshot that breaks a figure-gating test stops here, loudly, and no status
+      # is recorded for it.
+      - name: Run the gate on the commit
+        if: steps.commit.outputs.committed == 'true'
+        run: make verify
+
+      # A status can only be attached to a SHA the remote has, and master will not take the SHA
+      # until it has the status. The staging ref breaks the circle: it is unprotected, it holds
+      # the commit for the seconds between these two pushes, and it is deleted afterwards. The
+      # status names this run so anyone reading master can follow it back to the log that shows
+      # `make verify` passing.
+      - name: Record the verify status on the commit
+        if: steps.commit.outputs.committed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha="$(git rev-parse HEAD)"
+          git push --force origin "HEAD:refs/heads/snapshot/staging"
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${sha}" \
+            -f state=success \
+            -f context=verify \
+            -f description="make verify passed in daily-snapshot run ${GITHUB_RUN_ID}" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+      - name: Push to master
+        if: steps.commit.outputs.committed == 'true'
+        run: |
+          git push origin HEAD:master
+          git push --delete origin refs/heads/snapshot/staging
+
+      # Nothing a GITHUB_TOKEN push does starts another workflow, so without this the published
+      # site would go on describing the day before. workflow_dispatch is the documented exception
+      # to that rule, and publish-site needs no secret and reads only committed data.
+      - name: Rebuild the published site
+        if: steps.commit.outputs.committed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run publish-site --ref master
 
       # The post-condition, checked rather than assumed. A step that reports success without
-      # having done anything is the failure this repository exists to name, and the previous
-      # version of the step above was exactly that for ten consecutive runs. This one asserts the
-      # effect: today's snapshot is in the history, not merely on the runner's disk.
+      # having done anything is the failure this repository exists to name, and the first version
+      # of the commit step above was exactly that for ten consecutive runs. This asserts the
+      # effect on the remote, not on the runner: today's snapshot is on origin/master.
       - name: Fail if the snapshot never reached the history
         env:
           TAKEN: ${{ steps.snap.outputs.taken }}
@@ -133,4 +197,11 @@ jobs:
           not a quiet one."
             exit 1
           fi
-          echo "${path} is committed."
+          git fetch --quiet origin master
+          if ! git ls-tree -r --name-only origin/master -- "${path}" | grep -qx "${path}"; then
+            echo "::error title=Snapshot not on master::${path} is committed on this runner and \
+          absent from origin/master. The push did not land, and a snapshot that exists only on \
+          a runner that is about to be discarded is the same as no snapshot."
+            exit 1
+          fi
+          echo "${path} is on origin/master."

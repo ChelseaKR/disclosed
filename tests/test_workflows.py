@@ -20,6 +20,14 @@ yet" every single day.
 The bug is a one-word fix and completely invisible in review, which is exactly why it is worth
 a test. This asserts the two properties that make the step honest: it compares something a new
 file can fail, and it checks afterwards that the commit actually happened.
+
+The second chapter was quieter still. With the diff fixed, five more runs (2026-08-16 to
+2026-08-20) wrote the snapshot, committed it, and were rejected by the ``protect-main`` ruleset
+for lacking the ``verify`` status it requires of every commit on master. The job now earns that
+status by running ``make verify`` on the commit and recording the result against the SHA before
+it pushes (ADR 0002). The tests in :class:`TestTheDailySnapshotEarnsItsCheck` pin the order,
+because the honest version and the dishonest version of that step differ only in whether the
+gate runs first.
 """
 
 from __future__ import annotations
@@ -112,6 +120,96 @@ class TestTheDailySnapshotCommitCanFail:
             "Without that, any future rewrite of the commit step can go back to reporting "
             "success while committing nothing, which is what it did for ten days."
         )
+
+    def test_the_post_condition_looks_at_the_remote_and_not_the_runner(self) -> None:
+        """Five runs passed ``git ls-files`` and still committed nothing anyone can read: the
+        file was tracked on a runner that was discarded minutes later. The series lives on
+        origin/master or it does not exist."""
+        assert re.search(r"git ls-tree -r --name-only origin/master", _WORKFLOW), (
+            "the snapshot workflow no longer checks that the snapshot is on origin/master. A "
+            "file tracked only in the runner's clone is the shape of the 2026-08-16 to "
+            "2026-08-20 failures: committed, rejected, gone."
+        )
+
+
+class TestTheDailySnapshotEarnsItsCheck:
+    """The route by which a bot commit satisfies a ruleset that names no bypass actor.
+
+    The ruleset requires a ``verify`` status on every commit that lands on master. The job runs
+    the gate and records the status itself (ADR 0002), and the honest version of that is
+    distinguishable from the dishonest one only by order: the gate has to run before the status
+    is written, and the status has to be written before the push. Both are asserted from the
+    file, the same way the security scans are.
+    """
+
+    def _index(self, pattern: str) -> int:
+        lines = _steps(_WORKFLOW)
+        found = [i for i, line in enumerate(lines) if re.search(pattern, line)]
+        assert found, (
+            f"snapshot.yml has no executable line matching {pattern!r}. If the step was "
+            "rewritten, bring these assertions with it: they guard the only route by which the "
+            "daily series reaches master."
+        )
+        return found[0]
+
+    def test_the_gate_runs_on_the_commit_before_any_status_is_recorded(self) -> None:
+        gate = self._index(r"^run: make verify$")
+        status = self._index(r"repos/\$\{GITHUB_REPOSITORY\}/statuses/")
+        assert gate < status, (
+            "the verify status is recorded before `make verify` runs. A status written ahead of "
+            "the gate is a green check that proves nothing, which is the failure this project "
+            "exists to name in other people's data."
+        )
+
+    def test_the_status_is_recorded_before_the_push_and_is_the_context_the_ruleset_names(
+        self,
+    ) -> None:
+        status = self._index(r"repos/\$\{GITHUB_REPOSITORY\}/statuses/")
+        pushed = self._index(r"^git push origin HEAD:master$")
+        assert status < pushed
+        # The `gh api` call is wrapped with backslashes, so each flag is its own line with a
+        # continuation marker after it; matched on the flag, not on the whole line.
+        window = _steps(_WORKFLOW)[status : pushed + 1]
+        assert any(line.startswith("-f context=verify") for line in window), (
+            "the recorded status is not the `verify` context the ruleset requires, so the push "
+            "will be rejected exactly as it was from 2026-08-16 to 2026-08-20."
+        )
+        assert any(line.startswith("-f state=success") for line in window)
+
+    def test_the_status_names_the_run_that_earned_it(self) -> None:
+        """A status with no target is an assertion. One that links the run is evidence."""
+        assert re.search(r"-f target_url=.*GITHUB_RUN_ID", _WORKFLOW)
+        assert re.search(r"-f description=.*make verify passed", _WORKFLOW)
+
+    def test_the_staging_ref_is_removed_after_the_push(self) -> None:
+        """The staging ref exists only so a SHA can carry a status before master takes it.
+        Left behind, it is a second copy of master that nothing protects."""
+        pushed = self._index(r"^git push origin HEAD:master$")
+        deleted = self._index(r"^git push --delete origin refs/heads/snapshot/staging$")
+        assert pushed < deleted
+
+    def test_the_site_is_rebuilt_because_a_token_push_starts_nothing(self) -> None:
+        """Without the dispatch the published site lags the series by a day, silently."""
+        pushed = self._index(r"^git push origin HEAD:master$")
+        rebuilt = self._index(r"^run: gh workflow run publish-site --ref master$")
+        assert pushed < rebuilt
+
+    def test_the_gate_is_the_same_install_verify_yml_uses(self) -> None:
+        """`make verify` over a different dependency set is a different gate."""
+        for command in ("uv lock --check", "uv sync --locked"):
+            assert self._index(rf"^run: {re.escape(command)}$") < self._index(r"^run: make verify$")
+
+    def test_the_token_is_scoped_to_exactly_what_the_route_needs(self) -> None:
+        """contents to push, statuses to record the check, actions to dispatch the rebuild.
+        Anything wider is a write the job does not need and nobody reviewed."""
+        job_permissions = re.search(
+            r"permissions:\n((?:\s+\w+: \w+.*\n)+)", _WORKFLOW.split("jobs:", 1)[1]
+        )
+        assert job_permissions is not None
+        # Keys read from the start of each line, so a `word: word` inside the trailing comment
+        # that explains a grant is not mistaken for a fourth grant.
+        granted = dict(re.findall(r"^\s*(\w+): (\w+)", job_permissions.group(1), re.MULTILINE))
+        assert granted == {"contents": "write", "statuses": "write", "actions": "write"}
 
 
 class TestTheSecurityScansCanFail:

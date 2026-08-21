@@ -129,3 +129,24 @@ the automated evidence above does not substitute for them and this file does not
 
 Last verified: 2026-08-07 · Recheck cadence: quarterly, and on any new data source, hosted
 surface, or release.
+
+## Addendum 2026-08-21: branch protection verified, and what the daily job does about it
+
+Appended rather than edited, per the append-only rule above.
+
+- **Branch protection is applied.** Read back from the API on 2026-08-21: ruleset
+  `protect-main` (id 20564802), enforcement `active`, target `refs/heads/master`, rules
+  `non_fast_forward`, `deletion`, `required_status_checks` with the single context `verify`,
+  and **no bypass actors**. `delete_branch_on_merge` was switched on the same day so merged
+  branches stop accumulating. The open item in section F above is closed by this line.
+- **The daily snapshot was rejected by that ruleset** on five consecutive runs (2026-08-16 to
+  2026-08-20, workflow runs 31940376474, 32018856289, 32123887915, 32239848772, 32356139212),
+  after ten runs that had committed nothing for a different reason (#18). No bypass actor was
+  added: GitHub refuses the Actions app as a bypass actor on a user-owned repository, and a
+  deploy key was not minted. The job now runs `make verify` on its own commit, records the
+  `verify` status on the SHA with a link to the run, and pushes; `docs/adr/0002` records the
+  decision and `tests/test_workflows.py` pins the order of those steps.
+- **Unrecoverable days are recorded as unrecoverable.** The fifteen graded reports were written
+  to runners that no longer exist. The job logs print per-field fail counts, which are not the
+  per-field reported/missing/applicable counts a snapshot holds, so nothing is reconstructed
+  from them.
