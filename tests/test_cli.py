@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
@@ -494,6 +495,186 @@ class TestCrosscheck:
         out = tmp_path / "cross.json"
         assert cli.main(self._argv(bad, characteristics, out)) == 1
         assert "IPEDS unreadable" in capsys.readouterr().err
+        assert not out.exists()
+
+
+def _page_record(page: int = 0) -> college_scorecard.PageRecord:
+    return college_scorecard.PageRecord(
+        page=page,
+        url=f"{college_scorecard.BASE_URL}?api_key=REDACTED&per_page=100&page={page}",
+        fetched_at="2026-08-21T09:00:00Z",
+        status=200,
+        bytes=120,
+        sha256="ab" * 32,
+        attempts=1,
+        from_cache=False,
+        ratelimit_limit=1000,
+        ratelimit_remaining=999 - page,
+    )
+
+
+def _capture(
+    records: list[dict[str, Any]] | None = None, **overrides: Any
+) -> college_scorecard.Capture:
+    rows = _RECORDS if records is None else records
+    fields: dict[str, Any] = {
+        "records": rows,
+        "pages": [_page_record(0)],
+        "total_stated": len(rows),
+        "exhausted": True,
+        "limit": None,
+        "walked_at": "2026-08-21T09:00:00Z",
+        "finished_at": "2026-08-21T09:00:31Z",
+        "demo_key": False,
+    }
+    fields.update(overrides)
+    return college_scorecard.Capture(**fields)
+
+
+class TestFetch:
+    """The one keyed, network-bound verb, and the file it leaves behind for every other one."""
+
+    def test_writes_the_capture_and_its_provenance_summary(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        asked: dict[str, Any] = {}
+
+        def fake_walk(**kwargs: Any) -> college_scorecard.Capture:
+            asked.update(kwargs)
+            return _capture()
+
+        monkeypatch.setattr(college_scorecard, "walk", fake_walk)
+        out = tmp_path / "census" / "capture.json"
+        sidecar = tmp_path / "provenance" / "2026-08-21.json"
+        assert (
+            cli.main(
+                [
+                    "fetch",
+                    "--out",
+                    str(out),
+                    "--provenance-out",
+                    str(sidecar),
+                    "--cache-dir",
+                    str(tmp_path / "cache"),
+                ]
+            )
+            == 0
+        )
+        assert asked == {"limit": None, "cache_dir": tmp_path / "cache"}
+
+        records, provenance = college_scorecard.read_capture(json.loads(out.read_text()))
+        assert records == _RECORDS
+        assert provenance is not None and provenance["exhausted"] is True
+        summary = json.loads(sidecar.read_text())
+        assert summary["records"] == 2
+        assert summary["calls"] == 1
+        assert summary["ratelimit_remaining_min"] == 999
+        assert "REDACTED" in summary["url_template"]
+
+        printed = capsys.readouterr().out
+        assert "captured 2 institutions" in printed
+        assert "exhausted        yes; API stated 2" in printed
+        assert "999 of 1,000 requests left" in printed
+        assert "DATA_GOV_API_KEY" in printed
+
+    def test_a_failed_walk_writes_nothing(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        def refuse(**kwargs: Any) -> college_scorecard.Capture:
+            raise college_scorecard.RateLimited("page 4 still returning HTTP 429")
+
+        monkeypatch.setattr(college_scorecard, "walk", refuse)
+        out = tmp_path / "capture.json"
+        assert cli.main(["fetch", "--out", str(out)]) == 1
+        assert not out.exists()
+        assert "fetch failed, nothing written" in capsys.readouterr().err
+
+    def test_an_empty_walk_is_refused(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Zero institutions means the fetch failed, not that no college exists."""
+        monkeypatch.setattr(
+            college_scorecard, "walk", lambda **kw: _capture([], total_stated=0, exhausted=True)
+        )
+        out = tmp_path / "capture.json"
+        assert cli.main(["fetch", "--out", str(out)]) == 1
+        assert not out.exists()
+        assert "refusing to write an empty capture" in capsys.readouterr().err
+
+    def test_an_unreported_rate_limit_prints_as_words_not_as_zero(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        page = college_scorecard.PageRecord(
+            **{**asdict(_page_record()), "ratelimit_limit": None, "ratelimit_remaining": None}
+        )
+        monkeypatch.setattr(
+            college_scorecard,
+            "walk",
+            lambda **kw: _capture(pages=[page], demo_key=True, exhausted=False, limit=1),
+        )
+        assert cli.main(["fetch", "--out", str(tmp_path / "c.json"), "--limit", "1"]) == 0
+        printed = capsys.readouterr().out
+        assert "not reported by the API" in printed
+        assert "exhausted        no" in printed
+        assert "DEMO_KEY" in printed
+
+
+class TestReplayingACapture:
+    """A capture envelope replays as national on the strength of its own counts, or not at all."""
+
+    def _envelope(self, tmp_path: Path, capture: college_scorecard.Capture) -> Path:
+        path = tmp_path / "capture.json"
+        college_scorecard.write_capture(capture, path)
+        return path
+
+    def test_an_exhaustive_capture_replays_as_national_and_names_its_day(
+        self, tmp_path: Path
+    ) -> None:
+        source = self._envelope(tmp_path, _capture())
+        out = tmp_path / "report.json"
+        assert cli.main(["grade", "--source", str(source), "--out", str(out)]) == 0
+        scope = json.loads(out.read_text())["scope"]
+        assert scope["kind"] == "national"
+        assert scope["coverage"] == 1.0
+        assert "paged the API to exhaustion on 2026-08-21" in scope["note"]
+        assert "no key" in scope["note"]
+
+    def test_a_capture_truncated_after_it_was_written_replays_as_a_sample(
+        self, tmp_path: Path
+    ) -> None:
+        """The provenance says two records arrived; the file holds one. Whichever was edited,
+        the counts disagree, and a disagreement is graded as the smaller claim."""
+        source = self._envelope(tmp_path, _capture())
+        envelope = json.loads(source.read_text())
+        envelope["records"] = envelope["records"][:1]
+        source.write_text(json.dumps(envelope))
+        out = tmp_path / "report.json"
+        assert cli.main(["grade", "--source", str(source), "--out", str(out)]) == 0
+        assert json.loads(out.read_text())["scope"]["kind"] == "sample"
+
+    def test_a_walk_that_did_not_reach_the_total_replays_as_a_sample(self, tmp_path: Path) -> None:
+        source = self._envelope(tmp_path, _capture(total_stated=6300, exhausted=False, limit=2))
+        out = tmp_path / "report.json"
+        assert cli.main(["grade", "--source", str(source), "--out", str(out)]) == 0
+        assert json.loads(out.read_text())["scope"]["kind"] == "sample"
+
+    def test_a_limited_replay_of_an_exhaustive_capture_is_a_sample(self, tmp_path: Path) -> None:
+        """--limit is a deliberate sample and outranks what the file could have proved."""
+        source = self._envelope(tmp_path, _capture())
+        out = tmp_path / "report.json"
+        assert cli.main(["grade", "--source", str(source), "--limit", "1", "--out", str(out)]) == 0
+        report = json.loads(out.read_text())
+        assert report["institutions"] == 1
+        assert report["scope"]["kind"] == "sample"
+
+    def test_an_envelope_with_no_records_list_is_refused(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        bad = tmp_path / "bad.json"
+        bad.write_text(json.dumps({"kind": college_scorecard.CAPTURE_KIND, "provenance": {}}))
+        out = tmp_path / "report.json"
+        assert cli.main(["grade", "--source", str(bad), "--out", str(out)]) == 1
+        assert "not a JSON array" in capsys.readouterr().err
         assert not out.exists()
 
 

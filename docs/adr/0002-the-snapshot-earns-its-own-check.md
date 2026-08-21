@@ -1,6 +1,8 @@
 # 0002. The daily snapshot earns the status check it needs, and records where it earned it
 
-- Status: Accepted
+- Status: Superseded by [0003](0003-the-gates-run-on-the-staging-ref.md). Tried once (run
+  32466145742); the status landed and the push was still refused by a second protection layer
+  requiring four more checks the job had not run.
 - Date: 2026-08-21
 - Deciders: Chelsea Kelly-Reif
 
