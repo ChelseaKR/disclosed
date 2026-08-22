@@ -1,0 +1,186 @@
+{
+ "suite": "citation_grounding",
+ "status": "run",
+ "provenance": {
+  "provider": "oracle",
+  "model": "oracle",
+  "prompt_version": "2026-08-21.1",
+  "harness_version": "1",
+  "commit": "b630ed684e4151aeffb5015c786be6f02c7782f3",
+  "date": "2026-08-22"
+ },
+ "scores": {
+  "model_claims": 115,
+  "shown_claims": 115,
+  "cases_with_a_shown_claim": 13,
+  "cases_with_something_shown": 18,
+  "refused": 1,
+  "error": 0,
+  "quotes_shown": 9,
+  "quotes_withheld": 0,
+  "n": 20,
+  "served": 19,
+  "share_of_model_claims_shown": 1.0,
+  "withheld_reasons": {}
+ },
+ "outcomes": [
+  {
+   "case_id": "ground-01",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 12,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-02",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 12,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-03",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 12,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-04",
+   "verdict": "shown",
+   "intent": "is_value_real",
+   "shown": 2,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-05",
+   "verdict": "shown",
+   "intent": "is_value_real",
+   "shown": 2,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-06",
+   "verdict": "shown",
+   "intent": "did_anything_change",
+   "shown": 30,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-07",
+   "verdict": "shown",
+   "intent": "did_anything_change",
+   "shown": 24,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-08",
+   "verdict": "shown",
+   "intent": "why_absent",
+   "shown": 0,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-09",
+   "verdict": "shown",
+   "intent": "why_absent",
+   "shown": 1,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-10",
+   "verdict": "shown",
+   "intent": "why_absent",
+   "shown": 1,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-11",
+   "verdict": "shown",
+   "intent": "field_definition",
+   "shown": 0,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-12",
+   "verdict": "shown",
+   "intent": "field_definition",
+   "shown": 0,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-13",
+   "verdict": "shown",
+   "intent": "field_definition",
+   "shown": 0,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-14",
+   "verdict": "shown",
+   "intent": "field_definition",
+   "shown": 0,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-15",
+   "verdict": "shown",
+   "intent": "sources_disagree",
+   "shown": 1,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-16",
+   "verdict": "nothing_shown",
+   "intent": "sources_disagree",
+   "shown": 0,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-17",
+   "verdict": "shown",
+   "intent": "drift_in_a_field",
+   "shown": 3,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-18",
+   "verdict": "shown",
+   "intent": "drift_in_a_field",
+   "shown": 3,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-19",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 12,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-20",
+   "verdict": "refused",
+   "refusal": "institution_not_in_frame",
+   "intent": "is_value_real"
+  }
+ ]
+}

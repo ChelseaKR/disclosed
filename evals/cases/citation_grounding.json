@@ -1,0 +1,334 @@
+{
+ "suite": "citation_grounding",
+ "description": "Served questions across every intent. Scored on the share of model claims whose every citation resolves to a record in the pack, the share withheld per verifier reason, and whether at least one claim survived. Quotes are scored on verbatim verification.",
+ "cases": [
+  {
+   "id": "ground-01",
+   "question": "What does this college not report?",
+   "institution": "104717",
+   "expected_intent": "what_is_not_reported",
+   "expected_field_labels": [],
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-02",
+   "question": "What is missing from Harvard's disclosure?",
+   "institution": null,
+   "expected_intent": "what_is_not_reported",
+   "expected_field_labels": [],
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": "Harvard",
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-03",
+   "question": "Which fields did Alabama A & M University leave blank?",
+   "institution": null,
+   "expected_intent": "what_is_not_reported",
+   "expected_field_labels": [],
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": "Alabama A & M University",
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-04",
+   "question": "Is their 0% admission rate real?",
+   "institution": "110468",
+   "expected_intent": "is_value_real",
+   "expected_field_labels": [
+    "Admission rate"
+   ],
+   "oracle": {
+    "intent": "is_value_real",
+    "institution_text": null,
+    "fields": [
+     "Admission rate"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-05",
+   "question": "Is the zero admission rate at Alliant International University-San Diego a real number?",
+   "institution": null,
+   "expected_intent": "is_value_real",
+   "expected_field_labels": [
+    "Admission rate"
+   ],
+   "oracle": {
+    "intent": "is_value_real",
+    "institution_text": "Alliant International University-San Diego",
+    "fields": [
+     "Admission rate"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-06",
+   "question": "Did this institution stop publishing anything between IPEDS years?",
+   "institution": "104717",
+   "expected_intent": "did_anything_change",
+   "expected_field_labels": [],
+   "oracle": {
+    "intent": "did_anything_change",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-07",
+   "question": "Did Harvard start or stop reporting any field?",
+   "institution": null,
+   "expected_intent": "did_anything_change",
+   "expected_field_labels": [],
+   "oracle": {
+    "intent": "did_anything_change",
+    "institution_text": "Harvard",
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-08",
+   "question": "Why would a school not report a net price calculator?",
+   "institution": null,
+   "expected_intent": "why_absent",
+   "expected_field_labels": [
+    "Net price calculator"
+   ],
+   "oracle": {
+    "intent": "why_absent",
+    "institution_text": null,
+    "fields": [
+     "Net price calculator"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-09",
+   "question": "Why is the admission rate missing for this school?",
+   "institution": "100690",
+   "expected_intent": "why_absent",
+   "expected_field_labels": [
+    "Admission rate"
+   ],
+   "oracle": {
+    "intent": "why_absent",
+    "institution_text": null,
+    "fields": [
+     "Admission rate"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-10",
+   "question": "Why is the athletics disclosure not applicable here?",
+   "institution": "100690",
+   "expected_intent": "why_absent",
+   "expected_field_labels": [
+    "Equity in athletics disclosure"
+   ],
+   "oracle": {
+    "intent": "why_absent",
+    "institution_text": null,
+    "fields": [
+     "Equity in athletics disclosure"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-11",
+   "question": "What exactly does IPEDS mean by a net price calculator?",
+   "institution": null,
+   "expected_intent": "field_definition",
+   "expected_field_labels": [
+    "Net price calculator"
+   ],
+   "oracle": {
+    "intent": "field_definition",
+    "institution_text": null,
+    "fields": [
+     "Net price calculator"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-12",
+   "question": "How does the College Scorecard define the completion rate this tool grades?",
+   "institution": null,
+   "expected_intent": "field_definition",
+   "expected_field_labels": [
+    "Completion rate, 150% of normal time"
+   ],
+   "oracle": {
+    "intent": "field_definition",
+    "institution_text": null,
+    "fields": [
+     "Completion rate, 150% of normal time"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-13",
+   "question": "What does the Scorecard mean by median earnings 10 years after entry?",
+   "institution": null,
+   "expected_intent": "field_definition",
+   "expected_field_labels": [
+    "Median earnings 10 years after entry"
+   ],
+   "oracle": {
+    "intent": "field_definition",
+    "institution_text": null,
+    "fields": [
+     "Median earnings 10 years after entry"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-14",
+   "question": "What is the equity in athletics disclosure field?",
+   "institution": null,
+   "expected_intent": "field_definition",
+   "expected_field_labels": [
+    "Equity in athletics disclosure"
+   ],
+   "oracle": {
+    "intent": "field_definition",
+    "institution_text": null,
+    "fields": [
+     "Equity in athletics disclosure"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-15",
+   "question": "Do IPEDS and the College Scorecard disagree about Grand Canyon University?",
+   "institution": null,
+   "expected_intent": "sources_disagree",
+   "expected_field_labels": [],
+   "oracle": {
+    "intent": "sources_disagree",
+    "institution_text": "Grand Canyon University",
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-16",
+   "question": "Do the two federal sources describe this school the same way?",
+   "institution": "166027",
+   "expected_intent": "sources_disagree",
+   "expected_field_labels": [],
+   "oracle": {
+    "intent": "sources_disagree",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-17",
+   "question": "Nationally, how did disclosure of the athletics field change between IPEDS years?",
+   "institution": null,
+   "expected_intent": "drift_in_a_field",
+   "expected_field_labels": [
+    "Equity in athletics disclosure"
+   ],
+   "oracle": {
+    "intent": "drift_in_a_field",
+    "institution_text": null,
+    "fields": [
+     "Equity in athletics disclosure"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-18",
+   "question": "What changed in net price calculator disclosure across institutions between 2021 and 2023?",
+   "institution": null,
+   "expected_intent": "drift_in_a_field",
+   "expected_field_labels": [
+    "Net price calculator"
+   ],
+   "oracle": {
+    "intent": "drift_in_a_field",
+    "institution_text": null,
+    "fields": [
+     "Net price calculator"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-19",
+   "question": "What does this school disclose to IPEDS?",
+   "institution": "100654",
+   "expected_intent": "what_is_not_reported",
+   "expected_field_labels": [],
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "ground-20",
+   "question": "Is the enrollment figure for this school an artifact?",
+   "institution": "100636",
+   "expected_intent": "is_value_real",
+   "expected_field_labels": [
+    "Enrollment"
+   ],
+   "oracle": {
+    "intent": "is_value_real",
+    "institution_text": null,
+    "fields": [
+     "Enrollment"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  }
+ ]
+}

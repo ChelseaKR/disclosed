@@ -628,6 +628,50 @@ def _cmd_serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_evals(args: argparse.Namespace) -> int:
+    """Run the evaluation suites and write provenance-stamped results.
+
+    ``--kind oracle`` and ``--kind adversary`` need no key and run in the test suite; ``--kind
+    live`` needs a configured provider and is the only run that says anything about a model. A
+    live run that cannot reach a provider writes ``not_run`` results with the reason rather than
+    nothing, so the absence of a number is itself on the record.
+    """
+    from .ask import corpus, evals, evidence
+    from .ask.provider import ProviderError, from_environment
+
+    root = Path(args.root)
+    suites = evals.SUITES if args.suite == "all" else (args.suite,)
+    if args.kind == "oracle":
+        provider: Any = evals.OracleProvider()
+    elif args.kind == "adversary":
+        provider = evals.AdversaryProvider()
+    else:
+        try:
+            provider = from_environment()
+        except ProviderError as exc:
+            for suite in suites:
+                path = evals.write_result(
+                    evals.not_run(suite, kind="live", reason=str(exc)), root / "evals" / "results"
+                )
+                print(f"{suite}: not run ({exc}) -> {path}")
+            return 1
+    store = evidence.build(root / "data")
+    loaded = corpus.load(root / "corpus")
+    for suite in suites:
+        result = evals.run_suite(
+            suite,
+            kind=args.kind,
+            provider=provider,
+            evidence=store,
+            corpus=loaded,
+            cases_dir=root / "evals" / "cases",
+        )
+        path = evals.write_result(result, root / "evals" / "results")
+        shown = {k: v for k, v in result.scores.items() if k != "per_state"}
+        print(f"{suite} [{result.provenance['model']}]: {shown} -> {path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="disclosed",
@@ -784,6 +828,17 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_serve.add_argument("--root", default=".", help="repository root holding data/ and corpus/")
     p_serve.set_defaults(func=_cmd_serve)
+
+    p_evals = sub.add_parser("evals", help="run the question-answering evaluation suites")
+    p_evals.add_argument("--suite", default="all", help="a suite name, or all")
+    p_evals.add_argument(
+        "--kind",
+        choices=("oracle", "adversary", "live"),
+        default="oracle",
+        help="oracle (scripted, faithful), adversary (scripted, hostile), or live (a real model)",
+    )
+    p_evals.add_argument("--root", default=".", help="repository root")
+    p_evals.set_defaults(func=_cmd_evals)
 
     args = parser.parse_args(argv)
     result: int = args.func(args)

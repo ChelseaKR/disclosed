@@ -1,0 +1,233 @@
+{
+ "suite": "drift_direction",
+ "description": "Drift questions. expected_direction is filled from the evidence store at run time where null (the project's own measured direction for the field and source pair); 'unmeasured' means the store has no pair for that source and the narration must not call the field changed or unchanged. Scored on direction fidelity, source separation (IPEDS and the Scorecard are never compared), and refusal to invent a direction.",
+ "zero_tolerance": "wrong_direction",
+ "cases": [
+  {
+   "id": "drift-01",
+   "question": "Nationally, did institutions gain or lose the equity in athletics disclosure between IPEDS 2021 and 2023?",
+   "institution": null,
+   "field_label": "Equity in athletics disclosure",
+   "source": "IPEDS",
+   "expected_direction": "gained",
+   "kind": "national",
+   "oracle": {
+    "intent": "drift_in_a_field",
+    "institution_text": null,
+    "fields": [
+     "Equity in athletics disclosure"
+    ],
+    "unmapped_terms": [],
+    "judgement": false,
+    "source": "IPEDS"
+   }
+  },
+  {
+   "id": "drift-02",
+   "question": "How did the share of institutions publishing an athletics disclosure move across the IPEDS years?",
+   "institution": null,
+   "field_label": "Equity in athletics disclosure",
+   "source": "IPEDS",
+   "expected_direction": "gained",
+   "kind": "national",
+   "oracle": {
+    "intent": "drift_in_a_field",
+    "institution_text": null,
+    "fields": [
+     "Equity in athletics disclosure"
+    ],
+    "unmapped_terms": [],
+    "judgement": false,
+    "source": "IPEDS"
+   }
+  },
+  {
+   "id": "drift-03",
+   "question": "Did the net price calculator disclosure rate go up or down between 2021 and 2023 in IPEDS?",
+   "institution": null,
+   "field_label": "Net price calculator",
+   "source": "IPEDS",
+   "expected_direction": null,
+   "kind": "national",
+   "oracle": {
+    "intent": "drift_in_a_field",
+    "institution_text": null,
+    "fields": [
+     "Net price calculator"
+    ],
+    "unmapped_terms": [],
+    "judgement": false,
+    "source": "IPEDS"
+   }
+  },
+  {
+   "id": "drift-04",
+   "question": "What happened to institution web address disclosure between IPEDS 2021 and 2023?",
+   "institution": null,
+   "field_label": "Institution web address",
+   "source": "IPEDS",
+   "expected_direction": null,
+   "kind": "national",
+   "oracle": {
+    "intent": "drift_in_a_field",
+    "institution_text": null,
+    "fields": [
+     "Institution web address"
+    ],
+    "unmapped_terms": [],
+    "judgement": false,
+    "source": "IPEDS"
+   }
+  },
+  {
+   "id": "drift-05",
+   "question": "Between IPEDS snapshots, did financial aid information disclosure change?",
+   "institution": null,
+   "field_label": "Financial aid information",
+   "source": "IPEDS",
+   "expected_direction": null,
+   "kind": "national",
+   "oracle": {
+    "intent": "drift_in_a_field",
+    "institution_text": null,
+    "fields": [
+     "Financial aid information"
+    ],
+    "unmapped_terms": [],
+    "judgement": false,
+    "source": "IPEDS"
+   }
+  },
+  {
+   "id": "drift-06",
+   "question": "How did disability services disclosure drift across the IPEDS years?",
+   "institution": null,
+   "field_label": "Disability services information",
+   "source": "IPEDS",
+   "expected_direction": null,
+   "kind": "national",
+   "oracle": {
+    "intent": "drift_in_a_field",
+    "institution_text": null,
+    "fields": [
+     "Disability services information"
+    ],
+    "unmapped_terms": [],
+    "judgement": false,
+    "source": "IPEDS"
+   }
+  },
+  {
+   "id": "drift-07",
+   "question": "Did admissions information disclosure change in IPEDS between 2021 and 2023?",
+   "institution": null,
+   "field_label": "Admissions information",
+   "source": "IPEDS",
+   "expected_direction": null,
+   "kind": "national",
+   "oracle": {
+    "intent": "drift_in_a_field",
+    "institution_text": null,
+    "fields": [
+     "Admissions information"
+    ],
+    "unmapped_terms": [],
+    "judgement": false,
+    "source": "IPEDS"
+   }
+  },
+  {
+   "id": "drift-08",
+   "question": "Has College Scorecard admission rate disclosure changed between daily snapshots?",
+   "institution": null,
+   "field_label": "Admission rate",
+   "source": "College Scorecard",
+   "expected_direction": "unmeasured",
+   "kind": "national",
+   "oracle": {
+    "intent": "drift_in_a_field",
+    "institution_text": null,
+    "fields": [
+     "Admission rate"
+    ],
+    "unmapped_terms": [],
+    "judgement": false,
+    "source": "College Scorecard"
+   }
+  },
+  {
+   "id": "drift-09",
+   "question": "Did Scorecard enrollment disclosure drift between snapshots?",
+   "institution": null,
+   "field_label": "Enrollment",
+   "source": "College Scorecard",
+   "expected_direction": "unmeasured",
+   "kind": "national",
+   "oracle": {
+    "intent": "drift_in_a_field",
+    "institution_text": null,
+    "fields": [
+     "Enrollment"
+    ],
+    "unmapped_terms": [],
+    "judgement": false,
+    "source": "College Scorecard"
+   }
+  },
+  {
+   "id": "drift-10",
+   "question": "Compare IPEDS and Scorecard drift for the completion rate.",
+   "institution": null,
+   "field_label": "Completion rate, 150% of normal time",
+   "source": "either",
+   "expected_direction": null,
+   "kind": "cross_source",
+   "oracle": {
+    "intent": "drift_in_a_field",
+    "institution_text": null,
+    "fields": [
+     "Completion rate, 150% of normal time"
+    ],
+    "unmapped_terms": [],
+    "judgement": false,
+    "source": "either"
+   }
+  },
+  {
+   "id": "drift-11",
+   "question": "Did Grand Canyon University stop publishing its athletics disclosure between 2021 and 2023?",
+   "institution": "104717",
+   "field_label": "Equity in athletics disclosure",
+   "source": "IPEDS",
+   "expected_direction": null,
+   "kind": "institution",
+   "oracle": {
+    "intent": "did_anything_change",
+    "institution_text": "Grand Canyon University",
+    "fields": [
+     "Equity in athletics disclosure"
+    ],
+    "unmapped_terms": [],
+    "judgement": false,
+    "source": "IPEDS"
+   }
+  },
+  {
+   "id": "drift-12",
+   "question": "Did this school start reporting anything between IPEDS years?",
+   "institution": "100690",
+   "field_label": null,
+   "source": "IPEDS",
+   "expected_direction": null,
+   "kind": "institution",
+   "oracle": {
+    "intent": "did_anything_change",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false,
+    "source": "IPEDS"
+   }
+  }
+ ]
+}
