@@ -559,6 +559,7 @@ def _cmd_site(args: argparse.Namespace) -> int:
         generated=args.generated,
         national=national_payload,
         scorecard_census=census_payload,
+        ask_endpoint=args.ask_endpoint,
     )
     print(f"built {len(pages)} pages -> {out}")
     return 0
@@ -741,6 +742,14 @@ def main(argv: list[str] | None = None) -> int:
         help=(
             "census artifact from `disclosed census-report`. Without it the site's Scorecard "
             "figures describe the committed sample only, exactly as before #17"
+        ),
+    )
+    p_site.add_argument(
+        "--ask-endpoint",
+        default=None,
+        help=(
+            "URL of a running disclosed.ask service. With it, institution pages carry the opt-in "
+            "question form and one inline script; without it the site has no script at all"
         ),
     )
     p_site.add_argument("--out", default="site")
