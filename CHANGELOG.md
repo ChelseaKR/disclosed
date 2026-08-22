@@ -21,6 +21,17 @@ file is the human-readable one.
   byte-for-byte in the test suite. `disclosed.ask.definitions` maps every graded field to the
   passage that defines its exact variable, and separately to related glossary entries with a
   note when they define a different measure. Quotes verify verbatim or are withheld.
+- **The evidence store and the question-structuring step of `disclosed.ask`.** `evidence.build`
+  reduces the committed inputs, in about a second and with no key, to every classification the
+  project has made: 7,095 institutions, 153,486 records across two Scorecard snapshots and three
+  IPEDS years, with the applicability condition behind every IPEDS `not_applicable`, the 18
+  field-level drift measurements from the snapshot series, and 15 cross-source sector
+  contradictions computed over the full census rather than the 600. A `reported` value is never
+  carried; only an `implausible` one is. `provider` is the SDK seam (first-party or Bedrock,
+  credentials from the environment only, scripted fake for tests); `structure` turns a question
+  into a typed lookup whose field vocabulary is the schema's enum; `lookup` resolves the
+  institution exactly, gathers the pack per intent, and refuses with fixed text: performance or
+  ranking, outside disclosure, not in the frame, ambiguous, unclassified measure, unclear.
 
 - Five-way classification of every published value (`REPORTED`, `IMPLAUSIBLE`, `SUPPRESSED`,
   `NOT_APPLICABLE`, `MISSING`), with written rationales for every credible range.
