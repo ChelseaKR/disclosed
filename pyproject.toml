@@ -13,9 +13,13 @@ authors = [{ name = "Chelsea Kelly-Reif" }]
 dependencies = []
 
 # The grading pipeline and the static site need nothing. The optional question-answering layer
-# (ADR 0006, `disclosed.ask`) is the only thing with dependencies, and it is an extra.
+# (ADR 0006, `disclosed.ask`) is the only thing with dependencies, and it is an extra: the public
+# Anthropic SDK and a defensive XML parser for the corpus workbooks. `ask-bedrock` adds the AWS
+# signing needed to reach the same models through Amazon Bedrock, which is the route the
+# evaluation suites run on when no first-party key is in the environment.
 [project.optional-dependencies]
-ask = ["defusedxml>=0.7"]
+ask = ["anthropic>=1.0", "defusedxml>=0.7"]
+ask-bedrock = ["anthropic[bedrock]>=1.0", "defusedxml>=0.7"]
 
 # Dev tooling lives in a PEP 735 dependency group (CODE-QUALITY-STANDARD section 5), not in
 # optional-dependencies: nothing downstream may ever install the linters by accident, and
@@ -23,6 +27,7 @@ ask = ["defusedxml>=0.7"]
 # portfolio-wide minimums; raising them is fine, lowering them is not.
 [dependency-groups]
 dev = [
+  "anthropic[bedrock]>=1.0",
   "defusedxml>=0.7",
   "types-defusedxml>=0.7",
   "pytest>=8",
