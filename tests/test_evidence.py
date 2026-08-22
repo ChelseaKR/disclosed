@@ -87,21 +87,54 @@ class TestTheFrame:
 
 
 class TestAgreementWithTheCrosscheck:
-    def test_every_ipeds_2023_classification_matches_data_crosscheck_json(
+    def test_every_ipeds_year_reproduces_the_committed_snapshot_counts(
         self, evidence: ev.Evidence
     ) -> None:
-        crosscheck = json.loads((ROOT / "data" / "crosscheck.json").read_text(encoding="utf-8"))
-        checked = 0
-        for row in crosscheck["grades"]:
-            unit_id = row["unit_id"]
-            ours = {
-                r.field_label: r.classification
-                for r in evidence.for_institution(unit_id, source=ev.IPEDS)
-                if r.snapshot == "2023"
-            }
-            assert ours == row["fields"], unit_id
-            checked += 1
-        assert checked == 6163
+        """``data/crosscheck.json`` itself is regenerable and not committed; the per-field counts
+        it reduces to are, three times over, and every one has to come out of this store."""
+        for year in ev.IPEDS_YEARS:
+            committed = json.loads(
+                (ROOT / "data" / "snapshots" / "ipeds" / f"{year}.json").read_text("utf-8")
+            )
+            reported: dict[str, int] = {}
+            missing: dict[str, int] = {}
+            applicable: dict[str, int] = {}
+            institutions: set[str] = set()
+            for inst in evidence.institutions.values():
+                for r in inst.records:
+                    if r.source != ev.IPEDS or r.snapshot != str(year):
+                        continue
+                    institutions.add(r.unit_id)
+                    reported.setdefault(r.field_label, 0)
+                    missing.setdefault(r.field_label, 0)
+                    applicable.setdefault(r.field_label, 0)
+                    if r.classification == "reported":
+                        reported[r.field_label] += 1
+                    elif r.classification == "missing":
+                        missing[r.field_label] += 1
+                    if r.classification not in ("suppressed", "not_applicable"):
+                        applicable[r.field_label] += 1
+            assert len(institutions) == committed["institutions"], year
+            assert reported == committed["reported"], year
+            assert missing == committed["missing"], year
+            assert applicable == committed["applicable"], year
+
+    def test_the_national_artifact_counts_come_out_of_the_store(
+        self, evidence: ev.Evidence
+    ) -> None:
+        national = json.loads((ROOT / "data" / "national.json").read_text("utf-8"))
+        for row in national["fields"]:
+            records = [
+                r
+                for inst in evidence.institutions.values()
+                for r in inst.records
+                if r.source == ev.IPEDS and r.snapshot == "2023" and r.field_label == row["label"]
+            ]
+            assert sum(1 for r in records if r.classification == "missing") == row["missing"]
+            assert (
+                sum(1 for r in records if r.classification not in ("suppressed", "not_applicable"))
+                == row["applicable"]
+            )
 
     def test_the_sample_snapshot_matches_data_report_json(self, evidence: ev.Evidence) -> None:
         report = json.loads((ROOT / "data" / "report.json").read_text(encoding="utf-8"))
