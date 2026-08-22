@@ -18,6 +18,12 @@ file is the human-readable one.
   model, prompt version, commit and date, and a test rejects one that does not. Measured live on
   `global.anthropic.claude-sonnet-4-6`: 0 leaked of 59 ranking questions, 0 wrong states shown of 46,
   0 wrong drift directions of 12, 0 guesses on 19 guarded questions.
+- **`deploy/`: the prepared, unapplied deployment shape.** A SAM template (JSON, so the test
+  suite reads it with the standard library) for one Lambda behind a Function URL with CORS locked
+  to the Pages origin, reserved concurrency of 2, IAM limited to invoking the one configured
+  model, an invocations alarm and a monthly budget; a build script that assembles the package
+  and never talks to AWS; a README that says it is not applied and lists the decisions it does
+  not make. `tests/test_deploy.py` holds the template to the code it would run.
 - **The opt-in question form on institution pages, off by default.** `disclosed site
   --ask-endpoint URL` adds, to each institution page, a labelled form and one inline script with
   no `src` whose only network call is inside the submit handler; without the flag the build is
