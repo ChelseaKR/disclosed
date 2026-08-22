@@ -165,8 +165,18 @@ def _institution_path(row: dict[str, Any]) -> str | None:
     return f"institution/{safe}" if safe else None
 
 
-def institution_page(row: dict[str, Any], findings: list[dict[str, Any]], *, path: str) -> Page:
-    """One institution: its grade, every field's disclosure state, and any implausible values."""
+def institution_page(
+    row: dict[str, Any],
+    findings: list[dict[str, Any]],
+    *,
+    path: str,
+    ask_endpoint: str | None = None,
+) -> Page:
+    """One institution: its grade, every field's disclosure state, and any implausible values.
+
+    With ``ask_endpoint`` the page also carries the opt-in question form and the one inline
+    script behind it (see :func:`_ask_widget`); without it the page is exactly what it was.
+    """
     name = _name_of(row)
     letter = row.get("letter")
     score = row.get("score")
@@ -249,6 +259,7 @@ def institution_page(row: dict[str, Any], findings: list[dict[str, Any]], *, pat
 everything and performs badly scores higher here than a good school that reports nothing, and
 that is intended. If you believe a field is marked wrongly, the
 <a href="../../methodology/">methodology</a> states every rule and the reasoning behind it.</p>
+{_ask_widget(str(row.get("unit_id")), ask_endpoint) if ask_endpoint else ""}
 """
     return Page(
         path=path,
@@ -259,6 +270,114 @@ that is intended. If you believe a field is marked wrongly, the
         ),
         body=body,
     )
+
+
+# The one script the site can carry, and only when it is built with an endpoint. It is inline
+# (no ``src``, so no second file is fetched), it registers a submit handler and does nothing
+# else at load, and its single network call sits inside that handler: nothing leaves the page
+# until the reader presses Ask. Everything it renders is built from DOM nodes with textContent,
+# never from markup, so a reply cannot inject anything into the page. A failed or rate-limited
+# request leaves the page exactly as it was, with one sentence saying so.
+_ASK_SCRIPT: Final[str] = """(function () {
+  var form = document.querySelector("form.ask-form");
+  if (!form) { return; }
+  var out = document.getElementById("ask-answer");
+  function el(tag, text, cls) {
+    var node = document.createElement(tag);
+    if (text !== undefined && text !== null) { node.textContent = String(text); }
+    if (cls) { node.className = cls; }
+    return node;
+  }
+  function list(items, render) {
+    var ul = el("ul");
+    items.forEach(function (item) { ul.appendChild(render(item)); });
+    return ul;
+  }
+  function show(answer) {
+    out.replaceChildren();
+    out.appendChild(el("p", answer.label, "ask-label"));
+    if (answer.error) {
+      out.appendChild(el("p", answer.error, "ask-error"));
+      return;
+    }
+    if (answer.refusal) {
+      out.appendChild(el("p", answer.refusal.message));
+      if (answer.refusal.known && answer.refusal.known.length) {
+        out.appendChild(el("p", "What is known instead:"));
+        out.appendChild(list(answer.refusal.known, function (k) { return el("li", k); }));
+      }
+      return;
+    }
+    if (answer.claims.length) {
+      out.appendChild(list(answer.claims, function (c) {
+        var li = el("li", c.text);
+        li.appendChild(el("span", " [" + c.cites.join(", ") + "]", "ask-cite"));
+        return li;
+      }));
+    }
+    if (answer.quotes.length) {
+      out.appendChild(el("p", "From the federal source, verbatim:"));
+      out.appendChild(list(answer.quotes, function (q) {
+        var li = el("li");
+        li.appendChild(el("q", q.quote));
+        var src = q.source || {};
+        li.appendChild(el("span", " (" + (src.publisher || "") + ", " + (src.locator || "") +
+          ", retrieved " + (src.retrieved || "") + ")", "ask-cite"));
+        if (q.note) { li.appendChild(el("p", q.note, "ask-note")); }
+        return li;
+      }));
+    }
+    if (answer.could_not_answer) { out.appendChild(el("p", answer.could_not_answer)); }
+    var w = answer.withheld || { claims: 0, quotes: 0 };
+    out.appendChild(el("p", "Withheld by the verifier: " + w.claims + " statement(s), " +
+      w.quotes + " quote(s).", "ask-withheld"));
+    if (!answer.claims.length && !answer.quotes.length && !answer.could_not_answer) {
+      out.appendChild(el("p",
+        "Nothing could be verified against the records, so nothing is shown."));
+    }
+  }
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    var question = form.elements.question.value.trim();
+    if (!question) { return; }
+    out.replaceChildren(el("p", "Asking\u2026"));
+    fetch(form.dataset.endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: question, institution: form.dataset.unitId })
+    }).then(function (response) { return response.json(); }).then(show).catch(function () {
+      out.replaceChildren(el("p",
+        "The question service is unavailable or at its limit. This page is unchanged."));
+    });
+  });
+})();"""
+
+
+def _ask_widget(unit_id: str, endpoint: str) -> str:
+    """The opt-in question form for one institution, and the script behind it.
+
+    Rendered only when the site is built with ``--ask-endpoint``. The section says what it is
+    before the reader types anything: optional, nothing sent until Ask is pressed, answers
+    AI-generated and unofficial, about disclosure and never about quality.
+    """
+    return f"""
+<section class="ask" aria-labelledby="ask-heading">
+<h2 id="ask-heading">Ask about this institution's disclosure</h2>
+<p>Optional. Nothing is sent anywhere until you press Ask. Answers are AI-generated and
+unofficial: they describe what this institution disclosed to federal sources and why an absence
+might be there, never how it performs, and every statement shown was checked against this
+project's own records. Questions about quality, rankings or whether to attend are refused.</p>
+<form class="ask-form" data-endpoint="{html.escape(endpoint)}"
+      data-unit-id="{html.escape(unit_id)}">
+<label for="ask-question">Your question</label>
+<input id="ask-question" name="question" type="text" maxlength="600" required
+       placeholder="What does this college not report?">
+<button type="submit">Ask</button>
+</form>
+<div id="ask-answer" class="ask-answer" aria-live="polite"></div>
+</section>
+<script>{_ASK_SCRIPT}</script>
+"""
 
 
 def state_page(summary: dict[str, Any], rows: list[dict[str, Any]]) -> Page:
@@ -941,6 +1060,14 @@ section[id] { scroll-margin-top: 1rem; border-left: 3px solid #e3e3e3; padding-l
 .caveat { font-size: .9rem; color: #555; border-top: 1px solid #e3e3e3; padding-top: .8rem;
           margin-top: 2rem; }
 footer { margin-top: 3rem; font-size: .9rem; color: #555; }
+.ask { margin-top: 2.5rem; border-top: 1px solid #e3e3e3; padding-top: .5rem; }
+.ask-form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.ask-form label { flex-basis: 100%; font-weight: 600; }
+.ask-form input { flex: 1 1 18rem; padding: .5rem; font: inherit; }
+.ask-form button { padding: .5rem 1rem; font: inherit; }
+.ask-answer { margin-top: 1rem; }
+.ask-label, .ask-cite, .ask-note, .ask-withheld { font-size: .9rem; color: #555; }
+.ask-error { color: #a8421f; }
 @media (prefers-color-scheme: dark) {
   body { background: #131313; color: #e9e9e9; }
   a { color: #79b8ff; }
@@ -950,7 +1077,9 @@ footer { margin-top: 3rem; font-size: .9rem; color: #555; }
   :focus-visible { outline-color: #79b8ff; }
   caption { color: #bbb; }
   .why, .bounds, .caveat, footer { color: #bbb; }
-  .caveat { border-color: #333; }
+  .ask-label, .ask-cite, .ask-note, .ask-withheld { color: #bbb; }
+  .ask-error { color: #ffab7a; }
+  .caveat, .ask { border-color: #333; }
   .tag-reported { color: #6fbf73; } .tag-implausible { color: #ff8a80; }
   .tag-missing { color: #ffab7a; } .tag-suppressed { color: #bbb; }
   .tag-not-applicable { color: #bbb; }
@@ -1023,6 +1152,7 @@ def build(
     generated: str,
     national: dict[str, Any] | None = None,
     scorecard_census: dict[str, Any] | None = None,
+    ask_endpoint: str | None = None,
 ) -> list[Page]:
     """Render the whole site from a graded report.
 
@@ -1041,6 +1171,9 @@ def build(
             Without it no census page is written and the site's Scorecard figures describe the
             600-institution sample only, exactly as before #17 -- the same "absence over
             assertion" default as ``national``.
+        ask_endpoint: The URL of a running ``disclosed.ask`` service, or ``None``. With it,
+            every institution page carries the opt-in question form and one inline script;
+            without it the build is byte-for-byte what it was, with no script anywhere.
 
     Returns:
         Every page written, in the order written. Callers use it to assert page counts without
@@ -1073,7 +1206,11 @@ def build(
             # Counted in the state listings, but given no URL. See _institution_path.
             continue
         unit_id = str(row.get("unit_id"))
-        pages.append(institution_page(row, findings_by_id.get(unit_id, []), path=path))
+        pages.append(
+            institution_page(
+                row, findings_by_id.get(unit_id, []), path=path, ask_endpoint=ask_endpoint
+            )
+        )
 
     for page in pages:
         target = out_dir / page.path if page.path else out_dir

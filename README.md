@@ -153,6 +153,9 @@ the page exactly like a field everybody suddenly started reporting.
 ```sh
 disclosed site    --report data/report.json --out site --generated 2026-08-05
 disclosed dataset --report data/report.json --out data/dataset.csv
+# With a running disclosed.ask service (ADR 0006), institution pages gain the opt-in form:
+disclosed site    --report data/report.json --out site --generated 2026-08-05 \
+                  --ask-endpoint https://example.invalid/ask
 ```
 
 `data/dataset.csv` ships with a Table Schema at `data/dataset.schema.json`, generated in the same
@@ -294,7 +297,13 @@ audible version of printing an absence as a bare number. And every table row now
 hundredth row announces a classification with nothing attached to say whose it is.
 
 There are no scripts, no external stylesheets, no fonts, no images and no third-party requests,
-and adding one is a build failure rather than a decision nobody noticed. That is enforced in
+and adding one is a build failure rather than a decision nobody noticed. One deliberate
+exception exists and is off by default: built with `--ask-endpoint`, each institution page
+carries the opt-in question form for the AI layer (ADR 0006) and one inline script behind it,
+with no `src`, whose only network call sits inside the form's submit handler, so nothing leaves
+the page until a reader presses Ask; `tests/test_ask_widget.py` proves both from the built
+bytes. The published site is built without it until the service is deployed, which is a
+separate decision. That is enforced in
 `make verify`, by parsing the built HTML for anything that would make a browser fetch a second
 file: once over a fixture holding one page of every kind, and once over the whole published
 site, all 617 pages of it, rendered from `data/report.json`, `data/national.json` and

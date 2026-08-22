@@ -10,6 +10,12 @@ file is the human-readable one.
 
 ### Added
 
+- **The opt-in question form on institution pages, off by default.** `disclosed site
+  --ask-endpoint URL` adds, to each institution page, a labelled form and one inline script with
+  no `src` whose only network call is inside the submit handler; without the flag the build is
+  byte-for-byte what it was and carries no script. Rendering uses `textContent` only; a failed
+  or rate-limited request leaves the page unchanged. `tests/test_ask_widget.py` proves all of
+  it from the built bytes.
 - **ADR 0006: runtime AI at the edges.** An owner-directed change of direction, recorded before
   the code: an optional question-answering layer (`disclosed.ask`) in which the model structures
   a question and narrates the project's own classified records, never sees a reported value,
