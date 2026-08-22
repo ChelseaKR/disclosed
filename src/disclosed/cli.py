@@ -26,10 +26,10 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Final
 
-from . import crosswalk, dataset, national, site
+from . import crosswalk, dataset, frame, national, site
 from .disclosure import CLASSIFICATIONS
 from .drift import Snapshot, compare
-from .fields import IPEDS_FIELDS
+from .fields import FIELDS, IPEDS_FIELDS
 from .grading import InstitutionGrade, grade_institution, summarize
 from .peers import peer_context
 from .scope import NATIONAL, SAMPLE, Scope, scope_from_payload
@@ -482,6 +482,60 @@ def _cmd_national(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_census_report(args: argparse.Namespace) -> int:
+    """Reduce a full College Scorecard census to the artifact the site's census page rests on.
+
+    Three committed inputs, kept apart on purpose: ``--report`` is a graded payload (from
+    ``disclosed grade --source <capture> --out ...``) and carries per-field disclosure; ``--source``
+    is the capture itself and carries ``school.state``/``school.ownership`` on every raw record,
+    neither of which a grade keeps; ``--sample`` is the 600-institution capture the site's home
+    page already describes, read here only for its own composition so the artifact can state both
+    frames' skew side by side without a reader needing to load two files and compare them by hand.
+    The reduction needs all three, because a reader asking "how skewed is this frame" is asking
+    about the captures and a reader asking "who disclosed what" is asking about the grade, and #17
+    was opened because the answer to the first question was a sentence instead of a table.
+    """
+    report = json.loads(Path(args.report).read_text(encoding="utf-8"))
+    try:
+        coverage = national.build(report, fields=FIELDS)
+    except ValueError as exc:
+        print(f"{exc}", file=sys.stderr)
+        return 1
+    raw = json.loads(Path(args.source).read_text(encoding="utf-8"))
+    try:
+        records, _ = college_scorecard.read_capture(raw)
+    except college_scorecard.ScorecardError as exc:
+        print(f"{args.source} is {exc}", file=sys.stderr)
+        return 1
+    sample_raw = json.loads(Path(args.sample).read_text(encoding="utf-8"))
+    try:
+        sample_records, _ = college_scorecard.read_capture(sample_raw)
+    except college_scorecard.ScorecardError as exc:
+        print(f"{args.sample} is {exc}", file=sys.stderr)
+        return 1
+    payload = {
+        **coverage,
+        "composition": frame.composition(records),
+        "sample_composition": frame.composition(sample_records),
+    }
+    Path(args.out).write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    comp = payload["composition"]
+    print(f"census coverage for {payload['scope']['institutions']} institutions -> {args.out}")
+    print(
+        f"  composition      {len(comp['states'])} states "
+        f"({comp['states_unstated']} unstated), {len(comp['sectors'])} sectors "
+        f"({comp['sectors_unstated']} unstated)"
+    )
+    for coverage_row in payload["fields"]:
+        share = coverage_row["share_reported"]
+        rendered = "no applicable institutions" if share is None else f"{share:.1%} reported"
+        print(
+            f"  {coverage_row['label']:34} {coverage_row['applicable']:>5} applicable, "
+            f"{coverage_row['missing']:>4} absent, {rendered}"
+        )
+    return 0
+
+
 def _cmd_site(args: argparse.Namespace) -> int:
     report = json.loads(Path(args.report).read_text(encoding="utf-8"))
     if not report.get("grades"):
@@ -492,6 +546,11 @@ def _cmd_site(args: argparse.Namespace) -> int:
     national_payload = (
         json.loads(Path(args.national).read_text(encoding="utf-8")) if args.national else None
     )
+    census_payload = (
+        json.loads(Path(args.scorecard_census).read_text(encoding="utf-8"))
+        if args.scorecard_census
+        else None
+    )
     out = Path(args.out)
     pages = site.build(
         report,
@@ -499,6 +558,7 @@ def _cmd_site(args: argparse.Namespace) -> int:
         origin=args.origin,
         generated=args.generated,
         national=national_payload,
+        scorecard_census=census_payload,
     )
     print(f"built {len(pages)} pages -> {out}")
     return 0
@@ -583,6 +643,24 @@ def main(argv: list[str] | None = None) -> int:
     p_nat.add_argument("--out", default="data/national.json")
     p_nat.set_defaults(func=_cmd_national)
 
+    p_census = sub.add_parser(
+        "census-report",
+        help="reduce a full Scorecard census to per-field coverage plus the frame's composition",
+    )
+    p_census.add_argument(
+        "--report", required=True, help="graded payload from `grade --source <capture>`"
+    )
+    p_census.add_argument(
+        "--source", required=True, help="the capture itself, for school.state/school.ownership"
+    )
+    p_census.add_argument(
+        "--sample",
+        default="data/sample.json",
+        help="the 600-institution sample, read only for its own composition to compare against",
+    )
+    p_census.add_argument("--out", default="data/scorecard-census.json")
+    p_census.set_defaults(func=_cmd_census_report)
+
     p_site = sub.add_parser("site", help="render a report as static HTML")
     p_site.add_argument("--report", default="data/report.json")
     p_site.add_argument(
@@ -591,6 +669,14 @@ def main(argv: list[str] | None = None) -> int:
         help=(
             "national artifact from `disclosed national`. Without it the site publishes only the "
             "sample-scoped pages, and makes no national claim at all"
+        ),
+    )
+    p_site.add_argument(
+        "--scorecard-census",
+        default=None,
+        help=(
+            "census artifact from `disclosed census-report`. Without it the site's Scorecard "
+            "figures describe the committed sample only, exactly as before #17"
         ),
     )
     p_site.add_argument("--out", default="site")

@@ -178,3 +178,13 @@ Appended rather than edited, per the append-only rule above.
   completion and only when its own reported conclusion is `success`, quoting the run and job that
   produced it; `docs/adr/0004` supersedes 0003 and the test file pins that the status always
   follows the watch it is transcribing. Eighteen days are unrecoverable, not sixteen.
+- **A third item in the data inventory, and the reason the second one existed.** `census` was
+  dispatched for real on 2026-08-21 and committed `data/census/scorecard.json`: institution-level
+  College Scorecard records (name, state, ownership code, and the six graded fields) for 6,273
+  institutions, no different in kind from the 600-institution `data/sample.json` already
+  committed and already covered by this audit's public-data exemption -- these are institutional
+  records the Department of Education itself publishes, not personal data about any individual.
+  Grepped for the API key before commit (workflow step, and reconfirmed here by hand); none
+  found. The capture is the input the #17 sampling-frame work (`disclosed census-report`,
+  `data/scorecard-census.json`) is built from, and it is the reason a raw capture had to become
+  committable at all rather than staying a ninety-day artifact.

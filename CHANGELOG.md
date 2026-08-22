@@ -34,6 +34,23 @@ file is the human-readable one.
   artifact, and commits the provenance summary beside each snapshot. A dispatch-only `census`
   workflow commits a full capture to the branch it was run on, refusing if the replay is not
   national or the key is in the file.
+- **A real Scorecard census (#17), beside the 600-institution sample, never in place of it.**
+  Every Scorecard figure this project published came from 600 institutions in 13 states, 51% of
+  them Californian, because the API returns institutions grouped by state and nobody had paged
+  it to exhaustion. `census` was dispatched for real on 2026-08-21 and committed
+  `data/census/scorecard.json`: 6,273 institutions, provenance-proven exhaustive, no key in the
+  file. `disclosed census-report` reduces it and the committed sample to
+  `data/scorecard-census.json` -- per-field national coverage plus both frames' composition
+  (institutions by state and by sector) side by side, so "51% Californian" is answered with a
+  table rather than asserted away. The re-derived headline: **4,363 of 6,273, or 69.6%, publish
+  no admission rate at all**, five points higher than the sample's 64.5% -- the sample, if
+  anything, understated non-disclosure. The sample also turns out skewed by sector and not just
+  by state: 47.8% public against the census's 32.6%, and private for-profits at a fifth of the
+  sample against over a third of the census. The site gains a `/census/` page
+  (`disclosed.site.scorecard_census_page`) with a pointer from the home page; the README's
+  "What is a sample and what is national" table gains a third row and the sector comparison.
+  `tests/test_census_replay.py` gates the reduction byte-for-byte against the committed capture,
+  the same discipline `tests/test_replay.py` holds `data/national.json` to.
 - Portfolio standards conformance set: security workflow (gitleaks, semgrep, pip-audit),
   Dependabot config, pre-commit hooks, committed `uv.lock` and `.python-version`, ADR log,
   `SECURITY.md`, `CONTRIBUTING.md`, roadmap metrics ledger, and responsible-tech audit record.

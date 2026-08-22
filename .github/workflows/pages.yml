@@ -1,11 +1,11 @@
 name: publish-site
 
 # The site is a build artifact, not a tracked directory: `disclosed site` renders it from
-# data/report.json and data/national.json, both of which are committed. So this workflow needs
-# no network, no API key, and no secrets, and the published pages are reproducible from the
-# commit they were built at.
+# data/report.json, data/national.json and data/scorecard-census.json, all three committed. So
+# this workflow needs no network, no API key, and no secrets, and the published pages are
+# reproducible from the commit they were built at.
 #
-# The origin stamped into the 616 canonical links, the sitemap and robots.txt is taken from the
+# The origin stamped into the 617 canonical links, the sitemap and robots.txt is taken from the
 # deploy target the Pages API reports, not from a constant in the source. Issue #2 was those
 # URLs naming a host that served a 404, and the reason it went unnoticed for so long is that
 # nothing in the build compared the two. `check_site_origin.py` now does, and fails the build
@@ -64,6 +64,7 @@ jobs:
           python -m disclosed.cli site
           --report data/report.json
           --national data/national.json
+          --scorecard-census data/scorecard-census.json
           --out site
           --origin "$SITE_ORIGIN"
           --generated "$(date -u +%F)"

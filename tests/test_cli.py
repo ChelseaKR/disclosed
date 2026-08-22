@@ -678,6 +678,129 @@ class TestReplayingACapture:
         assert not out.exists()
 
 
+class TestCensusReport:
+    """``census-report``: a graded national payload plus two captures, reduced to one artifact."""
+
+    def _envelope(self, tmp_path: Path, name: str, capture: college_scorecard.Capture) -> Path:
+        path = tmp_path / name
+        college_scorecard.write_capture(capture, path)
+        return path
+
+    def _graded(self, tmp_path: Path, source: Path) -> Path:
+        out = tmp_path / "graded.json"
+        assert cli.main(["grade", "--source", str(source), "--out", str(out)]) == 0
+        return out
+
+    def test_reduces_a_national_capture_to_per_field_coverage_and_composition(
+        self, tmp_path: Path
+    ) -> None:
+        source = self._envelope(tmp_path, "capture.json", _capture())
+        sample = self._envelope(tmp_path, "sample.json", _capture())
+        graded = self._graded(tmp_path, source)
+        out = tmp_path / "census.json"
+        assert (
+            cli.main(
+                [
+                    "census-report",
+                    "--report",
+                    str(graded),
+                    "--source",
+                    str(source),
+                    "--sample",
+                    str(sample),
+                    "--out",
+                    str(out),
+                ]
+            )
+            == 0
+        )
+        payload = json.loads(out.read_text())
+        assert payload["scope"]["kind"] == "national"
+        assert {f["label"] for f in payload["fields"]} == {
+            "Median earnings 10 years after entry",
+            "Completion rate, 150% of normal time",
+            "Admission rate",
+            "Median debt at completion",
+            "In-state tuition",
+            "Enrollment",
+        }
+        assert payload["composition"]["institutions"] == len(_RECORDS)
+        assert payload["sample_composition"]["institutions"] == len(_RECORDS)
+
+    def test_refuses_to_build_from_a_report_that_is_not_national(self, tmp_path: Path) -> None:
+        """A sample graded through here would publish census-scale claims about 600 institutions
+        under a name that says every institution the Scorecard publishes."""
+        sample_source = tmp_path / "sample.json"
+        sample_source.write_text(json.dumps(_RECORDS))
+        graded = self._graded(tmp_path, sample_source)  # bare list: replays as a sample
+        out = tmp_path / "census.json"
+        rc = cli.main(
+            [
+                "census-report",
+                "--report",
+                str(graded),
+                "--source",
+                str(sample_source),
+                "--sample",
+                str(sample_source),
+                "--out",
+                str(out),
+            ]
+        )
+        assert rc == 1
+        assert not out.exists()
+
+    def test_a_source_that_is_not_a_capture_is_refused(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        source = self._envelope(tmp_path, "capture.json", _capture())
+        graded = self._graded(tmp_path, source)
+        bad_source = tmp_path / "not-a-capture.json"
+        bad_source.write_text(json.dumps({"nope": True}))
+        out = tmp_path / "census.json"
+        rc = cli.main(
+            [
+                "census-report",
+                "--report",
+                str(graded),
+                "--source",
+                str(bad_source),
+                "--sample",
+                str(source),
+                "--out",
+                str(out),
+            ]
+        )
+        assert rc == 1
+        assert str(bad_source) in capsys.readouterr().err
+        assert not out.exists()
+
+    def test_a_sample_that_is_not_a_capture_is_refused(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        source = self._envelope(tmp_path, "capture.json", _capture())
+        graded = self._graded(tmp_path, source)
+        bad_sample = tmp_path / "not-a-capture.json"
+        bad_sample.write_text(json.dumps({"nope": True}))
+        out = tmp_path / "census.json"
+        rc = cli.main(
+            [
+                "census-report",
+                "--report",
+                str(graded),
+                "--source",
+                str(source),
+                "--sample",
+                str(bad_sample),
+                "--out",
+                str(out),
+            ]
+        )
+        assert rc == 1
+        assert str(bad_sample) in capsys.readouterr().err
+        assert not out.exists()
+
+
 def test_no_subcommand_is_an_error() -> None:
     with pytest.raises(SystemExit):
         cli.main([])

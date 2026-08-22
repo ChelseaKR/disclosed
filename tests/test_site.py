@@ -344,3 +344,67 @@ class TestSiteCommand:
         assert cli.main(["site", "--report", str(report), "--out", str(out)]) == 1
         assert "refusing to build" in capsys.readouterr().err
         assert not out.exists()
+
+    def test_a_scorecard_census_argument_adds_the_census_page_and_the_home_pointer(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """The integration path: `--scorecard-census` on the CLI reaches `build`, reaches
+        `_corpus_pages`, and produces the extra page plus the home-page pointer to it -- not just
+        the unit-tested `scorecard_census_page()` function called in isolation."""
+        report = tmp_path / "report.json"
+        report.write_text(json.dumps(_REPORT))
+        census = tmp_path / "census.json"
+        census.write_text(
+            json.dumps(
+                {
+                    "scope": {
+                        "kind": "national",
+                        "source": "College Scorecard",
+                        "institutions": 1,
+                        "states": 1,
+                        "universe": 1,
+                        "coverage": 1.0,
+                        "note": "The API was paged to exhaustion.",
+                    },
+                    "fields": [],
+                    "gaps": {},
+                    "contradictions": [],
+                    "ungradeable": 0,
+                    "composition": {
+                        "institutions": 1,
+                        "states": {"CA": 1},
+                        "states_unstated": 0,
+                        "sectors": {"public": 1},
+                        "sectors_unstated": 0,
+                    },
+                    "sample_composition": {
+                        "institutions": 3,
+                        "states": {"CA": 3},
+                        "states_unstated": 0,
+                        "sectors": {},
+                        "sectors_unstated": 3,
+                    },
+                }
+            )
+        )
+        out = tmp_path / "out"
+        assert (
+            cli.main(
+                [
+                    "site",
+                    "--report",
+                    str(report),
+                    "--scorecard-census",
+                    str(census),
+                    "--out",
+                    str(out),
+                    "--generated",
+                    "2026-08-21",
+                ]
+            )
+            == 0
+        )
+        assert (out / "census" / "index.html").exists()
+        assert "built 7 pages" in capsys.readouterr().out
+        home = (out / "index.html").read_text(encoding="utf-8")
+        assert 'href="census/"' in home
