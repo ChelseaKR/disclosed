@@ -188,3 +188,29 @@ Appended rather than edited, per the append-only rule above.
   found. The capture is the input the #17 sampling-frame work (`disclosed census-report`,
   `data/scorecard-census.json`) is built from, and it is the reason a raw capture had to become
   committable at all rather than staying a ninety-day artifact.
+
+## Addendum 2026-08-21: an AI component exists (ADR 0006)
+
+The applicability line above recording **AI-EVAL: N/A** was true when written and is left as
+written, because this file is append-only. It stopped being true on 2026-08-21, when the owner
+directed that the project add a runtime question-answering layer
+(`docs/adr/0006-ai-at-the-edges-the-classified-dataset-is-the-only-evidence.md`).
+
+- **AI-EVAL: Applies.** The component is `disclosed.ask`, an optional subpackage that calls a
+  language model at two edges (structuring a question; narrating records) with the project's
+  classified evidence as the only evidence and a programmatic verifier before display. The
+  evaluation suites are committed under `evals/`: performance-ranking refusal (zero tolerance),
+  five-way classification fidelity (scored per state), citation grounding, drift-direction
+  fidelity, and question structuring including refusal to guess. Results carry provider, model,
+  prompt version, commit and date; a test rejects results without them; a suite not run live is
+  recorded as not run.
+- **C Privacy:** the service stores no request body and writes no question to disk or to logs.
+  A reader's question is sent to the model provider for the duration of the request, which is a
+  subprocessor relationship that a deployment must record before the service is exposed. No
+  deployment exists at the time of this addendum.
+- **D Transparency:** every AI answer is labelled AI-generated and unofficial, states that it is
+  about disclosure and not quality, and shows the count of claims withheld by the verifier.
+- **EU AI Act:** still out of scope while nothing is deployed; to be revisited in the deployment
+  decision.
+- The grading pipeline, the committed dataset, and the static pages contain no model-generated
+  content. That claim narrows; it does not change.
