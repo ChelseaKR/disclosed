@@ -9,7 +9,6 @@ is committed. The README and the build script are checked for the claims a reade
 
 from __future__ import annotations
 
-import importlib
 import json
 from pathlib import Path
 from typing import Any
@@ -33,11 +32,13 @@ def function(template: dict[str, Any]) -> dict[str, Any]:
 
 
 class TestTheFunction:
-    def test_the_handler_names_a_callable_that_exists(self, function: dict[str, Any]) -> None:
-        module_name, attribute = function["Handler"].rsplit(".", 1)
-        module = importlib.import_module(module_name)
-        assert callable(getattr(module, attribute))
-        assert getattr(module, attribute) is service.lambda_handler
+    def test_the_handler_names_the_callable_the_service_exports(
+        self, function: dict[str, Any]
+    ) -> None:
+        """Compared as the literal path rather than imported dynamically, so a scanner has no
+        non-literal import to object to and a rename of the handler fails here by name."""
+        assert function["Handler"] == f"{service.__name__}.{service.lambda_handler.__name__}"
+        assert callable(service.lambda_handler)
 
     def test_concurrency_is_reserved_and_small(self, function: dict[str, Any]) -> None:
         assert 1 <= function["ReservedConcurrentExecutions"] <= 2
