@@ -10,6 +10,14 @@ file is the human-readable one.
 
 ### Added
 
+- **The evaluation suites and their results.** Five suites under `evals/` (167 cases): ranking
+  refusal, five-way classification fidelity scored per state, citation grounding, drift
+  direction judged per cited record, question structuring including refused-to-guess. Three
+  kinds of model behind a run: live, a faithful oracle (passes everything, proving the scorer),
+  and a hostile adversary (leaks nothing, proving the verifier). Every result carries provider,
+  model, prompt version, commit and date, and a test rejects one that does not. Measured live on
+  `global.anthropic.claude-sonnet-4-6`: 0 leaked of 59 ranking questions, 0 wrong states shown of 46,
+  0 wrong drift directions of 12, 0 guesses on 19 guarded questions.
 - **The opt-in question form on institution pages, off by default.** `disclosed site
   --ask-endpoint URL` adds, to each institution page, a labelled form and one inline script with
   no `src` whose only network call is inside the submit handler; without the flag the build is

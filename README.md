@@ -354,6 +354,77 @@ display, performance judgement is refused and measured at zero tolerance, and th
 classifications are never collapsed. Its output is always labelled AI-generated, unofficial, and
 about disclosure rather than quality. The static site and the dataset are unchanged by it.
 
+## Ask about disclosure
+
+`disclosed.ask` answers one kind of question: what an institution did and did not disclose,
+and why an absence might be there. It never answers whether a college is good.
+
+```sh
+uv sync --extra ask                      # the public anthropic SDK is the only dependency
+ANTHROPIC_API_KEY=... disclosed ask "What does this college not report?" --institution 104717
+disclosed serve --origin https://chelseakr.github.io   # the development server
+disclosed evals --kind oracle            # the evaluation suites, no key needed
+```
+
+How it works, in the order a question travels:
+
+1. **The model structures the question** into the project's own vocabulary: one of ten intents
+   and zero or more of the twelve graded field labels, which are the JSON schema's enum. A
+   measure the project does not grade goes into `unmapped_terms`, never onto the nearest field.
+2. **Code decides, without the model,** whether the question can be served. Performance,
+   ranking, advice and outcome values are refused with fixed text; so are questions outside
+   disclosure, institutions not in the frame, ambiguous names, and measures the project does not
+   classify. Every refusal points at what *is* known.
+3. **The evidence pack is assembled** from the evidence store: every classification the project
+   has made, built at start-up from the committed census capture, the committed sample, the
+   three IPEDS collection years, the snapshot series and the crosswalk, by the same grading code
+   behind every figure on this page. **A `reported` value is never in the pack.** The model is
+   shown classifications and, for an `implausible` one, the value that earned it; it cannot
+   narrate a graduation rate it was never given.
+4. **The model narrates the pack** as claims that each cite record ids, and as verbatim quotes
+   from `corpus/`, the federal definitions kept as fetched.
+5. **The verifier withholds every claim it cannot prove** against that pack: uncited or foreign
+   citations, a classification word none of the cited records is in, an absence rendered as a
+   non-state ("has no", "unavailable"), a number the model was never given, a judgement or
+   recommendation. Quotes verify verbatim or are withheld. The reader sees what survived and the
+   count of what did not.
+
+Every answer is labelled AI-generated and unofficial and says that a disclosure grade is not a
+quality grade. Per-client and daily limits sit before the first model call; a 429 leaves the page
+as it was. The service keeps no request body. The deployment it would run as is prepared and not
+applied (`deploy/`), and the published site is built without the form until that decision is made.
+
+### What the evaluation suites measure, and the numbers
+
+Five suites under `evals/cases/` (167 cases), run by `disclosed evals`, with every result
+carrying provider, model, prompt version, commit and date (`evals/results/`; a test rejects a
+result without them, and the scripted numbers are re-derived in `make verify`). Two scripted
+models frame every live number: an **oracle** that narrates the pack faithfully, to prove the
+scorer accepts a correct system, and an **adversary** that emits judgements, wrong states,
+invented numbers, uncited claims and paraphrased quotes on every question, to prove the verifier
+stops them.
+
+| Model | Ranking refusal (zero tolerance: leaked) | Five-way fidelity (zero tolerance: wrong shown) | Citation grounding | Drift direction (zero tolerance: wrong) | Question structuring |
+| --- | --- | --- | --- | --- | --- |
+| live: `global.anthropic.claude-sonnet-4-6` | **0 leaked** of 59; 57 refused as performance, 2 refused otherwise, 0 served | **0 wrong shown** of 46; 46 correct; the model's own claims were wrong in 1 | 43 of 53 model claims shown (81%); 11 quotes verified, 8 withheld | **0 wrong** of 12; 9 correct, 1 named no direction, 0 refused | 11/11 intents and 11/11 field sets on clear questions; **0 guessed** of 19 guarded (16 refused as expected, 3 refused under another code) |
+| oracle (scripted, faithful) | **0 leaked** of 59; 59 refused as performance, 0 refused otherwise, 0 served | **0 wrong shown** of 46; 46 correct; the model's own claims were wrong in 0 | 115 of 115 model claims shown (100%); 9 quotes verified, 0 withheld | **0 wrong** of 12; 10 correct, 0 named no direction, 0 refused | 11/11 intents and 11/11 field sets on clear questions; **0 guessed** of 19 guarded (19 refused as expected, 0 refused under another code) |
+| adversary (scripted, hostile) | **0 leaked** of 59; 0 refused as performance, 7 refused otherwise, 52 served | **0 wrong shown** of 46; 46 correct; the model's own claims were wrong in 46 | 12 of 84 model claims shown (14%); 0 quotes verified, 0 withheld | **0 wrong** of 12; 0 correct, 0 named no direction, 10 refused | 3/11 intents and 11/11 field sets on clear questions; **6 guessed** of 19 guarded (5 refused as expected, 8 refused under another code) |
+
+Five-way fidelity on the live model, per state (`shown` is what the reader saw after the verifier; `model raw wrong` is what the model said before it):
+
+| State | n | shown correct | shown no answer | shown wrong | model raw wrong |
+| --- | --- | --- | --- | --- | --- |
+| `reported` | 10 | 10 | 0 | 0 | 0 |
+| `implausible` | 8 | 8 | 0 | 0 | 0 |
+| `not_applicable` | 10 | 10 | 0 | 0 | 1 |
+| `missing` | 10 | 10 | 0 | 0 | 0 |
+| `suppressed` | 8 | 8 | 0 | 0 | 0 |
+
+Measured 2026-08-22 on Amazon Bedrock, prompt version `2026-08-21.1`, harness commit `40b5a84`; `claude-sonnet-5`, the code's default, returned 403 on this account and could not be measured. Live grounding withheld reasons: contains a number not in its cited records: 10; quotes a passage not in the pack: 6; is not a verbatim quote of the passage: 2.
+
+The committed data contains no `suppressed` value in either source, so the fidelity suite's
+suppressed cases are constructed and labelled as such; the other four states are real records.
+
 ## Standards Conformance
 
 This repo is bound by the portfolio standards set
