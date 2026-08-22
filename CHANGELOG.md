@@ -15,6 +15,12 @@ file is the human-readable one.
   a question and narrates the project's own classified records, never sees a reported value,
   cites a record for every claim, passes a verifier before display, refuses performance
   judgement, and never collapses the five classifications. `AGENTS.md` states the working rules.
+- **`corpus/`: the federal definitions the AI layer may quote.** The College Scorecard glossary
+  and data dictionary and the IPEDS HD2023/IC2023 dictionaries, kept as fetched (hash and
+  retrieval date in `manifest.json`), reduced to 3,545 passages by `disclosed corpus`, replayed
+  byte-for-byte in the test suite. `disclosed.ask.definitions` maps every graded field to the
+  passage that defines its exact variable, and separately to related glossary entries with a
+  note when they define a different measure. Quotes verify verbatim or are withheld.
 
 - Five-way classification of every published value (`REPORTED`, `IMPLAUSIBLE`, `SUPPRESSED`,
   `NOT_APPLICABLE`, `MISSING`), with written rationales for every credible range.

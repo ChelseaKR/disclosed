@@ -1,0 +1,56 @@
+{
+  "documents": [
+    {
+      "bytes": 100688,
+      "file": "scorecard-glossary.html",
+      "id": "scorecard-glossary",
+      "publisher": "U.S. Department of Education, College Scorecard",
+      "retrieved": "2026-08-22",
+      "sha256": "52724f814d31b5da451d8a5e6f884ca23afc0173449619524bd94fcc9638c202",
+      "stored": "without-scripts",
+      "stored_bytes": 98845,
+      "stored_sha256": "7d72b643c8cf26f275e14576e8337deef963121c96d835d32da5fb53d5f6396a",
+      "title": "College Scorecard Technical Definitions (glossary)",
+      "url": "https://collegescorecard.ed.gov/data/glossary/"
+    },
+    {
+      "bytes": 681418,
+      "file": "CollegeScorecardDataDictionary.xlsx",
+      "id": "scorecard-data-dictionary",
+      "publisher": "U.S. Department of Education, College Scorecard",
+      "retrieved": "2026-08-22",
+      "sha256": "e3738fe328c81820de38da2149fa22a5698f257226e7e9ca44deba0c67cc7d92",
+      "stored": "as-fetched",
+      "stored_bytes": 681418,
+      "stored_sha256": "e3738fe328c81820de38da2149fa22a5698f257226e7e9ca44deba0c67cc7d92",
+      "title": "College Scorecard Data Dictionary (Institution_Data_Dictionary sheet)",
+      "url": "https://collegescorecard.ed.gov/assets/CollegeScorecardDataDictionary.xlsx"
+    },
+    {
+      "bytes": 151910,
+      "file": "HD2023_Dict.zip",
+      "id": "ipeds-hd2023-dictionary",
+      "publisher": "National Center for Education Statistics, IPEDS",
+      "retrieved": "2026-08-22",
+      "sha256": "131d8f2f56a71078ea453989384cce91985fa2a29a94f168a718dedc6a466e3b",
+      "stored": "as-fetched",
+      "stored_bytes": 151910,
+      "stored_sha256": "131d8f2f56a71078ea453989384cce91985fa2a29a94f168a718dedc6a466e3b",
+      "title": "IPEDS Directory Information (HD2023) data dictionary",
+      "url": "https://nces.ed.gov/ipeds/datacenter/data/HD2023_Dict.zip"
+    },
+    {
+      "bytes": 66588,
+      "file": "IC2023_Dict.zip",
+      "id": "ipeds-ic2023-dictionary",
+      "publisher": "National Center for Education Statistics, IPEDS",
+      "retrieved": "2026-08-22",
+      "sha256": "3736b3a151a88433e18959a47322f3e697b52f7f9fe4290b582b45a4cc27711a",
+      "stored": "as-fetched",
+      "stored_bytes": 66588,
+      "stored_sha256": "3736b3a151a88433e18959a47322f3e697b52f7f9fe4290b582b45a4cc27711a",
+      "title": "IPEDS Institutional Characteristics (IC2023) data dictionary",
+      "url": "https://nces.ed.gov/ipeds/datacenter/data/IC2023_Dict.zip"
+    }
+  ]
+}

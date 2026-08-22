@@ -564,6 +564,27 @@ def _cmd_site(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_corpus(args: argparse.Namespace) -> int:
+    """Fetch or re-extract the federal definitions the question-answering layer may quote.
+
+    ``--fetch`` is the only thing in this command that touches the network, and it rewrites the
+    manifest's retrieval dates and hashes, so it is an explicit flag rather than the default. The
+    extraction is re-run by the test suite against the committed raw bytes; this command is how
+    ``corpus/passages.json`` gets regenerated when the extractor changes.
+    """
+    from .ask import corpus
+
+    corpus_dir = Path(args.dir)
+    if args.fetch:
+        manifest = corpus.fetch(corpus_dir)
+        for entry in manifest["documents"]:
+            print(f"fetched {entry['id']}: {entry['bytes']} bytes, sha256 {entry['sha256'][:12]}")
+    passages = corpus.extract(corpus_dir)
+    corpus.write_passages(corpus_dir, passages)
+    print(f"extracted {len(passages)} passages -> {corpus_dir / 'passages.json'}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="disclosed",
@@ -690,6 +711,17 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     p_site.set_defaults(func=_cmd_site)
+
+    p_corpus = sub.add_parser(
+        "corpus", help="re-extract (or, with --fetch, re-download) the federal definitions corpus"
+    )
+    p_corpus.add_argument("--dir", default="corpus", help="corpus directory")
+    p_corpus.add_argument(
+        "--fetch",
+        action="store_true",
+        help="download every document again and rewrite manifest.json; the only network step",
+    )
+    p_corpus.set_defaults(func=_cmd_corpus)
 
     args = parser.parse_args(argv)
     result: int = args.func(args)
