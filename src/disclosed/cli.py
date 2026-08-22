@@ -585,6 +585,49 @@ def _cmd_corpus(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_ask(args: argparse.Namespace) -> int:
+    """Ask one question from the command line and print the verified answer as JSON.
+
+    Needs a configured provider (``ANTHROPIC_API_KEY``, or ``DISCLOSED_ASK_PROVIDER=bedrock``
+    with AWS credentials and a region); without one it says so and exits non-zero rather than
+    pretending. The question is not written anywhere by this command.
+    """
+    from .ask import service
+    from .ask.provider import ProviderError
+
+    root = Path(args.root)
+    try:
+        svc = service.Service.from_environment(data_dir=root / "data", corpus_dir=root / "corpus")
+    except ProviderError as exc:
+        print(f"no model is configured: {exc}", file=sys.stderr)
+        return 1
+    answer = svc.ask(args.question, institution_hint=args.institution, client="cli")
+    print(json.dumps(answer, indent=2, ensure_ascii=False))
+    return 0 if answer.get("status") == 200 else 1
+
+
+def _cmd_serve(args: argparse.Namespace) -> int:
+    """Run the development server. Not a deployment; see deploy/ for the prepared shape."""
+    from .ask import service
+    from .ask.provider import ProviderError
+
+    root = Path(args.root)
+    try:
+        svc = service.Service.from_environment(data_dir=root / "data", corpus_dir=root / "corpus")
+    except ProviderError as exc:
+        print(f"no model is configured: {exc}", file=sys.stderr)
+        return 1
+    server = service.serve(svc, host=args.host, port=args.port, allowed_origin=args.origin)
+    print(f"serving on http://{args.host}:{server.server_address[1]} for origin {args.origin}")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:  # pragma: no cover -- interactive
+        pass
+    finally:
+        server.server_close()
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="disclosed",
@@ -722,6 +765,25 @@ def main(argv: list[str] | None = None) -> int:
         help="download every document again and rewrite manifest.json; the only network step",
     )
     p_corpus.set_defaults(func=_cmd_corpus)
+
+    p_ask = sub.add_parser(
+        "ask", help="ask the disclosure question-answering layer one question (needs a model)"
+    )
+    p_ask.add_argument("question")
+    p_ask.add_argument("--institution", default=None, help="IPEDS unit id the question is about")
+    p_ask.add_argument("--root", default=".", help="repository root holding data/ and corpus/")
+    p_ask.set_defaults(func=_cmd_ask)
+
+    p_serve = sub.add_parser("serve", help="run the question-answering development server")
+    p_serve.add_argument("--host", default="127.0.0.1")
+    p_serve.add_argument("--port", type=int, default=8765)
+    p_serve.add_argument(
+        "--origin",
+        default="https://chelseakr.github.io",
+        help="the one page origin allowed to call the service from a browser",
+    )
+    p_serve.add_argument("--root", default=".", help="repository root holding data/ and corpus/")
+    p_serve.set_defaults(func=_cmd_serve)
 
     args = parser.parse_args(argv)
     result: int = args.func(args)
