@@ -1,0 +1,137 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Transform": "AWS::Serverless-2016-10-31",
+  "Description": "disclosed.ask: the grounded disclosure question-answering service (ADR 0006), as a single Lambda behind a Function URL with CORS locked to the site's origin and a cost bound. PREPARED, NOT APPLIED: deploying this is a separate owner decision recorded in deploy/README.md.",
+  "Parameters": {
+    "PagesOrigin": {
+      "Type": "String",
+      "Default": "https://chelseakr.github.io",
+      "Description": "The one browser origin allowed to call the service. Requests from any other origin get no CORS headers and the browser drops the reply."
+    },
+    "ModelId": {
+      "Type": "String",
+      "Default": "global.anthropic.claude-sonnet-4-6",
+      "Description": "The Bedrock model id. The code default is claude-sonnet-5 on the first-party API; on Bedrock the id carries the provider's prefix, and on the day this was written this account could invoke only this one."
+    },
+    "PerClientPerHour": {
+      "Type": "Number",
+      "Default": 20,
+      "Description": "Questions one client address may ask per hour, counted in the running container."
+    },
+    "PerDay": {
+      "Type": "Number",
+      "Default": 400,
+      "Description": "Questions the service answers per UTC day, counted in the running container. The hard bound that does not depend on the container remembering anything is ReservedConcurrentExecutions plus the budget below."
+    },
+    "MonthlyBudgetUsd": {
+      "Type": "Number",
+      "Default": 25,
+      "Description": "The monthly spend past which the budget notifies; the owner sets it before applying."
+    },
+    "BudgetEmail": {
+      "Type": "String",
+      "Description": "Where the budget notification goes. No default on purpose: the owner supplies it at apply time and it is never committed."
+    }
+  },
+  "Resources": {
+    "AskFunction": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "Description": "disclosed.ask service: structure -> lookup -> narrate -> verify, with limits before the model",
+        "Runtime": "python3.12",
+        "Handler": "disclosed.ask.service.lambda_handler",
+        "CodeUri": "../build/package/",
+        "Architectures": ["arm64"],
+        "MemorySize": 1024,
+        "Timeout": 60,
+        "ReservedConcurrentExecutions": 2,
+        "Environment": {
+          "Variables": {
+            "DISCLOSED_ROOT": "/var/task",
+            "DISCLOSED_ASK_PROVIDER": "bedrock",
+            "DISCLOSED_ASK_MODEL": {"Ref": "ModelId"},
+            "DISCLOSED_ASK_ORIGIN": {"Ref": "PagesOrigin"},
+            "DISCLOSED_ASK_PER_CLIENT_PER_HOUR": {"Ref": "PerClientPerHour"},
+            "DISCLOSED_ASK_PER_DAY": {"Ref": "PerDay"}
+          }
+        },
+        "Policies": [
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Sid": "InvokeTheOneModel",
+                "Effect": "Allow",
+                "Action": ["bedrock:InvokeModel"],
+                "Resource": [
+                  {"Fn::Sub": "arn:aws:bedrock:*::foundation-model/${ModelId}"},
+                  {"Fn::Sub": "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/${ModelId}"}
+                ]
+              }
+            ]
+          }
+        ],
+        "FunctionUrlConfig": {
+          "AuthType": "NONE",
+          "Cors": {
+            "AllowOrigins": [{"Ref": "PagesOrigin"}],
+            "AllowMethods": ["POST"],
+            "AllowHeaders": ["content-type"],
+            "MaxAge": 600
+          }
+        }
+      }
+    },
+    "AskLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {"Fn::Sub": "/aws/lambda/${AskFunction}"},
+        "RetentionInDays": 14
+      }
+    },
+    "InvocationsAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "More invocations in an hour than the per-day cap: someone is turning the dial.",
+        "Namespace": "AWS/Lambda",
+        "MetricName": "Invocations",
+        "Dimensions": [{"Name": "FunctionName", "Value": {"Ref": "AskFunction"}}],
+        "Statistic": "Sum",
+        "Period": 3600,
+        "EvaluationPeriods": 1,
+        "Threshold": {"Ref": "PerDay"},
+        "ComparisonOperator": "GreaterThanThreshold",
+        "TreatMissingData": "notBreaching"
+      }
+    },
+    "SpendBudget": {
+      "Type": "AWS::Budgets::Budget",
+      "Properties": {
+        "Budget": {
+          "BudgetName": "disclosed-ask-monthly",
+          "BudgetType": "COST",
+          "TimeUnit": "MONTHLY",
+          "BudgetLimit": {"Amount": {"Ref": "MonthlyBudgetUsd"}, "Unit": "USD"},
+          "CostFilters": {"Service": ["Amazon Bedrock", "AWS Lambda"]}
+        },
+        "NotificationsWithSubscribers": [
+          {
+            "Notification": {
+              "NotificationType": "ACTUAL",
+              "ComparisonOperator": "GREATER_THAN",
+              "Threshold": 80,
+              "ThresholdType": "PERCENTAGE"
+            },
+            "Subscribers": [{"SubscriptionType": "EMAIL", "Address": {"Ref": "BudgetEmail"}}]
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "AskEndpoint": {
+      "Description": "Pass this to `disclosed site --ask-endpoint` so institution pages carry the opt-in form.",
+      "Value": {"Fn::GetAtt": ["AskFunctionUrl", "FunctionUrl"]}
+    }
+  }
+}

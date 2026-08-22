@@ -33,8 +33,9 @@ milestones, in order:
    project's own classified records, refuses performance judgement, never collapses the five
    states, and is measured on both. Built in stages: corpus of federal definitions, evidence
    store and question structuring, grounded narration with a verifier, evaluation suites,
-   front-end opt-in, and an unapplied deployment template. Deployment is a separate owner
-   decision.
+   front-end opt-in, and an unapplied deployment template (`deploy/`, tested against the code
+   it would run). Deployment is a separate owner decision; `deploy/README.md` lists what it
+   does not make.
 4. **First release.** Supersedes `docs/adr/0001-no-versioned-release.md` and brings the
    hardened release workflow with it.
 
@@ -45,7 +46,10 @@ site is a build artifact, not a hosted service. There is no server, no accounts,
 and no production boundary to observe. Operational visibility is the CI record itself: the
 daily snapshot workflow fails loudly (missing API key, non-exhaustive walk) rather than
 committing a partial truth, which for this shape of project is the observability that matters.
-OTel instrumentation re-enters scope if a hosted surface ever ships.
+OTel instrumentation re-enters scope if a hosted surface ever ships. The prepared (unapplied)
+shape of the question-answering service in `deploy/` carries the observability it would need
+on day one: a 14-day log group that holds runtime errors and nothing a reader typed, an
+invocations alarm at the daily cap, and a monthly budget; if it is applied, this tier moves.
 
 ## Metrics ledger
 
