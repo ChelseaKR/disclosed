@@ -32,6 +32,15 @@ file is the human-readable one.
   into a typed lookup whose field vocabulary is the schema's enum; `lookup` resolves the
   institution exactly, gathers the pack per intent, and refuses with fixed text: performance or
   ranking, outside disclosure, not in the frame, ambiguous, unclassified measure, unclear.
+- **Grounded narration, the verifier, and the service.** `narrate` asks the model for claims
+  that each cite a record id and for verbatim quotes; `verify` withholds and counts every claim
+  it cannot prove against the pack: uncited or foreign citations, a classification word none of
+  the cited records is in, an absence rendered as a non-state ("has no", "unavailable"), a number
+  the model was never given, a judgement or recommendation; quotes verify verbatim against the
+  corpus or are withheld. `service` runs the path with a per-client hourly limit and a hard
+  daily cap before the first model call, labels every answer AI-generated and unofficial, keeps
+  no request body, and carries the provenance of every quote; a Lambda Function URL handler and
+  a stdlib development server share it. `disclosed ask` and `disclosed serve` on the CLI.
 
 - Five-way classification of every published value (`REPORTED`, `IMPLAUSIBLE`, `SUPPRESSED`,
   `NOT_APPLICABLE`, `MISSING`), with written rationales for every credible range.
