@@ -28,7 +28,14 @@ milestones, in order:
 2. **Veterans-page grading rule.** The IPEDS characteristics file could supply an
    applicability rule, but no universal publication duty exists, so it stays ungraded until a
    defensible rule does (README).
-3. **First release.** Supersedes `docs/adr/0001-no-versioned-release.md` and brings the
+3. **Grounded disclosure Q&A (ADR 0006).** An optional runtime layer, `disclosed.ask`, that
+   answers "what does this institution not disclose, and why does that matter" from the
+   project's own classified records, refuses performance judgement, never collapses the five
+   states, and is measured on both. Built in stages: corpus of federal definitions, evidence
+   store and question structuring, grounded narration with a verifier, evaluation suites,
+   front-end opt-in, and an unapplied deployment template. Deployment is a separate owner
+   decision.
+4. **First release.** Supersedes `docs/adr/0001-no-versioned-release.md` and brings the
    hardened release workflow with it.
 
 ## Observability
@@ -62,8 +69,9 @@ Per QUALITY-AND-METRICS-STANDARD's ledger shape. Values as measured 2026-08-07.
 | Rationale disputability | every credible range carries a written rationale | `src/disclosed/fields.py`; reviewed when a range changes | REVIEW |
 
 AI-DEV-MEASUREMENT: APPLIES (delivery and quality-debt metrics are mined portfolio-wide from
-git/PR history; there is no AI product surface in this repo, so Track B is N/A - see the AI
-Evaluation row in the README conformance table).
+git/PR history). Track B applies from ADR 0006: the AI product surface is `disclosed.ask`, and
+its evaluation results under `evals/` are the Track B record - see the AI Evaluation row in the
+README conformance table.
 
 ## CI stages 6-8 applicability (CI-CD-STANDARD section 10)
 

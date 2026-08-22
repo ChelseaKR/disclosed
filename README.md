@@ -334,7 +334,16 @@ that. Two things keep it honest: every change has to pass the same gate regardle
 it (`make verify`: lint, format, strict types, tests including the accessibility suite, plus
 the CI security scans), and no finding rests on anyone's fluency, machine or human. The
 numbers come from committed data and are reproducible with the commands above; nothing in the
-dataset or on the site is model-generated.
+dataset or on the static pages is model-generated.
+
+Runtime AI is a separate, optional layer, and a deliberate change of direction recorded in
+[ADR 0006](docs/adr/0006-ai-at-the-edges-the-classified-dataset-is-the-only-evidence.md): a
+question-answering service (`disclosed.ask`) that lets a reader ask what an institution does and
+does not disclose. The model structures the question and narrates the project's own classified
+records; it never sees a reported value, every claim cites a record and is verified before
+display, performance judgement is refused and measured at zero tolerance, and the five
+classifications are never collapsed. Its output is always labelled AI-generated, unofficial, and
+about disclosure rather than quality. The static site and the dataset are unchanged by it.
 
 ## Standards Conformance
 
@@ -349,10 +358,10 @@ skips.
 | Code Quality | Applies - ruff (incl. bandit `S` rules, complexity <= 10) + `ruff format --check` + strict mypy + pytest with a 90% branch-coverage floor, over `src`, `tests` **and** `.github/scripts`; `uv.lock` and `.python-version` committed; dev deps in a PEP 735 group |
 | Security & Supply-Chain | Applies - gitleaks, semgrep, and pip-audit as blocking CI gates (`.github/workflows/security.yml`), with no severity floor and no `.semgrepignore` exclusions, both of which had been quietly making the SAST pass unfailable; all actions SHA-pinned; Dependabot for deps and action pins; ASVS L1 declared in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | CI/CD | Applies - `verify.yml` runs `make verify` verbatim (local/CI parity) with `uv lock --check` as the lockfile-drift check and `uv sync --locked` as the install; workflows are permission-scoped. Branch protection is a GitHub settings action, recorded as open in `docs/RESPONSIBLE-TECH-AUDITS.md` |
-| Observability | Applies - Tier C (CLI producing a static build; no hosted runtime): declared in `docs/ROADMAP.md` |
+| Observability | Applies - Tier C for the CLI and static build (no hosted runtime); the optional `disclosed.ask` service is not deployed, and the prepared deployment shape records the observability it would need (`docs/ROADMAP.md`) |
 | Accessibility | Applies - static WCAG suite in `make verify` (`tests/test_accessibility.py`), including the zero-subresource budget on every generated page; Lighthouse accessibility == 100 on all six page classes (`.github/workflows/accessibility.yml`). Human walkthrough and ACR remain open, recorded honestly in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | Internationalization | Applies - deferred to the first public release, with the entry point recorded (`docs/I18N.md`) |
-| AI Evaluation | N/A - no LLM or model component; every classification is a deterministic rule with a committed rationale |
+| AI Evaluation | Applies - as of ADR 0006 an optional runtime Q&A layer (`disclosed.ask`) exists; the grading pipeline and the static site remain deterministic. Evaluation suites (ranking refusal, five-way fidelity, citation grounding, drift direction, question structuring) are committed under `evals/` with provenance-pinned results; see the ADR for the contract |
 | Documentation | Applies - `CHANGELOG.md`, `CITATION.cff`, `SECURITY.md`, `CONTRIBUTING.md`, ADR log (`docs/adr/`), roadmap and metrics ledger (`docs/ROADMAP.md`) |
 | Quality & Metrics | Applies - metrics ledger with AUTO/REVIEW gates in `docs/ROADMAP.md` |
 | Release & Versioning | N/A - nothing versioned is released; committed data plus a rebuildable static site, no downstream consumers (`docs/adr/0001-no-versioned-release.md`) |

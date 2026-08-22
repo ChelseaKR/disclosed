@@ -10,6 +10,12 @@ file is the human-readable one.
 
 ### Added
 
+- **ADR 0006: runtime AI at the edges.** An owner-directed change of direction, recorded before
+  the code: an optional question-answering layer (`disclosed.ask`) in which the model structures
+  a question and narrates the project's own classified records, never sees a reported value,
+  cites a record for every claim, passes a verifier before display, refuses performance
+  judgement, and never collapses the five classifications. `AGENTS.md` states the working rules.
+
 - Five-way classification of every published value (`REPORTED`, `IMPLAUSIBLE`, `SUPPRESSED`,
   `NOT_APPLICABLE`, `MISSING`), with written rationales for every credible range.
 - College Scorecard adapter (600-institution committed capture) and IPEDS adapter (full
