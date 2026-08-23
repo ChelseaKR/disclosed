@@ -190,6 +190,32 @@ class TestDrift:
         (drift,) = compare(earlier, later)
         assert drift.direction == "gained"
 
+    def test_a_rate_that_did_not_move_is_unchanged_not_lost(self) -> None:
+        """The applicable population and the count of reporters both moved (so the record is not
+        skipped by ``compare``), but they moved in exact proportion: the share of applicable
+        institutions reporting is identical before and after. ``rate_change == 0.0`` must not fall
+        through to "lost" -- that is the same "absence rendered as a value" defect this module's
+        own docstring argues against, just on ``direction`` instead of on a count."""
+        earlier = Snapshot(
+            "a",
+            200,
+            {"Institution web address": 50},
+            {"Institution web address": 50},
+            {"Institution web address": 100},
+        )
+        later = Snapshot(
+            "b",
+            400,
+            {"Institution web address": 100},
+            {"Institution web address": 100},
+            {"Institution web address": 200},
+        )
+        (drift,) = compare(earlier, later)
+        assert drift.was_reported == 50 and drift.now_reported == 100
+        assert drift.rate_change == 0.0
+        assert drift.direction == "unchanged"
+        assert not drift.is_systemic
+
     def test_a_shrinking_population_is_not_a_change_in_disclosure(self) -> None:
         """The real IPEDS web address numbers, 2021 to 2023. 130 fewer institutions published one
         because 131 stopped existing. Measured on counts this was a systemic 2.1% collapse; the

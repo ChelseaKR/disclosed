@@ -115,6 +115,26 @@ file is the human-readable one.
 
 ### Fixed
 
+- **`disclosed.ask`'s absence-collapse check missed the field's own most natural phrasing.**
+  `_COLLAPSE` (`src/disclosed/ask/verify.py`) caught "has no", "no data", "unavailable", "did not
+  provide" and kin, but not "does not report", "did not report", "not published", or "never
+  reported" — a disclosure project's most natural paraphrase for an absent field. A correctly
+  cited claim using that phrasing passed verification unchecked. The pattern now catches it;
+  `tests/test_narrate_verify.py` gains four cases.
+- **A claim naming a classification state, cited only to a drift or contradiction record, skipped
+  the classification-fidelity check entirely.** `_check_claim` (`src/disclosed/ask/verify.py`)
+  only checked a named state against `ClassificationRecord`s among the claim's citations; a claim
+  citing only a drift or contradiction id — both citable per `Pack.citable_ids()` — had no
+  `ClassificationRecord` to check against, so "suppressed" over a field with no suppressed record
+  anywhere in the frame could stand unverified. Such a claim is now withheld outright, with the
+  same exemption a note-only citation has always had.
+- **`FieldDrift.direction` reported an unchanged reporting rate as "lost".** When `rate_change` is
+  exactly `0.0` — the applicable population and the count of reporters both moved, in exact
+  proportion, so the record is not skipped by `compare()` — `direction` fell through to the
+  branch built for a real loss and returned `"lost"`, the same "absence rendered as a value"
+  defect this module's own docstring argues against. It is now its own case, `"unchanged"`;
+  `disclosed.ask.narrate`'s prompt and `tests/test_grading.py`/`tests/test_evidence.py` are
+  updated to match.
 - A Scorecard walk that cannot confirm exhaustion now fails instead of reporting national
   figures.
 - Drift no longer reports a shrinking directory as a reporting collapse.

@@ -8,10 +8,14 @@ fails:
 2. **Classification fidelity.** It names a classification state that none of the records it
    cites is in. "Suppressed" over a ``missing`` record is the defect this project exists to name,
    and it is caught here by the word. A claim that names several states (a contrast: "missing,
-   not suppressed") passes if at least one of them is a cited record's state.
+   not suppressed") passes if at least one of them is a cited record's state. A claim that names a
+   state but cites no ``ClassificationRecord`` at all -- only a drift id, a contradiction id, or
+   both -- is withheld outright rather than skipped: a drift or contradiction record proves
+   nothing about one institution's one field, so there is nothing here to check the word against.
+   A note id is the one exception, because a note is fixed text this project wrote itself.
 3. **Collapse.** It renders an absence as a non-state -- "has no", "no data", "unavailable",
-   "not available", "did not provide" -- about a field, instead of saying which of the five
-   states the record is in.
+   "not available", "did not provide", "does not report", "not published" -- about a field,
+   instead of saying which of the five states the record is in.
 4. **Numbers.** It contains a number that cannot be found in the cited records: anything but a
    snapshot, a year, a unit id, an ``implausible_value``, the counts and rate change of a cited
    drift record, or a count of the cited records themselves (how many fields, how many in each
@@ -53,9 +57,13 @@ _STATE_PATTERN: Final[re.Pattern[str]] = re.compile(
 
 # Renderings of an absence that are not one of the five states. Each is the sentence this
 # project's README warns about, and none is allowed to reach a reader as a description of a field.
+# "report"/"published" phrasing is caught alongside "have"/"provide": a disclosure project's most
+# natural paraphrase of an absent field is "does not report it", and that collapses the five
+# states exactly as "has no" does.
 _COLLAPSE: Final[re.Pattern[str]] = re.compile(
     r"\b(has no |have no |no data|unavailable|not available|did not provide|does not have|"
-    r"doesn't have|don't have|lacks?\b|is blank|left blank|no information)",
+    r"doesn't have|don't have|lacks?\b|is blank|left blank|no information|"
+    r"does(?:n't| not) report|did(?:n't| not) report|not published|never report(?:ed|s)?)",
     re.IGNORECASE,
 )
 
@@ -172,9 +180,19 @@ def _check_claim(claim: Claim, pack: Pack) -> str | None:
         return "cites a record not in the pack"
     records, drifts = _cited(pack, claim.cites)
     named = {STATE_WORDS[m.lower().replace("_", " ")] for m in _STATE_PATTERN.findall(claim.text)}
-    cited_states = {r.classification for r in records}
-    if named and records and not (named & cited_states):
-        return "names a classification none of its cited records is in"
+    if named:
+        # A claim naming a classification state has to be checked against an actual
+        # ClassificationRecord, not skipped because none happened to be cited. A drift or
+        # contradiction id is citable (Pack.citable_ids()) but proves nothing about which of the
+        # five states one institution's one field is in; only a note id -- fixed text this
+        # project wrote itself -- is exempt, the same exemption the fidelity check has always
+        # given a note-only citation.
+        cites_only_notes = all(c.startswith("note:") for c in claim.cites)
+        if not records and not cites_only_notes:
+            return "names a classification without citing a classification record"
+        cited_states = {r.classification for r in records}
+        if records and not (named & cited_states):
+            return "names a classification none of its cited records is in"
     if _COLLAPSE.search(claim.text):
         return "renders an absence as a non-state"
     if JUDGEMENT.search(claim.text):
