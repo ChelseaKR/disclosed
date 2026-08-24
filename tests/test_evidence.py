@@ -214,7 +214,12 @@ class TestDrift:
     def test_direction_is_the_projects_not_recomputed(self, evidence: ev.Evidence) -> None:
         for d in evidence.drift:
             if d.rate_change is not None:
-                assert d.direction == ("gained" if d.rate_change > 0 else "lost")
+                if d.rate_change > 0:
+                    assert d.direction == "gained"
+                elif d.rate_change < 0:
+                    assert d.direction == "lost"
+                else:
+                    assert d.direction == "unchanged"
 
     def test_sources_are_never_mixed(self, evidence: ev.Evidence) -> None:
         for d in evidence.drift:

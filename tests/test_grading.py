@@ -217,6 +217,29 @@ class TestDrift:
         assert not drift.is_systemic
         assert drift.direction == "lost"
 
+    def test_an_unchanged_rate_labels_direction_as_unchanged(self) -> None:
+        earlier = Snapshot(
+            taken="2024",
+            institutions=200,
+            reported={"Institution web address": 50},
+            missing={"Institution web address": 50},
+            applicable={"Institution web address": 100},
+            source="IPEDS",
+        )
+        later = Snapshot(
+            taken="2025",
+            institutions=400,
+            reported={"Institution web address": 100},
+            missing={"Institution web address": 100},
+            applicable={"Institution web address": 200},
+            source="IPEDS",
+        )
+        (drift,) = compare(earlier, later)
+        assert drift.delta == 50
+        assert drift.rate_change == 0.0
+        assert drift.direction == "unchanged"
+        assert not drift.is_systemic
+
     def test_measurable_changes_sort_ahead_of_unmeasurable_ones(self) -> None:
         earlier = Snapshot(
             "a", 100, {"Known": 90, "Unknown": 90}, {"Known": 10, "Unknown": 10}, {"Known": 100}

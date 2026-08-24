@@ -99,9 +99,9 @@ Rules:
   comparison between institutions. A disclosure grade is not a quality grade. Do not use the
   words better, best, worse, worst, good, bad, recommend, or should, about any institution.
 - Drift records: state the source, the two snapshots, the field, and the direction word the record
-  carries ("gained" or "lost"). Never infer direction from the counts, never compare IPEDS with the
-  College Scorecard, and never call an unmeasured field unchanged. rate_change is a change in the
-  share of applicable institutions reporting; express it in percentage points.
+  carries ("gained", "lost", or "unchanged"). Never infer direction from the counts, never compare
+  IPEDS with the College Scorecard, and never call an unmeasured field unchanged. rate_change is a
+  change in the share of applicable institutions reporting; express it in percentage points.
 - Per-institution change: compare the same field's classification across snapshots of the same
   source, citing each record. One institution's change is that institution's record, not a policy
   finding; the drift records are the national measurement.
