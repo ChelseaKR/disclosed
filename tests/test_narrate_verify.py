@@ -154,6 +154,10 @@ class TestVerifyClaims:
             "The institution did not provide an admission rate.",
             "The school lacks an admission rate.",
             "The admission rate is not available for this school.",
+            "Example University does not report its in-state tuition.",
+            "The institution did not report the field.",
+            "In-state tuition is not published.",
+            "The school never reports an admission rate.",
         ],
     )
     def test_an_absence_rendered_as_a_non_state_is_withheld(

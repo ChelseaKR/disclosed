@@ -55,7 +55,8 @@ _STATE_PATTERN: Final[re.Pattern[str]] = re.compile(
 # project's README warns about, and none is allowed to reach a reader as a description of a field.
 _COLLAPSE: Final[re.Pattern[str]] = re.compile(
     r"\b(has no |have no |no data|unavailable|not available|did not provide|does not have|"
-    r"doesn't have|don't have|lacks?\b|is blank|left blank|no information)",
+    r"doesn't have|don't have|lacks?\b|is blank|left blank|no information|"
+    r"does(?:n't| not) report|did(?:n't| not) report|not published|never report(?:ed|s)?)",
     re.IGNORECASE,
 )
 
