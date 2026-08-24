@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from disclosed.drift import Snapshot, compare, snapshot
+from disclosed.drift import FieldDrift, Snapshot, compare, snapshot
 from disclosed.fields import FIELDS
 from disclosed.grading import grade_institution, summarize
 
@@ -216,6 +216,38 @@ class TestDrift:
         assert drift.rate_change is None
         assert not drift.is_systemic
         assert drift.direction == "lost"
+
+    def test_unchanged_rate_labels_direction_as_unchanged(self) -> None:
+        """When the reporting rate does not move (even if counts changed proportionally),
+        the direction is unchanged, not lost."""
+        earlier = Snapshot(
+            "a", 200, {"Web address": 50}, {"Web address": 50}, {"Web address": 100}
+        )
+        later = Snapshot(
+            "b", 400, {"Web address": 100}, {"Web address": 100}, {"Web address": 200}
+        )
+        (drift,) = compare(earlier, later)
+        assert drift.delta == 50
+        assert drift.rate_change == 0.0
+        assert drift.direction == "unchanged"
+        assert not drift.is_systemic
+
+    def test_unmeasurable_rate_with_zero_delta_labels_direction_as_unchanged(self) -> None:
+        earlier = Snapshot("a", 100, {"Enrollment": 50}, {"Enrollment": 50})
+        later = Snapshot("b", 100, {"Enrollment": 50}, {"Enrollment": 50})
+        # If rate is unmeasurable and delta is 0, direction is unchanged
+        (drift,) = (
+            FieldDrift(
+                field_label="Enrollment",
+                was_reported=50,
+                now_reported=50,
+                was_applicable=0,
+                now_applicable=0,
+                delta=0,
+                rate_change=None,
+            ),
+        )
+        assert drift.direction == "unchanged"
 
     def test_measurable_changes_sort_ahead_of_unmeasurable_ones(self) -> None:
         earlier = Snapshot(

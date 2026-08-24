@@ -130,8 +130,16 @@ class FieldDrift:
         backwards, which is worse than a wrong number because it comes with a word attached.
         """
         if self.rate_change is not None:
-            return "gained" if self.rate_change > 0 else "lost"
-        return "gained" if self.delta > 0 else "lost"
+            if self.rate_change > 0:
+                return "gained"
+            if self.rate_change < 0:
+                return "lost"
+            return "unchanged"
+        if self.delta > 0:
+            return "gained"
+        if self.delta < 0:
+            return "lost"
+        return "unchanged"
 
     @property
     def applicability_moved(self) -> int:
