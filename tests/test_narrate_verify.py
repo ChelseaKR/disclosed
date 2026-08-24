@@ -270,6 +270,33 @@ class TestVerifyClaims:
         )
         assert len(out.claims) == 1
 
+    def test_a_claim_naming_state_without_classification_record_or_note_is_withheld(
+        self, evidence: Evidence, corpus: Corpus
+    ) -> None:
+        drift_pack = lookup.assemble(
+            _q(
+                intent="drift_in_a_field",
+                institution_hint=None,
+                field_labels=("Equity in athletics disclosure",),
+                source="IPEDS",
+            ),
+            evidence,
+            corpus,
+        )
+        systemic = next(d for d in drift_pack.drift if d.is_systemic)
+        out = self._verify(
+            drift_pack,
+            corpus,
+            {
+                "text": "The athletics disclosure is suppressed across institutions.",
+                "cites": [systemic.id],
+            },
+        )
+        assert out.claims == ()
+        assert out.withheld_claims[0].reason == (
+            "names a classification none of its cited records is in"
+        )
+
 
 class TestVerifyQuotes:
     def test_verbatim_quotes_stand_and_paraphrases_do_not(

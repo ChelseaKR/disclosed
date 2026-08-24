@@ -173,7 +173,8 @@ def _check_claim(claim: Claim, pack: Pack) -> str | None:
     records, drifts = _cited(pack, claim.cites)
     named = {STATE_WORDS[m.lower().replace("_", " ")] for m in _STATE_PATTERN.findall(claim.text)}
     cited_states = {r.classification for r in records}
-    if named and records and not (named & cited_states):
+    notes_cited = any(c.startswith("note:") for c in claim.cites)
+    if named and not (records and (named & cited_states)) and not notes_cited:
         return "names a classification none of its cited records is in"
     if _COLLAPSE.search(claim.text):
         return "renders an absence as a non-state"
