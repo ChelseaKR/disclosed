@@ -182,7 +182,7 @@ stop-reporting event is newsworthy well before it touches a majority of institut
 | --- | --- | --- |
 | College Scorecard | **Live** | Public API. `DEMO_KEY` works for small runs; set `DATA_GOV_API_KEY` for a higher rate limit. |
 | IPEDS | **Live** | Public bulk directory file, no key and no quota. Adds required disclosures the Scorecard doesn't carry, and lets the same institution be checked against two federal sources. |
-| Credential Registry (CTDL) | **Open, adapter unwritten** | Public and unauthenticated. `GET /ce-registry/search?resource_type=credential` answered 200 with `x-total: 133346` on 2026-08-15 with no key and no headers; `/ce-registry/envelopes` answered 200 with `x-total: 395878` and a full `decoded_resource` per envelope. This row previously said "blocked", and that was our error, not theirs: see below. |
+| Credential Registry (CTDL) | **Open, joinable, adapter unwritten** | Public and unauthenticated. `GET /ce-registry/search?resource_type=credential` answered 200 with `x-total: 133346` on 2026-08-15 with no key and no headers; `/ce-registry/envelopes` answered 200 with `x-total: 395878` and a full `decoded_resource` per envelope. This row previously said "blocked", and that was our error, not theirs: see below. The join to the two federal corpora has now been measured rather than assumed, and it is good; the adapter is still unwritten, which is a different sentence. |
 
 A partial fetch is treated as a failure, not as data. Truncation would understate disclosure across
 every institution that never arrived, which looks identical to a real reporting collapse.
@@ -205,10 +205,56 @@ in the repository that grades other people for it, and the misreading stopped wo
 source for weeks.
 
 `/robots.txt` 404s, so the registry publishes no crawl directives (RFC 9309 §2.2.3 treats a 4xx
-as unrestricted). Whether a CTDL adapter can be joined to the two federal corpora is a separate
-and still-open question: in the first 200 organizations
-(`?resource_type=organization&per_page=100`, pages 1 and 2, fetched the same day) only 8 records
-mentioned IPEDS at all, so the join rate has to be measured before anything is built on it.
+as unrestricted).
+
+### The join was measured before anything was built on it, and it is better than the sample said
+
+The roadmap set one condition ahead of any Credential Registry adapter: measure whether registry
+organizations can be joined to the two federal corpora, rather than designing around a guess. An
+adapter built on an unmeasured join publishes findings for whichever institutions happened to
+match, and on the page an institution the join missed looks exactly like an institution that
+disclosed nothing, which is this project's own defect class turned inward.
+
+So the registry was walked to its own stated total on 2026-08-27: **33,809 organizations** over
+340 pages, of which **6,799** are typed as postsecondary institutions. That walk is committed as
+`data/registry/organizations.json`, reduced to the fields a join needs, and the measurement it
+supports is `data/registry-join.json`.
+
+The registry publishes two federal identifiers as typed CTDL properties, and the strong one
+carries most of the weight. **4,818** organizations publish a `ceterms:ipedsID`, **4,690** of
+them among the postsecondary ones. Those resolve to **4,794 of the 6,163 institutions in the
+IPEDS directory** and **4,510 of the 6,273 in the Scorecard census**; only **6** of the 4,800
+distinct unit ids the registry publishes fail to resolve in the 2023 directory at all. A further
+**4,969** organizations publish a `ceterms:opeID`, which is counted and joined to nothing,
+because neither committed corpus carries an OPE id: reporting it as unmatched would understate
+the registry and reporting it as matched would invent a join.
+
+**The earlier note in this file said the opposite, and the difference is the measurement.** It
+recorded that in the first 200 organizations only 8 records mentioned IPEDS at all, and read that
+as a reason to doubt the join. Two hundred records out of 33,809 is a sample of six-tenths of one
+percent, taken from the front of an offset-paginated set, which is the same shape of frame this
+project already had to publish a census to correct once. The string "IPEDS" is also not the thing
+to look for: the registry's most common IPEDS-shaped free-text identifier is
+`"IPEDS NCES Data Year": "2023"`, which is a year and not a unit id, while the identifier that
+actually joins is the typed `ceterms:ipedsID` property. The adapter reads the typed property and
+reads nothing out of `ceterms:identifier`, because a join rate is only as honest as the field it
+was counted from.
+
+A third, weaker key is reported separately and never added to the first. Matching the host of
+`ceterms:subjectWebpage` against the host of the IPEDS web address this project already grades,
+over the **28,997** organizations the identifier key left unresolved, **1,514** resolve to
+exactly one IPEDS institution and **255** to more than one. The ambiguous ones are excluded
+rather than resolved to whichever row came first, because 283 hosts in the IPEDS directory belong
+to more than one institution and a host is not an identifier. What that key resolves to and what
+it *adds* are also two different numbers: it reaches 1,026 institutions, of which **831** are
+institutions the identifier join had not already reached, and only the second number is what an
+adapter would gain.
+
+None of this makes the adapter written. It makes the question the roadmap asked answerable: a
+Credential Registry adapter would join cleanly to roughly three quarters of the IPEDS directory
+on a published federal identifier, which is a real third source rather than a few percent
+dressed as one. What it would grade there, and whether CTDL carries a disclosure duty worth
+grading, is a separate question and is not answered here.
 
 IPEDS states absence three different ways, all negative integers: `-1` not reported, `-2` not
 applicable, `-3` not available. They are not interchangeable and only the first counts against an

@@ -214,3 +214,33 @@ directed that the project add a runtime question-answering layer
   decision.
 - The grading pipeline, the committed dataset, and the static pages contain no model-generated
   content. That claim narrows; it does not change.
+
+## Addendum 2026-08-27: a third source is read, and only measured
+
+Appended rather than edited, per the append-only rule above. The recheck cadence in section F
+says "on any new data source"; this is that.
+
+- **A fourth item in the data inventory.** `data/registry/organizations.json`: 33,809 Credential
+  Registry organization records reduced to what a join needs (registry ctid, published name,
+  `ceterms:ipedsID`, `ceterms:opeID`, CTDL organization types, address region, and the host of the
+  published web address), walked to the registry's own stated total on 2026-08-27. No personal
+  data: these are organizations, published openly by Credential Engine under a public,
+  unauthenticated endpoint with no key, no quota and no crawl directives (`/robots.txt` 404s). No
+  credential of any kind exists for this source, so there is none to keep out of git. Retention:
+  committed, for the reason `data/census/scorecard.json` is committed, that a rerun does not
+  reproduce it.
+- **D Transparency.** The measurement (`data/registry-join.json`) carries a `scope` block like
+  every other payload, and that block says in words that its `states` figure counts distinct
+  free-text `ceterms:addressRegion` values, including regions outside the United States, rather
+  than states. A count is named after what it counted.
+- **A Ethics: nothing is graded from this source.** The adapter reads and reduces; it classifies
+  nobody, adds no field, and changes no institution's grade. `docs/adr/0007` records why the
+  measurement had to come first: an adapter built on an unmeasured join would render an
+  institution the join missed exactly like an institution that disclosed nothing, which is this
+  project's own defect class turned inward. Roughly a quarter of the IPEDS directory is not in the
+  registry at all, and that limit is written into the ADR as the first thing a future adapter
+  inherits.
+- **F Security.** No new secret, no new credential, no new network path at grading time: the join
+  runs offline from three committed inputs. The one network verb (`disclosed registry-fetch`) is a
+  read-only GET against a fixed scheme and host with an urlencoded query, waived at the line for
+  the same scanner finding, and with the same reason, as the two existing adapters.
