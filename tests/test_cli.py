@@ -838,3 +838,248 @@ class TestSnapshotProvenance:
             )
         assert cli.main(["drift", str(tmp_path / "a.json"), str(tmp_path / "b.json")]) == 1
         assert "different populations" in capsys.readouterr().err
+
+
+class TestTheRegistryVerbs:
+    """``registry-fetch`` and ``registry-join``: a capture, and the measurement it supports.
+
+    The join reads three committed inputs and writes one artifact. Every failure path here exits
+    non-zero with a sentence rather than writing a file, because a join measurement written from
+    an input that could not be read is a number over a denominator nobody saw.
+    """
+
+    def _capture(self, tmp_path: Path, *, exhausted: bool = True) -> Path:
+        from disclosed.sources import credential_registry
+
+        capture = credential_registry.Capture(
+            organizations=[
+                credential_registry.Organization(
+                    ctid="ce-1",
+                    name="Example College",
+                    ipeds_id="201885",
+                    ope_id="00308800",
+                    org_types=("orgType:Postsecondary",),
+                    state="Ohio",
+                    homepage_host="example.edu",
+                ),
+                credential_registry.Organization(
+                    ctid="ce-2",
+                    name="Example Training",
+                    ipeds_id=None,
+                    ope_id=None,
+                    org_types=("orgType:TrainingProvider",),
+                    state="Ohio",
+                    homepage_host="training.test",
+                ),
+            ],
+            pages=[],
+            total_stated=2,
+            exhausted=exhausted,
+            limit=None,
+            walked_at="2026-08-27T00:00:00Z",
+            finished_at="2026-08-27T00:00:10Z",
+            duplicates=0,
+            unreduced=0,
+        )
+        path = tmp_path / "registry.json"
+        credential_registry.write_capture(capture, path)
+        return path
+
+    def _ipeds_archive(self, tmp_path: Path) -> Path:
+        import io
+        import zipfile
+
+        rows = "UNITID,INSTNM,STABBR,CONTROL,WEBADDR\n201885,Example College,OH,1,example.edu\n"
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as bundle:
+            bundle.writestr("hd2023.csv", rows)
+        path = tmp_path / "HD.zip"
+        path.write_bytes(buffer.getvalue())
+        return path
+
+    def _scorecard(self, tmp_path: Path) -> Path:
+        path = tmp_path / "scorecard.json"
+        college_scorecard.write_capture(_capture(), path)
+        return path
+
+    def test_a_join_reads_three_committed_inputs_and_writes_one_measurement(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        out = tmp_path / "join.json"
+        assert (
+            cli.main(
+                [
+                    "registry-join",
+                    "--capture",
+                    str(self._capture(tmp_path)),
+                    "--cache",
+                    str(self._ipeds_archive(tmp_path)),
+                    "--source",
+                    str(self._scorecard(tmp_path)),
+                    "--out",
+                    str(out),
+                ]
+            )
+            == 0
+        )
+        payload = json.loads(out.read_text())
+        assert payload["kind"] == "credential-registry-join"
+        assert payload["registry"]["organizations"] == 2
+        assert payload["registry"]["postsecondary"] == 1
+        over_all = payload["identifier_join"]["over_all_organizations"]
+        assert over_all["matched_ipeds_directory"] == 1
+        assert "registry join over 2 organizations" in capsys.readouterr().out
+
+    def test_a_partial_walk_is_refused_rather_than_measured(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        out = tmp_path / "join.json"
+        assert (
+            cli.main(
+                [
+                    "registry-join",
+                    "--capture",
+                    str(self._capture(tmp_path, exhausted=False)),
+                    "--cache",
+                    str(self._ipeds_archive(tmp_path)),
+                    "--source",
+                    str(self._scorecard(tmp_path)),
+                    "--out",
+                    str(out),
+                ]
+            )
+            == 1
+        )
+        assert not out.exists()
+        assert "did not reach the registry's own total" in capsys.readouterr().err
+
+    def test_a_capture_that_is_not_a_capture_is_refused(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        bare = tmp_path / "bare.json"
+        bare.write_text(json.dumps([{"ctid": "ce-1"}]))
+        assert (
+            cli.main(
+                [
+                    "registry-join",
+                    "--capture",
+                    str(bare),
+                    "--cache",
+                    str(self._ipeds_archive(tmp_path)),
+                    "--source",
+                    str(self._scorecard(tmp_path)),
+                    "--out",
+                    str(tmp_path / "join.json"),
+                ]
+            )
+            == 1
+        )
+        assert "carries its own provenance" in capsys.readouterr().err
+
+    def test_an_unreadable_ipeds_archive_is_refused(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        broken = tmp_path / "broken.zip"
+        broken.write_bytes(b"not a zip")
+        assert (
+            cli.main(
+                [
+                    "registry-join",
+                    "--capture",
+                    str(self._capture(tmp_path)),
+                    "--cache",
+                    str(broken),
+                    "--source",
+                    str(self._scorecard(tmp_path)),
+                    "--out",
+                    str(tmp_path / "join.json"),
+                ]
+            )
+            == 1
+        )
+        assert "IPEDS directory unreadable" in capsys.readouterr().err
+
+    def test_a_scorecard_source_of_an_unknown_shape_is_refused(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """A bare array is a legitimate Scorecard source shape (``data/sample.json`` is one), so
+        the refusal has to be triggered by a shape that is neither that nor a capture envelope."""
+        odd = tmp_path / "odd-scorecard.json"
+        odd.write_text(json.dumps({"institutions": 6273}))
+        assert (
+            cli.main(
+                [
+                    "registry-join",
+                    "--capture",
+                    str(self._capture(tmp_path)),
+                    "--cache",
+                    str(self._ipeds_archive(tmp_path)),
+                    "--source",
+                    str(odd),
+                    "--out",
+                    str(tmp_path / "join.json"),
+                ]
+            )
+            == 1
+        )
+        assert "not a JSON array of records" in capsys.readouterr().err
+
+    def test_a_fetch_writes_a_capture_and_a_failed_one_writes_nothing(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        from disclosed.sources import credential_registry
+
+        out = tmp_path / "fetched.json"
+
+        def boom(**kwargs: Any) -> None:
+            raise credential_registry.RegistryError("the registry said no")
+
+        monkeypatch.setattr(cli.credential_registry, "walk", boom)
+        assert cli.main(["registry-fetch", "--out", str(out)]) == 1
+        assert not out.exists()
+        assert "registry fetch failed" in capsys.readouterr().err
+
+        source = self._capture(tmp_path)
+        organizations, _ = credential_registry.read_capture(json.loads(source.read_text()))
+        monkeypatch.setattr(
+            cli.credential_registry,
+            "walk",
+            lambda **kwargs: credential_registry.Capture(
+                organizations=organizations,
+                pages=[],
+                total_stated=2,
+                exhausted=True,
+                limit=None,
+                walked_at="2026-08-27T00:00:00Z",
+                finished_at="2026-08-27T00:00:10Z",
+                duplicates=0,
+                unreduced=0,
+            ),
+        )
+        assert cli.main(["registry-fetch", "--out", str(out)]) == 0
+        assert "captured 2 organizations" in capsys.readouterr().out
+
+    def test_an_empty_walk_writes_no_capture(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        from disclosed.sources import credential_registry
+
+        out = tmp_path / "empty.json"
+        monkeypatch.setattr(
+            cli.credential_registry,
+            "walk",
+            lambda **kwargs: credential_registry.Capture(
+                organizations=[],
+                pages=[],
+                total_stated=None,
+                exhausted=False,
+                limit=None,
+                walked_at="2026-08-27T00:00:00Z",
+                finished_at="2026-08-27T00:00:10Z",
+                duplicates=0,
+                unreduced=0,
+            ),
+        )
+        assert cli.main(["registry-fetch", "--out", str(out)]) == 1
+        assert not out.exists()
+        assert "refusing to write an empty capture" in capsys.readouterr().err

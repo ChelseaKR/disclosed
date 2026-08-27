@@ -13,18 +13,38 @@ and the site holds a Lighthouse accessibility score of 100 and ships no subresou
 kind. Next
 milestones, in order:
 
-1. **Credential Registry (CTDL) adapter.** No longer blocked, and it never was. Probed
-   unauthenticated on 2026-08-15: `GET /ce-registry/search?resource_type=credential` returns
-   HTTP 200 with `x-total: 133346`, `?resource_type=organization` returns 34,082, and
-   `GET /ce-registry/envelopes?page=N&per_page=1` returns 200 with `x-total: 395878` and a full
-   `decoded_resource` per envelope. `/robots.txt` 404s, so no crawl directives are published.
-   The old note read an `x-total: 0` as a locked door; the filter parameter is `resource_type`
-   and an unmatched value is answered 200-with-zero rather than with an error, so the zero meant
-   "your query matched nothing" (README, "The zero in the Credential Registry row was our own
-   failure mode"). The adapter is unwritten because nobody has written it, which is a different
-   status and belongs in a different sentence. First question for whoever does: in a
-   200-organization sample only 8 records mentioned IPEDS at all, so measure the join rate to
-   the two federal corpora before designing around it.
+1. **Credential Registry (CTDL) adapter.** No longer blocked, and it never was; and now
+   measured, which is a further step. Probed unauthenticated on 2026-08-15:
+   `GET /ce-registry/search?resource_type=credential` returns HTTP 200 with `x-total: 133346`,
+   `?resource_type=organization` returns 34,082, and `GET /ce-registry/envelopes?page=N&per_page=1`
+   returns 200 with `x-total: 395878` and a full `decoded_resource` per envelope. `/robots.txt`
+   404s, so no crawl directives are published. The old note read an `x-total: 0` as a locked door;
+   the filter parameter is `resource_type` and an unmatched value is answered 200-with-zero rather
+   than with an error, so the zero meant "your query matched nothing" (README, "The zero in the
+   Credential Registry row was our own failure mode").
+
+   The precondition this milestone set itself is met. It read: "in a 200-organization sample only
+   8 records mentioned IPEDS at all, so measure the join rate to the two federal corpora before
+   designing around it." The join was measured on 2026-08-27 by walking
+   `resource_type=organization` to the registry's own stated total, 33,809 organizations over 340
+   pages, and it is good: 4,818 organizations publish a typed `ceterms:ipedsID`, which resolves to
+   4,794 of the 6,163 institutions in the IPEDS directory (77.8%) and 4,510 of the 6,273 in the
+   Scorecard census. The 200-organization figure was six-tenths of one percent of the registry,
+   drawn from the front of an offset-paginated set, and it looked for the string "IPEDS" rather
+   than for the typed property that carries the identifier; the registry's most common
+   IPEDS-shaped free-text identifier is `"IPEDS NCES Data Year": "2023"`, which is a year.
+   `docs/adr/0007` records the decision and the numbers; `disclosed registry-fetch` and
+   `disclosed registry-join` produce them; `data/registry-join.json` is the committed artifact and
+   replays byte-for-byte in `make verify`.
+
+   The adapter is still unwritten, which remains a different status and a different sentence.
+   What it inherits from the measurement is a stated limit as well as a stated basis: roughly a
+   quarter of the IPEDS directory is not in the registry at all, so anything built on this join
+   has to render those institutions as outside the frame rather than as institutions that
+   disclosed nothing. The second open question is what CTDL would be graded *on*: this project
+   grades published disclosures against duties, and whether the registry carries a duty worth
+   grading is not answered by the join.
+
 2. **Veterans-page grading rule.** The IPEDS characteristics file could supply an
    applicability rule, but no universal publication duty exists, so it stays ungraded until a
    defensible rule does (README).
@@ -67,6 +87,7 @@ Per QUALITY-AND-METRICS-STANDARD's ledger shape. Values as measured 2026-08-07.
 | SHA-pinned `uses:` | 100% | full 40-char SHAs in all workflows; Dependabot keeps them current | AUTO |
 | Secret / SAST / dependency scan | zero unwaived findings | `.github/workflows/security.yml` (gitleaks, semgrep, pip-audit), blocking, with no severity floor on semgrep and no `.semgrepignore` exclusions; the three waived findings carry an inline `nosemgrep` and a reason | AUTO |
 | Snapshot cadence | daily, or a loud failure | `.github/workflows/snapshot.yml`; the post-condition checks `origin/master`, the commit is gated by `verify.yml` and `security.yml` dispatched on a staging ref, and each dispatched job's watched result is transcribed to a commit status before the push (ADR 0004; ADR 0003 alone was rejected twice on its first real run) | AUTO |
+| Credential Registry join | measured, never assumed; the artifact replays from committed inputs | `data/registry-join.json` rebuilt from `data/registry/organizations.json`, `data/HD2023.zip` and `data/census/scorecard.json` in `tests/test_registry.py::TestTheCommittedMeasurement`; every README figure in that section re-derived in `tests/test_doc_counts.py` | AUTO |
 | Fetch provenance | every page recorded; key never in git | `disclosed fetch` writes redacted URL, time, status, bytes, SHA-256 and rate-limit headers per page; the `census` workflow refuses to commit a capture containing the key; `tests/test_sources.py::TestProvenance` | AUTO |
 | Scorecard census coverage | national, not a 600-institution slice; every figure re-derived and stated beside the sample | `data/census/scorecard.json` (6,273 institutions, provenance-proven exhaustive) reduced by `disclosed census-report` to `data/scorecard-census.json`; byte-for-byte replay in `tests/test_census_replay.py`; README's "What is a sample and what is national" states both frames' composition | AUTO |
 | Drift threshold | 2 points of rate, reviewed against new collection years | README "Drift is a change in rate" section records the calibration | REVIEW |

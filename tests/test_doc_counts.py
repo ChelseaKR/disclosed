@@ -63,6 +63,7 @@ def _load(name: str) -> Any:
 _REPORT: Any = _load("report.json")
 _NATIONAL: Any = _load("national.json")
 _CENSUS: Any = _load("scorecard-census.json")
+_REGISTRY_JOIN: Any = _load("registry-join.json")
 _SNAPSHOTS = {
     year: drift.Snapshot(**_load(f"snapshots/ipeds/{year}.json")) for year in (2021, 2022, 2023)
 }
@@ -447,3 +448,94 @@ class TestTheRawDirectoryFigures:
             assert stated_rows == f"{len(rows):,}"
         for (stated,) in _stated(rf"account for the other \*\*({_N})\*\*"):
             assert stated == f"{blank - graded_gap:,}"
+
+
+class TestTheCredentialRegistryJoinFigures:
+    """The join measurement, tied to the artifact that measured it.
+
+    This section exists because the README previously carried the opposite claim about the same
+    source, drawn from 200 records out of 33,809. A file whose whole argument is that a sample is
+    not a census cannot state a second sample's figure as a fact about a registry, so every
+    number in that section is re-derived here from ``data/registry-join.json``.
+    """
+
+    _REGISTRY = _REGISTRY_JOIN["registry"]
+    _IDENTIFIER = _REGISTRY_JOIN["identifier_join"]["over_all_organizations"]
+    _POSTSECONDARY = _REGISTRY_JOIN["identifier_join"]["over_postsecondary_organizations"]
+    _HOMEPAGE = _REGISTRY_JOIN["homepage_join"]
+
+    def test_the_walk_is_the_walk_the_capture_recorded(self) -> None:
+        pattern = (
+            rf"walked to its own stated total on 2026-08-27: \*\*({_N}) organizations\*\* "
+            rf"over ({_N}) pages"
+        )
+        for organizations, pages in _stated(pattern):
+            assert organizations == f"{self._REGISTRY['organizations']:,}"
+            assert pages == f"{self._REGISTRY['pages']:,}"
+        for (stated,) in _stated(rf"of which \*\*({_N})\*\* are typed as postsecondary"):
+            assert stated == f"{self._REGISTRY['postsecondary']:,}"
+
+    def test_the_walk_the_figures_rest_on_was_exhaustive(self) -> None:
+        """Every share in that section divides by the registry. A partial walk would make each
+        one a rate over an unknown fraction while still being named after the registry, so the
+        artifact is only publishable at all because the capture proved it reached the end."""
+        assert _REGISTRY_JOIN["scope"]["kind"] == "national"
+        assert _REGISTRY_JOIN["scope"]["universe"] == self._REGISTRY["organizations"]
+
+    def test_the_identifier_counts_are_the_ones_the_join_produced(self) -> None:
+        pattern = (
+            rf"\*\*({_N})\*\* organizations publish a `ceterms:ipedsID`, \*\*({_N})\*\* of them"
+        )
+        for published, postsecondary in _stated(pattern):
+            assert published == f"{self._IDENTIFIER['organizations_publishing_an_ipeds_id']:,}"
+            assert postsecondary == (
+                f"{self._POSTSECONDARY['organizations_publishing_an_ipeds_id']:,}"
+            )
+        for (stated,) in _stated(rf"\*\*({_N})\*\* organizations publish a `ceterms:opeID`"):
+            assert stated == f"{_REGISTRY_JOIN['ope_id']['organizations_publishing_one']:,}"
+
+    def test_the_reach_into_each_federal_corpus_is_stated_with_its_denominator(self) -> None:
+        """Both halves of each sentence, because the interesting number here is the denominator
+        and a reach quoted without one is the claim this project exists to refuse."""
+        ipeds_pattern = rf"\*\*({_N}) of the ({_N}) institutions in the IPEDS directory\*\*"
+        for reached, total in _stated(ipeds_pattern):
+            assert reached == f"{self._IDENTIFIER['ipeds_institutions_reached']:,}"
+            assert total == f"{self._IDENTIFIER['ipeds_institutions']:,}"
+            assert total == f"{_NATIONAL['scope']['institutions']:,}"
+        census_pattern = rf"\*\*({_N}) of the ({_N}) in the Scorecard census\*\*"
+        for reached, total in _stated(census_pattern):
+            assert reached == f"{self._IDENTIFIER['scorecard_institutions_reached']:,}"
+            assert total == f"{self._IDENTIFIER['scorecard_institutions']:,}"
+            assert total == f"{_CENSUS['scope']['institutions']:,}"
+
+    def test_the_unit_ids_that_do_not_resolve_are_counted_not_rounded_away(self) -> None:
+        pattern = rf"only \*\*({_N})\*\* of the ({_N}) distinct unit ids"
+        for unresolved, distinct in _stated(pattern):
+            assert unresolved == f"{self._IDENTIFIER['unmatched_ipeds_directory']:,}"
+            assert distinct == f"{self._IDENTIFIER['distinct_ipeds_ids']:,}"
+
+    def test_the_weaker_key_is_stated_as_what_it_resolves_to_and_what_it_adds(self) -> None:
+        pattern = (
+            rf"over the \*\*({_N})\*\* organizations the identifier key left unresolved, "
+            rf"\*\*({_N})\*\* resolve to exactly one IPEDS institution and \*\*({_N})\*\* to "
+            r"more than one"
+        )
+        for considered, unique, ambiguous in _stated(pattern):
+            assert considered == f"{self._HOMEPAGE['organizations_considered']:,}"
+            assert unique == f"{self._HOMEPAGE['matched_one_institution']:,}"
+            assert ambiguous == f"{self._HOMEPAGE['matched_more_than_one_institution']:,}"
+        for (stated,) in _stated(rf"because ({_N}) hosts in the IPEDS directory belong"):
+            assert stated == (f"{self._HOMEPAGE['hosts_shared_by_more_than_one_institution']:,}")
+        added = rf"it reaches ({_N}) institutions, of which \*\*({_N})\*\* are institutions"
+        for reaches, beyond in _stated(added):
+            assert reaches == f"{self._HOMEPAGE['ipeds_institutions_reached']:,}"
+            assert beyond == (
+                f"{self._HOMEPAGE['ipeds_institutions_reached_beyond_the_identifier_join']:,}"
+            )
+
+    def test_roughly_three_quarters_really_is_roughly_three_quarters(self) -> None:
+        """The one qualitative claim in that section, held to the arithmetic behind it. If the
+        share ever leaves this band the sentence is wrong and this is where it says so."""
+        _stated(r"roughly three quarters of the IPEDS directory")
+        share = _REGISTRY_JOIN["identifier_join"]["share_of_ipeds_directory_reached"]
+        assert 0.70 <= share < 0.80, f"{share:.1%} is no longer roughly three quarters"

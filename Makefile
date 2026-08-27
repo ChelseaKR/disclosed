@@ -1,7 +1,8 @@
 PYTHON ?= .venv/bin/python
 
 .PHONY: verify lint typecheck test fetch grade site dataset crosscheck national census-report \
-        snapshot replay census-replay ipeds-snapshots
+        snapshot replay census-replay ipeds-snapshots registry-fetch registry-join \
+        registry-replay
 
 verify: lint typecheck test
 
@@ -67,6 +68,25 @@ census-replay:
 	$(PYTHON) -m disclosed.cli grade --source data/census/scorecard.json --out /tmp/census-graded.json
 	$(PYTHON) -m disclosed.cli census-report --report /tmp/census-graded.json --source data/census/scorecard.json --out /tmp/scorecard-census.json
 	diff -u data/scorecard-census.json /tmp/scorecard-census.json && echo "data/scorecard-census.json replays exactly"
+
+# Walk the Credential Registry once, with provenance, into the capture the join measurement is
+# read from. No key and no quota; the registry is public and unauthenticated. Committed for the
+# reason the Scorecard census capture is: the registry's publishers edit it continuously, so a
+# rerun does not reproduce it and the file is the only durable record of what it held that day.
+registry-fetch:
+	$(PYTHON) -m disclosed.cli registry-fetch --out data/registry/organizations.json --cache-dir .cache/registry
+
+# Measure the join, offline, from three committed inputs. docs/ROADMAP.md names this as the thing
+# that comes before a Credential Registry adapter; docs/adr/0007 records what the answer licenses.
+registry-join:
+	$(PYTHON) -m disclosed.cli registry-join --capture data/registry/organizations.json --cache data/HD2023.zip --source data/census/scorecard.json --out data/registry-join.json
+
+# Same contract as `replay`: no network and no key, because all three inputs are committed.
+# `tests/test_registry.py::TestTheCommittedMeasurement` is the pytest form and is what gates
+# `make verify`; this target is what you run to see the diff when it fails.
+registry-replay:
+	$(PYTHON) -m disclosed.cli registry-join --capture data/registry/organizations.json --cache data/HD2023.zip --source data/census/scorecard.json --out /tmp/registry-join.json
+	diff -u data/registry-join.json /tmp/registry-join.json && echo "data/registry-join.json replays exactly"
 
 # The three-year IPEDS history the systemic threshold is argued from. Same contract as `replay`.
 ipeds-snapshots:

@@ -10,6 +10,20 @@ file is the human-readable one.
 
 ### Added
 
+- **The Credential Registry join, measured before an adapter is designed around it
+  ([ADR 0007](docs/adr/0007-the-credential-registry-join-is-measured-before-it-is-adapted.md)).**
+  `disclosed.sources.credential_registry` walks `resource_type=organization` to the registry's own
+  `x-total`, records the provenance of every page, caches pages so a rerun resumes rather than
+  starting over, and refuses to report a walk it cannot prove reached the end, including on a
+  stated total of zero, which is what the registry also answers to an unmatched filter.
+  `disclosed.registry` measures three candidate keys separately and never sums them: the typed
+  `ceterms:ipedsID`, the `ceterms:opeID` it counts and joins to nothing because neither committed
+  corpus carries one, and the web host it treats as weaker and reports as both what it resolves to
+  and what it adds. Two new verbs, `registry-fetch` and `registry-join`. The answer, on 2026-08-27:
+  33,809 organizations, of which 4,818 publish an IPEDS unit id reaching 4,794 of the 6,163
+  institutions in the IPEDS directory and 4,510 of the 6,273 in the Scorecard census. The
+  roadmap's precondition is met and the adapter remains unwritten, which is a different sentence.
+  Nothing here grades an institution or touches `disclosed.ask`.
 - **`deploy/`: the prepared, unapplied deployment shape.** A SAM template (JSON, so the test
   suite reads it with the standard library) for one Lambda behind a Function URL with CORS locked
   to the Pages origin, reserved concurrency of 2, IAM limited to invoking the one configured
