@@ -35,7 +35,7 @@ import json
 import re
 import tomllib
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from disclosed import drift
 from disclosed.sources import ipeds
@@ -539,3 +539,110 @@ class TestTheCredentialRegistryJoinFigures:
         _stated(r"roughly three quarters of the IPEDS directory")
         share = _REGISTRY_JOIN["identifier_join"]["share_of_ipeds_directory_reached"]
         assert 0.70 <= share < 0.80, f"{share:.1%} is no longer roughly three quarters"
+
+
+class TestTheCredentialRegistryPropertyFigures:
+    """What the registry publishes, tied to the artifact that counted it.
+
+    The section these figures live in is the one that closes milestone 1 by saying there is
+    nothing here to grade. A closing argument made of numbers has to be made of the numbers in
+    the file, so every one of them is re-derived from ``data/registry-properties.json``.
+    """
+
+    _REPORT = _load("registry-properties.json")
+    _BY_NAME: ClassVar[dict[str, Any]] = {row["property"]: row for row in _REPORT["properties"]}
+
+    def test_the_vocabulary_in_use_is_the_vocabulary_counted(self) -> None:
+        pattern = (
+            rf"\*\*({_N})\*\* distinct property names and \*\*({_N})\*\* distinct property sets"
+        )
+        for names, sets_ in _stated(pattern):
+            assert names == f"{self._REPORT['distinct_property_names']:,}"
+            assert sets_ == f"{self._REPORT['distinct_property_sets']:,}"
+
+    def test_the_joined_denominator_is_the_one_the_report_carries(self) -> None:
+        for (stated,) in _stated(
+            rf"Over the \*\*({_N})\*\* organizations that publish an IPEDS id"
+        ):
+            assert stated == f"{self._REPORT['publishing_an_ipeds_id']:,}"
+
+    def test_the_nine_universal_properties_are_the_nine_that_are_universal(self) -> None:
+        """Named in the prose, and named nowhere else that a reader would check them against."""
+        universal = self._REPORT["universal_over_joined"]
+        for (stated,) in _stated(r"Nine are on every single one \(([^)]+)\)"):
+            named = {token.strip(" `") for token in stated.split(",")}
+            assert named == set(universal), (
+                "the README names a different set of universal properties than the report "
+                f"carries: {sorted(named)} against {sorted(universal)}"
+            )
+        assert len(universal) == 9, "the prose says nine; the report says otherwise"
+
+    def test_the_three_almost_universal_properties_keep_their_counts(self) -> None:
+        pattern = (
+            rf"`ceterms:opeID` on ({_N}), `ceterms:identifier` on ({_N}) and `ceterms:fein` "
+            rf"on ({_N})"
+        )
+        for ope, ident, fein in _stated(pattern):
+            assert ope == f"{self._BY_NAME['ceterms:opeID']['joined_organizations']:,}"
+            assert ident == f"{self._BY_NAME['ceterms:identifier']['joined_organizations']:,}"
+            assert fein == f"{self._BY_NAME['ceterms:fein']['joined_organizations']:,}"
+
+    def test_the_cliff_is_where_the_prose_says_it_is(self) -> None:
+        """The whole argument rests on this drop, so it is checked as a drop and not as a number.
+
+        If ``ceterms:email`` ever stopped being the next most common property the sentence would
+        be naming the wrong one, which the count alone would not catch.
+        """
+        pattern = rf"`ceterms:email`, is on \*\*({_N})\*\* of them, ([\d.]+)%"
+        email = self._BY_NAME["ceterms:email"]
+        for count, share in _stated(pattern):
+            assert count == f"{email['joined_organizations']:,}"
+            assert share == f"{email['joined_rate'] * 100:.1f}"
+        universal = set(self._REPORT["universal_over_joined"])
+        almost = {"ceterms:opeID", "ceterms:identifier", "ceterms:fein"}
+        ranked = sorted(
+            (
+                row
+                for row in self._REPORT["properties"]
+                if row["property"] not in universal | almost
+            ),
+            key=lambda row: -row["joined_organizations"],
+        )
+        assert ranked[0]["property"] == "ceterms:email", (
+            f"the next most common property after the twelve is now {ranked[0]['property']}, "
+            "and the README still names ceterms:email"
+        )
+
+    def test_the_nearest_thing_to_a_cost_disclosure_keeps_its_number(self) -> None:
+        pattern = (
+            rf"`ceterms:hasCostManifest`, is on \*\*({_N})\*\* of the ({_N}), which is ([\d.]+)%"
+        )
+        row = self._BY_NAME["ceterms:hasCostManifest"]
+        for count, joined, share in _stated(pattern):
+            assert count == f"{row['joined_organizations']:,}"
+            assert joined == f"{self._REPORT['publishing_an_ipeds_id']:,}"
+            assert share == f"{row['joined_rate'] * 100:.2f}"
+
+    def test_the_bulk_load_signature_is_stated_as_measured(self) -> None:
+        pattern = (
+            rf"\*\*({_N})\*\* of the ({_N}), or ([\d.]+)%, carry exactly the same twelve "
+            rf"properties: ({_N}) distinct property sets"
+        )
+        largest = self._REPORT["largest_joined_property_set"]
+        for count, joined, share, sets_ in _stated(pattern):
+            assert count == f"{largest['organizations']:,}"
+            assert joined == f"{self._REPORT['publishing_an_ipeds_id']:,}"
+            assert share == f"{largest['share_of_joined'] * 100:.1f}"
+            assert sets_ == f"{self._REPORT['distinct_property_sets_among_joined']:,}"
+        assert len(largest["properties"]) == 12, "the prose says twelve properties"
+
+    def test_the_data_year_identifier_keeps_its_number(self) -> None:
+        pattern = rf"\*\*({_N})\*\* of them, ([\d.]+)%, carry a free-text identifier"
+        row = next(
+            r
+            for r in self._REPORT["identifier_type_names"]
+            if r["joined"] and r["name"] == "IPEDS NCES Data Year"
+        )
+        for count, share in _stated(pattern):
+            assert count == f"{row['organizations']:,}"
+            assert share == f"{row['joined_rate'] * 100:.1f}"

@@ -146,11 +146,37 @@ class Organization:
     state: str | None
     homepage_host: str | None
 
+    properties: tuple[str, ...] = ()
+    """The CTDL property names present on this organization's node, sorted, ``@`` keys dropped.
+
+    Names only, never values. The question this answers is what the registry publishes about an
+    organization, which is a question about presence: a property is either on the node or it is
+    not, and that is the same shape of fact this project already grades institutions on.
+    """
+
+    identifier_type_names: tuple[str, ...] = ()
+    """The distinct type names inside ``ceterms:identifier``, sorted, as the publisher wrote them.
+
+    Free text, and read as free text. ``docs/adr/0007`` refuses to read anything here as a federal
+    identifier, and nothing here is read as one. It is captured because the most common value in
+    the registry is ``IPEDS NCES Data Year``, which is a year, and how often that appears is the
+    difference between an organization describing itself and a record loaded from a directory.
+    """
+
     @property
     def is_postsecondary(self) -> bool:
         return POSTSECONDARY in self.org_types
 
     def as_dict(self) -> dict[str, Any]:
+        """The seven fields the join needs, and deliberately not the two above.
+
+        ``properties`` and ``identifier_type_names`` are left out of the committed capture on
+        purpose: written per organization they add about 8.5 MB to a 7.9 MB file, and the
+        questions they answer are questions about the population rather than about any one
+        organization. ``disclosed registry-properties`` captures them aggregated instead, at
+        245 KiB, and ``docs/adr/0009`` says why. An omission with a reason and a test on it is
+        not the silent kind.
+        """
         return {
             "ctid": self.ctid,
             "name": self.name,
@@ -320,6 +346,31 @@ def _org_types(node: dict[str, Any]) -> tuple[str, ...]:
     return tuple(out)
 
 
+def _properties(node: dict[str, Any]) -> tuple[str, ...]:
+    """The CTDL property names on a node, sorted, without the JSON-LD keywords.
+
+    ``@id`` and ``@type`` are dropped because they are on every node by construction and would
+    say nothing about what a publisher chose to publish. Everything else is kept as written,
+    including a property this adapter does not understand: a name nobody here recognises is
+    still something the registry published, and dropping it would make the census a census of
+    what this code knows about.
+    """
+    return tuple(sorted(key for key in node if isinstance(key, str) and not key.startswith("@")))
+
+
+def _identifier_type_names(node: dict[str, Any]) -> tuple[str, ...]:
+    """Distinct ``ceterms:identifierTypeName`` values inside ``ceterms:identifier``, sorted."""
+    names: set[str] = set()
+    raw = node.get("ceterms:identifier")
+    for item in raw if isinstance(raw, list) else []:
+        if not isinstance(item, dict):
+            continue
+        name = _english(item.get("ceterms:identifierTypeName"))
+        if name:
+            names.add(name)
+    return tuple(sorted(names))
+
+
 def _state(node: dict[str, Any]) -> str | None:
     raw = node.get("ceterms:address")
     for item in raw if isinstance(raw, list) else []:
@@ -400,6 +451,8 @@ def reduce_record(envelope: Any) -> Organization | None:
         org_types=_org_types(node),
         state=_state(node),
         homepage_host=host_of(node.get("ceterms:subjectWebpage")),
+        properties=_properties(node),
+        identifier_type_names=_identifier_type_names(node),
     )
 
 
