@@ -382,23 +382,40 @@ because a budget with a hundredfold of slack passes for the same reason a gate t
 does; a test recomputes it from the build, so the day a template change eats the headroom this
 paragraph has to say so.
 
-Two things it does not claim. It reads the bytes the generator writes, while Lighthouse's
+Two things about what it measures. It reads the bytes the generator writes, while Lighthouse's
 `transferSize` is what crossed the wire: the body after any content-encoding, plus the response
 headers. Served uncompressed, the state/CA page was 67,061 bytes on disk against 67,250 of
 `transferSize`, the difference being the headers; served from anything that compresses, the
 on-disk figure is far the larger of the two. So the static check is stricter than the wire in the
 ordinary case and looser by a few hundred bytes in the pathological one, and it is described that
-way rather than as the same measurement. And the three timing lines, largest contentful paint,
-cumulative layout shift and total blocking time, are still enforced by nothing: they need a
-rendering engine, and a paint time is a fact about a machine as much as about a document.
-Measured locally on 2026-08-27 with `lighthouse@12`, the home page reported an LCP of 752 ms and
-the state/CA page 1052 ms against the 1500 ms line, both with a layout shift and a blocking time
-of exactly zero. A laptop is not the CI runner, and 1052 of 1500 is not the headroom to calibrate
-a gate on, so
-[ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md) records
-that the runner gets measured before those lines become a gate, which is the rule ADR 0007 had
-just finished writing down for a different question. Until then the ledger row says NONE, and a
-test fails if the ledger stops saying it.
+way rather than as the same measurement. And it does not cover the three timing lines, which need
+a rendering engine and are gated in CI instead.
+
+### The timing lines, gated after the runner was measured
+
+Largest contentful paint, cumulative layout shift and total blocking time were the last lines of
+that file enforced by nothing, and the ledger said so. They are gated now, by
+`.github/scripts/check_lighthouse_timings.py` in the Lighthouse job, over the home page and the
+largest page, both audited with the performance category. It fails on a metric over budget, on a
+metric a report does not carry, and on a report that was never written. The middle one matters
+most: Lighthouse collects timings only when that category is asked for, so treating an absent
+audit as a pass is how this gate would quietly stop applying the day somebody trimmed a flag.
+
+The order it was done in is the point.
+[ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md) refused
+to gate on numbers measured on a laptop, and set the precondition: measure the runner, on the
+largest page and not only the easiest one. Run 33129896655 did that, and reported **751.7 ms** on
+the home page and **1052.4 ms** on state/CA against the 1500 ms line, within a millisecond of the
+laptop's 752.3 and 1051.8, with a layout shift and a blocking time of exactly zero on both.
+Lighthouse throttles by simulation, so the worry turned out to be about a difference that is not
+there, which is a thing you can only know afterwards.
+[ADR 0010](docs/adr/0010-the-timing-budget-becomes-a-gate-after-the-runner-was-measured.md)
+records both halves, including why the budget stayed at 1500 ms rather than being tightened to
+30 ms above the measurement: a budget set just above today's number gets widened under deadline
+instead of investigated.
+
+Every line of `lighthouse-budget.json` is now enforced by something named, and a line that is in
+neither register fails the build.
 
 ## Development
 
@@ -452,7 +469,7 @@ skips.
 | Documentation | Applies - `CHANGELOG.md`, `CITATION.cff`, `SECURITY.md`, `CONTRIBUTING.md`, ADR log (`docs/adr/`), roadmap and metrics ledger (`docs/ROADMAP.md`) |
 | Quality & Metrics | Applies - metrics ledger with AUTO/REVIEW gates in `docs/ROADMAP.md` |
 | Release & Versioning | N/A - nothing versioned is released; committed data plus a rebuildable static site, no downstream consumers (`docs/adr/0001-no-versioned-release.md`) |
-| Performance | Applies - zero non-document subresources **and** the transfer-size budget, both enforced in `make verify` over one page of every kind and again over all 617 pages of the committed build (`tests/test_accessibility.py`), with the sizes read out of `lighthouse-budget.json` rather than copied from it; Lighthouse itself enforces none of that file, see Accessibility above. The three timing lines remain enforced by nothing and the ledger row says NONE ([ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md)); a budget line that is in neither register fails the build. No server-side surface to load-test |
+| Performance | Applies - every line of `lighthouse-budget.json` is enforced by something named. Zero non-document subresources **and** the transfer-size budget in `make verify` over one page of every kind and again over all 617 pages of the committed build (`tests/test_accessibility.py`), with the numbers read out of the budget file rather than copied from it; the three timing lines by `.github/scripts/check_lighthouse_timings.py` in the Lighthouse job, gated only after the runner itself was measured ([ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md), then [ADR 0010](docs/adr/0010-the-timing-budget-becomes-a-gate-after-the-runner-was-measured.md)). A budget line in neither register fails the build. No server-side surface to load-test |
 | Incident Response | Applies - no incidents to date; postmortems will live in `docs/incidents/` |
 | Data Governance | Applies - public federal datasets only, each payload names its source and coverage in its `scope` block; data inventory in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | AI Development Measurement | Applies - declared in `docs/ROADMAP.md` metrics ledger |

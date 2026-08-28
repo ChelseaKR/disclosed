@@ -77,12 +77,14 @@ is now either enforced by a named check or declared unenforceable with a written
 line in neither register fails the build. The three timing lines are still enforced by nothing,
 and the ledger row above says so.
 
-**Phase 2. The timing budget, after the runner has been measured.** Precondition, from ADR 0008:
-record what `accessibility.yml`'s own runner reports for LCP, CLS and TBT, on the largest page
-and not only on the home page, over enough runs to know the spread. Locally the largest page
-reports 1,052 ms against a 1,500 ms line, and that is not headroom to calibrate a CI gate from a
-laptop. What this phase may not do: gate on a number nobody measured, or widen the budget to turn
-a red gate green without the argument for the wider budget appearing in the README.
+**Phase 2. The timing budget, after the runner has been measured. Built, 2026-08-28**
+(`docs/adr/0010`). The precondition ADR 0008 set was met first and separately: the largest page
+was added to the audits that collect the performance category, a step reported the numbers
+without gating on them, and run 33129896655 came back at 751.7 ms and 1052.4 ms, within a
+millisecond of the laptop's figures, because lighthouse throttles by simulation rather than by
+applying anything. Then the gate. The budget stayed at 1500 ms rather than being tightened to
+30 ms above the measurement, because a budget set just above today's number gets widened under
+deadline instead of investigated, which is the failure ADR 0008 was written about.
 
 **Phase 3. What the Credential Registry publishes that a duty could be graded against.**
 Milestone 1's second open question, which ADR 0007 states plainly is not answered by a join: this
@@ -148,7 +150,7 @@ Per QUALITY-AND-METRICS-STANDARD's ledger shape. Values as measured 2026-08-07.
 | Lighthouse accessibility | == 100 on all six page classes | `.github/workflows/accessibility.yml`; missing report or missing category fails | AUTO |
 | Resource counts | 0 of every non-document type, on every page | `tests/test_accessibility.py::TestTheResourceBudget` (one page of each kind) and `::TestTheResourceBudgetOverThePublishedSite` (all 617 pages of the committed build), both in `make verify` | AUTO |
 | Resource transfer sizes | every page inside the `resourceSizes` lines of `lighthouse-budget.json` (80 KiB document, 80 KiB total, zero for every other type) | `tests/test_accessibility.py::TestTheTransferSizeBudget` in `make verify`, over one page of each kind and again over all 617 pages of the committed build, reading the numbers out of the budget file rather than restating them; the largest published page (65.5 KiB) is a README figure recomputed from the build (ADR 0008) | AUTO |
-| Lighthouse timings (`largest-contentful-paint`, `cumulative-layout-shift`, `total-blocking-time`) | as stated in `lighthouse-budget.json` | **nothing** - `--budget-path` never fails a Lighthouse run and Lighthouse 12 emits no budget audit, and the three timing lines need a rendering engine no static checker has. Measured locally 2026-08-27 with `lighthouse@12`: home 752 ms LCP, state/CA 1052 ms, against a 1500 ms line, CLS and TBT exactly 0 on both. A laptop is not the runner, so ADR 0008 puts the runner's own numbers ahead of the gate. Recorded here rather than claimed as a gate | NONE |
+| Lighthouse timings (`largest-contentful-paint`, `cumulative-layout-shift`, `total-blocking-time`) | as stated in `lighthouse-budget.json` | `.github/scripts/check_lighthouse_timings.py`, run by `.github/workflows/accessibility.yml` over the home page and the largest page, both audited with the performance category. It fails on a metric over budget, on a metric a report does not carry (lighthouse collects timings only when that category is asked for, which is how this gate would otherwise stop applying), and on a report that was never written. Gated only after the runner was measured rather than assumed: run 33129896655 reported LCP 751.7 ms on the home page and 1052.4 ms on state/CA against a 1500 ms line, within a millisecond of the laptop figures in ADR 0008, because lighthouse throttles by simulation (ADR 0010) | AUTO |
 | Every budget line is in one register or the other | no line of `lighthouse-budget.json` enforced by nobody and unnamed | `tests/test_accessibility.py::TestEveryBudgetLineIsAccountedFor`; a new line that is neither enforced by a named check nor declared unenforceable with a reason fails `make verify`, and a register entry for a line the file no longer carries fails too | AUTO |
 | Static WCAG checks | zero violations | `tests/test_accessibility.py` (contrast both themes, landmarks, headings, table semantics, colour-independence) in `make verify` | AUTO |
 | Committed artifacts match their generators | byte-for-byte | tests tying `data/dataset.csv` / `data/national.json` to the code that writes them | AUTO |
@@ -171,5 +173,5 @@ README conformance table.
 | Stage | Applicable? | Gate |
 |---|---|---|
 | 6. a11y | **Applicable** | Static WCAG suite in `make verify` + Lighthouse 100 gate in `accessibility.yml` |
-| 7. perf | **Applicable (budget form)** | Zero-subresource budget **and** the transfer-size lines of `lighthouse-budget.json` enforced statically over every page in `make verify`; the three timing lines are enforced by nothing and the ledger row says so, with ADR 0008 naming what has to be measured before they become a gate. No load-test surface exists (static files, no server) |
+| 7. perf | **Applicable (budget form)** | Every line of `lighthouse-budget.json` is enforced by something named. Counts and transfer sizes statically over all 617 pages in `make verify`; the three timing lines by `.github/scripts/check_lighthouse_timings.py` in `accessibility.yml`, gated only after the runner itself was measured (ADR 0008, then ADR 0010). No load-test surface exists (static files, no server) |
 | 8. responsible | **Applicable** | `docs/RESPONSIBLE-TECH-AUDITS.md`; the ethics constraints are code (classifier, scope refusals) and are tested |

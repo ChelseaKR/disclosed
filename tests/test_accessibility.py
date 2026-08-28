@@ -739,6 +739,15 @@ class TestEveryBudgetLineIsAccountedFor:
     _SIZES = "TestTheTransferSizeBudget.over_budget"
     _COUNTS = "TestTheResourceBudget.test_no_page_fetches_anything_but_itself"
 
+    # The three timing lines are enforced too, as of `docs/adr/0010`, but not here and not
+    # statically: they need a rendering engine. `accessibility.yml` audits the home page and the
+    # largest page with the performance category and runs the script below over both reports,
+    # which fails on a metric over budget, on a metric a report does not carry, and on a report
+    # that was never written. ADR 0008 refused to gate them until this runner had been measured;
+    # run 33129896655 measured it, and it reported within a millisecond of the laptop on both
+    # pages because lighthouse throttles by simulation.
+    _TIMINGS = ".github/scripts/check_lighthouse_timings.py, run by accessibility.yml"
+
     _ENFORCED_BY: ClassVar[dict[tuple[str, str], str]] = {
         ("resourceSizes", "document"): _SIZES,
         ("resourceSizes", "total"): _SIZES,
@@ -753,35 +762,16 @@ class TestEveryBudgetLineIsAccountedFor:
         ("resourceCounts", "image"): _COUNTS,
         ("resourceCounts", "third-party"): _COUNTS,
         ("resourceCounts", "total"): _COUNTS,
+        ("timings", "largest-contentful-paint"): _TIMINGS,
+        ("timings", "cumulative-layout-shift"): _TIMINGS,
+        ("timings", "total-blocking-time"): _TIMINGS,
     }
 
-    # Lines no static checker can hold, each with the reason and the measurement behind it. These
-    # are three timings, and the honest answer is that they need a rendering engine: layout shift
-    # and blocking time are facts about a browser's main thread, and a paint time is a fact about
-    # a machine and a network as much as about a document. Measured on 2026-08-27 with
-    # `lighthouse@12` (12.8.2, simulated throttling, mobile form factor) against the built site
-    # served locally: the home page reported LCP 752 ms, CLS 0, TBT 0, and the largest page in the
-    # site, state/CA, reported LCP 1052 ms, CLS 0, TBT 0. Both are inside the 1500 ms line, and
-    # neither is a runner: `accessibility.yml` runs on ubuntu-latest with a 4x CPU slowdown
-    # applied to a machine this project has never measured, and 1052 of 1500 is not the headroom
-    # a gate wants to be calibrated on somebody's laptop. `docs/adr/0008` records the decision to
-    # measure the runner before gating rather than the other way round, which is the rule
-    # `docs/adr/0007` had just finished writing down for a different question.
-    _NOT_STATICALLY_ENFORCEABLE: ClassVar[dict[tuple[str, str], str]] = {
-        ("timings", "largest-contentful-paint"): (
-            "a paint time needs a rendering engine, and the number depends on the machine and "
-            "the simulated network as much as on the document; the static proxy is the document "
-            "size, which TestTheTransferSizeBudget holds to the resourceSizes line"
-        ),
-        ("timings", "cumulative-layout-shift"): (
-            "layout shift is a fact about what a browser did while painting; that this site "
-            "fetches nothing makes a shift unlikely, which is an argument and not a measurement"
-        ),
-        ("timings", "total-blocking-time"): (
-            "blocking time is main-thread time in a browser; the published build ships no "
-            "script, which is enforced as a count and is not the same claim as a measured zero"
-        ),
-    }
+    # Lines nothing enforces, each with the reason it cannot be held. Empty, and that is the
+    # state the whole phase was working towards rather than a placeholder: every line of the
+    # budget file is now held by something named. A line put back in here needs a written reason
+    # and a metrics-ledger row that says NONE, and the two tests below are what ask for them.
+    _NOT_ENFORCED: ClassVar[dict[tuple[str, str], str]] = {}
 
     def _lines(self) -> set[tuple[str, str]]:
         """Every budget line in the file, as (section, name)."""
@@ -794,14 +784,14 @@ class TestEveryBudgetLineIsAccountedFor:
         return lines | {("timings", line["metric"]) for line in entry.get("timings", [])}
 
     def test_every_line_of_the_budget_file_is_in_one_of_the_two_registers(self) -> None:
-        registered = set(self._ENFORCED_BY) | set(self._NOT_STATICALLY_ENFORCEABLE)
+        registered = set(self._ENFORCED_BY) | set(self._NOT_ENFORCED)
         unaccounted = self._lines() - registered
         assert not unaccounted, (
             f"lighthouse-budget.json carries {sorted(unaccounted)}, which no check in this suite "
             "claims and which nothing declares unenforceable. That is the state the whole file "
             "was in until it was found: a budget nothing reads, cited in three places as a gate. "
             "Add the line to _ENFORCED_BY with the check that holds it, or to "
-            "_NOT_STATICALLY_ENFORCEABLE with the reason it cannot be held."
+            "_NOT_ENFORCED with the reason it cannot be held and a ledger row that says NONE."
         )
 
     def test_neither_register_names_a_line_the_file_does_not_carry(self) -> None:
@@ -809,7 +799,7 @@ class TestEveryBudgetLineIsAccountedFor:
         lines = self._lines()
         for register, name in (
             (self._ENFORCED_BY, "_ENFORCED_BY"),
-            (self._NOT_STATICALLY_ENFORCEABLE, "_NOT_STATICALLY_ENFORCEABLE"),
+            (self._NOT_ENFORCED, "_NOT_ENFORCED"),
         ):
             stale = set(register) - lines
             assert not stale, (
@@ -817,26 +807,45 @@ class TestEveryBudgetLineIsAccountedFor:
             )
 
     def test_no_line_is_both_enforced_and_declared_unenforceable(self) -> None:
-        both = set(self._ENFORCED_BY) & set(self._NOT_STATICALLY_ENFORCEABLE)
+        both = set(self._ENFORCED_BY) & set(self._NOT_ENFORCED)
         assert not both, f"{sorted(both)} is registered as enforced and as unenforceable"
 
-    def test_every_unenforceable_line_carries_a_reason_and_not_a_shrug(self) -> None:
-        """A shrug is not a reason: the sentence has to say what a static checker cannot see."""
-        for line, reason in self._NOT_STATICALLY_ENFORCEABLE.items():
-            assert len(reason) > 60, f"{line} declares itself unenforceable without saying why"
+    def test_no_line_of_the_budget_file_is_enforced_by_nothing(self) -> None:
+        """The register is empty, which is the state this was all for rather than a placeholder.
 
-    def test_the_ledger_still_names_the_lines_nothing_enforces(self) -> None:
-        """The declaration is only honest while the documents a reader reads carry it too.
-
-        ``docs/ROADMAP.md`` is where this project states its gates as AUTO, REVIEW or NONE, and
-        the timing row is the one that is still NONE. If that row disappears while these three
-        lines are still enforced by nothing, the ledger has started overstating the project, and
-        overstating a gate is the defect that produced this whole class.
+        Every line of ``lighthouse-budget.json`` is now held by a named check: the counts and the
+        sizes here, the three timings by ``.github/scripts/check_lighthouse_timings.py`` in
+        ``accessibility.yml`` (``docs/adr/0010``). Putting a line back in ``_NOT_ENFORCED`` is
+        allowed and is sometimes the honest answer; it costs a written reason and a ledger row
+        that says NONE, and this test failing is how that cost gets paid deliberately.
         """
-        ledger = re.sub(r"\s+", " ", (_ROOT / "docs" / "ROADMAP.md").read_text(encoding="utf-8"))
-        for _, metric in self._NOT_STATICALLY_ENFORCEABLE:
-            assert metric in ledger, (
-                f"the metrics ledger no longer names {metric}, which is enforced by nothing. A "
-                "gate this project does not have has to be visible in the file that lists the "
-                "gates it does."
+        assert self._NOT_ENFORCED == {}, (
+            f"{sorted(self._NOT_ENFORCED)} is declared enforced by nothing. That is a legitimate "
+            "answer, and it has to be visible: give the reason here in a sentence that says what "
+            "a checker cannot see, and add the row to the metrics ledger with Gate: NONE, the "
+            "way the timing lines carried it until docs/adr/0010."
+        )
+
+    def test_the_ledger_does_not_claim_a_gate_the_timing_lines_do_not_have(self) -> None:
+        """The ledger and the register have to agree about which lines are gated.
+
+        Before ADR 0010 this test asserted the opposite, that the ledger still named the three
+        metrics as ungated. The direction changed with the gate; what did not change is that the
+        two are checked against each other rather than maintained by memory, because the whole
+        defect this class exists for is a document describing an enforcement that was not there.
+        """
+        ledger = (_ROOT / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
+        rows = [line for line in ledger.splitlines() if "largest-contentful-paint" in line]
+        assert rows, (
+            "the metrics ledger no longer names largest-contentful-paint at all. Every line of "
+            "the budget file is gated now, and the ledger is where this project says so."
+        )
+        for row in rows:
+            assert "| NONE |" not in row, (
+                "the metrics ledger still records the timing budget as enforced by nothing, "
+                "while accessibility.yml gates it. One of the two is wrong."
+            )
+            assert "check_lighthouse_timings" in row, (
+                "the ledger's timing row does not name the check that enforces it, which is the "
+                "one thing a reader needs to go and confirm the row"
             )

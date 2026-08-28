@@ -10,6 +10,20 @@ file is the human-readable one.
 
 ### Added
 
+- **The timing budget is a gate, and it was calibrated on the runner rather than on a laptop
+  ([ADR 0010](docs/adr/0010-the-timing-budget-becomes-a-gate-after-the-runner-was-measured.md)).**
+  ADR 0008 left largest contentful paint, cumulative layout shift and total blocking time
+  enforced by nothing, with the reason and a precondition: measure what `accessibility.yml`'s own
+  runner reports, on the largest page and not only the home page. That measurement landed first
+  and separately (run 33129896655: 751.7 ms and 1052.4 ms against a 1500 ms line, within a
+  millisecond of the laptop's figures, because lighthouse throttles by simulation), and this is
+  the gate it licensed. `.github/scripts/check_lighthouse_timings.py` reads the budget out of the
+  file and fails on a metric over budget, on a metric a report does not carry, and on a report
+  that was never written; a budget file with no timing lines exits 2 rather than passing over
+  everything, which is the state the whole file was in while three documents called it a gate.
+  The metrics ledger's last `Gate: NONE` row becomes AUTO, and
+  `TestEveryBudgetLineIsAccountedFor`'s unenforced register is now empty.
+
 - **The transfer-size budget is a gate, and every line of the budget file is accounted for
   ([ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md)).**
   `lighthouse-budget.json` had its resource *counts* moved into `make verify` when Lighthouse
