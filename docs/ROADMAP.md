@@ -113,30 +113,65 @@ those institutions must render as outside the frame rather than as institutions 
 nothing, stays written in ADR 0007 for whoever reopens this. ADR 0009 names the measurement that
 would reopen it.
 
-**Phase 5. The two accessibility artifacts recorded as open.** A human assistive-technology
-walkthrough and an ACR or VPAT, open in `docs/RESPONSIBLE-TECH-AUDITS.md` since 2026-08-07, where
-the automated evidence is explicitly stated not to substitute for them. Neither is code and
-neither can be produced by a gate; they need a person with a screen reader and a document written
-by hand.
+**Phase 5. The two accessibility artifacts recorded as open. Blocked on a person.** A human
+assistive-technology walkthrough and an ACR or VPAT, open in `docs/RESPONSIBLE-TECH-AUDITS.md`
+since 2026-08-07, where the automated evidence is explicitly stated not to substitute for them.
 
-**Phase 6. The first release (milestone 4).** Supersedes ADR 0001 and brings with it the two
-artifacts the security declarations name as required at that point, an SBOM and signing, plus the
-hardened release workflow, the CHANGELOG's first tagged section, and the internationalization
-work `docs/I18N.md` defers to exactly this moment: the page templates' strings into a message
-catalog, with the five classification tokens kept as machine keys in the CSV export and
-translated only at the presentation layer. Milestone 4 is the first release and this sequence
-does not subdivide it away.
+- *Blocked by:* both are records of a human evaluation. A walkthrough is what somebody found
+  operating the site with a screen reader and a keyboard, and an ACR is a conformance claim
+  attributed to whoever evaluated it. Neither can be produced from the automated evidence without
+  the resulting document being a fabrication, which is the one thing this project cannot ship.
+- *Unblocked by:* one person, one session with NVDA or VoiceOver and the keyboard, on the six
+  page classes; then the ACR written from what that session found, signed by them. The suite in
+  `make verify` is the input to that session, not a substitute for it.
 
-**Owner-gated, and therefore not scheduled here.** Deploying `disclosed.ask` is the owner's
-decision (`deploy/README.md`); applying it moves the observability tier above, adds a
-subprocessor record to the privacy inventory and reopens the EU AI Act question. Issues #36 and
-#37 change the grading contract itself and are marked as needing the owner's decision rather than
-an implementer's.
+**Phase 6. The first release (milestone 4). Blocked on the owner's decision to cut it.** It
+supersedes `docs/adr/0001-no-versioned-release.md`, which is a decision this sequence does not
+get to make. What it brings with it is recorded in the audit's section F and in `docs/I18N.md`,
+and the parts are listed here so that "blocked" names something specific:
+
+- **The cut itself.** Owner's. Nothing below is worth doing before it is made, because a release
+  workflow nobody has run is a configuration file nobody has read, which is the defect phases 1
+  and 2 of this sequence existed to remove.
+- **SBOM and signing.** Named in the audit as required at the first release and N/A until then.
+  Signing needs key material or an OIDC identity that does not exist yet; an SBOM needs a format
+  decision and the dev dependency that emits it, which is an owner call about this repository's
+  dependency surface rather than an implementation detail. Neither is written here, and neither is
+  stubbed.
+- **Internationalization.** `docs/I18N.md` defers it *to* the first release and records the entry
+  point: the page templates' strings into a message catalog, with the five classification tokens
+  kept as machine keys in the CSV export and translated only at the presentation layer. That is a
+  recorded decision with a reason, so it is not started early.
+- **The CHANGELOG's first tagged section.** Mechanical, and it is the cut.
+
+**Owner-gated, and therefore not scheduled here.**
+
+- **Deploying `disclosed.ask`** (`deploy/README.md`). Applying the template moves the
+  observability tier above, adds a subprocessor record to the privacy inventory and reopens the
+  EU AI Act question. *Unblocked by:* the owner deciding to apply it, with an AWS account and the
+  model access it names.
+- **Issues #36 and #37**, both marked "decision needed (owner)". #36 would move open-admissions
+  institutions from `missing` to `not_applicable` and change the README's headline figure; #37
+  would change which statute the athletics gap is argued from. Both change the grading contract,
+  which is the product. *Unblocked by:* the owner choosing, in the issue.
 
 **Decided, and therefore not on this list.** Milestone 2, the veterans-page grading rule, stays
 ungraded because no universal publication duty exists, and a rule about who a duty reaches is
 worthless when the duty does not exist. That is a decision with a reason. Carrying it as pending
-work would misdescribe it.
+work would misdescribe it, and building it would contradict the record.
+
+### Status of the sequence
+
+| Phase | State |
+|---|---|
+| 1. The budget file is read where a static checker can read it | **Built** (ADR 0008) |
+| 2. The timing budget, after the runner was measured | **Built** (ADR 0010) |
+| 3. What the registry publishes that a duty could be graded against | **Built** (ADR 0009) |
+| 4. The CTDL adapter | **Not built, decided** by phase 3's measurement |
+| 5. Human accessibility walkthrough and ACR | **Blocked** on a person operating a screen reader |
+| 6. The first release | **Blocked** on the owner's decision to cut it |
+| Deploying `disclosed.ask`; issues #36, #37 | **Blocked**, owner decisions |
+| Milestone 2, the veterans rule | **Decided** against, with a reason |
 
 ## Observability
 
