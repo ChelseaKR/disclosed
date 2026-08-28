@@ -88,11 +88,44 @@ jobs:
             --output=json --output-path=/tmp/home.json --quiet --chrome-flags="--headless" \
             --budget-path=lighthouse-budget.json \
             --only-categories=accessibility,best-practices,seo,performance
-          for page in methodology national census state/CA institution/110468; do
+          # state/CA is the largest page the generator produces, and it is the one a timing
+          # budget is about: the home page is a tenth of its size, so a timing measured only
+          # there is a measurement of the easiest page in the site. It gets the performance
+          # category for that reason; the other four do not need it.
+          npx --yes lighthouse@12 http://127.0.0.1:8000/state/CA/ \
+            --output=json --output-path=/tmp/CA.json --quiet --chrome-flags="--headless" \
+            --budget-path=lighthouse-budget.json \
+            --only-categories=accessibility,performance
+          for page in methodology national census institution/110468; do
             npx --yes lighthouse@12 "http://127.0.0.1:8000/${page}/" \
               --output=json --output-path="/tmp/$(basename "$page").json" --quiet \
               --chrome-flags="--headless" --budget-path=lighthouse-budget.json \
               --only-categories=accessibility
+          done
+
+      # ADR 0008 said the three timing lines of lighthouse-budget.json would not become a gate
+      # until this runner's own numbers were known, because the numbers in that ADR are a
+      # laptop's and 1052 ms of a 1500 ms line is not headroom to calibrate CI on. This step is
+      # that measurement. It reports and does not fail; the commit that follows it in this branch
+      # is the gate, written against what this printed.
+      - name: Measure the timings this runner reports (ADR 0008 precondition, not a gate)
+        run: |
+          for report in /tmp/home.json /tmp/CA.json; do
+            python -c "
+          import json, sys
+          data = json.load(open(sys.argv[1]))
+          audits = data['audits']
+          print(sys.argv[1], 'lighthouse', data['lighthouseVersion'])
+          for metric in ('largest-contentful-paint', 'cumulative-layout-shift',
+                         'total-blocking-time', 'first-contentful-paint'):
+              audit = audits.get(metric)
+              print('  ', metric, 'missing' if audit is None else audit['numericValue'])
+          summary = audits.get('resource-summary')
+          if summary is not None:
+              for item in summary['details']['items']:
+                  if item['resourceType'] in ('document', 'total'):
+                      print('  ', item['resourceType'], 'transferSize', item['transferSize'])
+          " "$report"
           done
 
       - name: Require 100 on accessibility
