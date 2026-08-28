@@ -244,3 +244,38 @@ says "on any new data source"; this is that.
   runs offline from three committed inputs. The one network verb (`disclosed registry-fetch`) is a
   read-only GET against a fixed scheme and host with an urlencoded query, waived at the line for
   the same scanner finding, and with the same reason, as the two existing adapters.
+
+## Addendum 2026-08-27: the budget file is read, and what still is not
+
+Appended rather than edited, per the append-only rule above. Section E states, under
+**Budgets**, that "`lighthouse-budget.json` budgets every resource type except the document at
+zero, so a script, font, image, or third-party request is a build failure." That sentence was
+already known to be wrong about the mechanism when it was written down, and the correction lived
+in the README rather than here. Both halves are now accurate, and the difference between them is
+recorded rather than smoothed over.
+
+- **E Accessibility, budgets, corrected and extended.** Lighthouse enforces nothing in that file:
+  `--budget-path` never makes it exit non-zero and `lighthouse@12` (12.8.2) emits no budget audit,
+  reconfirmed on 2026-08-27. The **resource counts** are enforced instead by
+  `tests/test_accessibility.py::TestTheResourceBudget` in `make verify`, over one page of each
+  kind and again over all 617 pages of the committed build. As of `docs/adr/0008` the
+  **transfer sizes** are enforced there too, by `::TestTheTransferSizeBudget`, reading the
+  `resourceSizes` lines out of the budget file rather than restating them, and holding the bytes
+  the generator writes to the 80 KiB document line. The largest published page is 65.5 KiB, which
+  the README states and a test recomputes, so the headroom is a published figure and not an
+  assumption.
+- **What is still enforced by nothing, said here as well as in the ledger.** The three timing
+  lines, largest contentful paint, cumulative layout shift and total blocking time. They need a
+  rendering engine. Measured locally on 2026-08-27 with `lighthouse@12` against the built site:
+  home 752 ms LCP, state/CA 1,052 ms, against the file's 1,500 ms line, with a layout shift and a
+  blocking time of exactly zero on both. Those are a laptop's numbers, not the CI runner's, and
+  ADR 0008 records the decision to measure the runner before gating rather than calibrate a gate
+  on the wrong machine.
+- **The class, not only the instance.** `::TestEveryBudgetLineIsAccountedFor` fails the build on
+  any line of `lighthouse-budget.json` that is neither enforced by a named check nor declared
+  unenforceable with a written reason, and fails equally on a register entry for a line the file
+  no longer carries. The reason this exists is in this file's own history: a control described
+  here as automated, which nothing was running.
+- **No new data, no new network path, no new secret.** This addendum changes no item in the data
+  inventory in section C and adds no runtime code. The measurement above ran locally against a
+  site built from committed artifacts.

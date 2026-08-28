@@ -10,6 +10,24 @@ file is the human-readable one.
 
 ### Added
 
+- **The transfer-size budget is a gate, and every line of the budget file is accounted for
+  ([ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md)).**
+  `lighthouse-budget.json` had its resource *counts* moved into `make verify` when Lighthouse
+  turned out to enforce none of the file; the `resourceSizes` lines did not move with them, and
+  the metrics ledger has carried a "Gate: NONE" row ever since. They move now:
+  `tests/test_accessibility.py::TestTheTransferSizeBudget` holds every page of the six-page
+  fixture and all 617 pages of the committed build to the file's own 80 KiB document and total
+  lines, reading the numbers out of the file rather than restating them, and reporting a page
+  that fetches something as unweighable rather than as a zero it invented. The largest published
+  page, 65.5 KiB, is now a README figure a test recomputes from the build, because a budget with
+  a hundredfold of slack passes for the same reason a gate that cannot fail does.
+  `::TestEveryBudgetLineIsAccountedFor` closes the class rather than the instance: a budget line
+  that is neither enforced by a named check nor declared unenforceable with a written reason
+  fails the build, and so does a register entry naming a line the file no longer carries. The
+  three timing lines stay enforced by nothing, with the reason, the local measurement (home
+  752 ms LCP, state/CA 1,052 ms against a 1,500 ms line, CLS and TBT exactly 0) and the
+  precondition for gating them written down; a test fails if the ledger stops saying so.
+
 - **The Credential Registry join, measured before an adapter is designed around it
   ([ADR 0007](docs/adr/0007-the-credential-registry-join-is-measured-before-it-is-adapted.md)).**
   `disclosed.sources.credential_registry` walks `resource_type=organization` to the registry's own

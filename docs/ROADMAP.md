@@ -59,6 +59,72 @@ milestones, in order:
 4. **First release.** Supersedes `docs/adr/0001-no-versioned-release.md` and brings the
    hardened release workflow with it.
 
+## The phase sequence
+
+The milestones above say what gets built. This says in what order, over what horizon, what each
+phase is not allowed to do, and which of them is finished. It is a plan and not a promise: a
+phase whose precondition fails is a phase that gets rewritten, which has already happened here
+once, when milestone 1's own precondition was measured on 2026-08-27 and came back the opposite
+way round from the note that set it (`docs/adr/0007`).
+
+Roughly: phases 2 and 3 are the coming year's work, phases 4 to 6 the two years after it, and
+phase 4 may never happen at all, which is the reason phase 3 comes first rather than a hedge.
+
+**Phase 1. The budget file is read where a static checker can read it. Built, 2026-08-27**
+(`docs/adr/0008`). The `resourceSizes` lines of `lighthouse-budget.json` are enforced in `make
+verify` over the fixture and over all 617 pages of the committed build; every line of that file
+is now either enforced by a named check or declared unenforceable with a written reason, and a
+line in neither register fails the build. The three timing lines are still enforced by nothing,
+and the ledger row above says so.
+
+**Phase 2. The timing budget, after the runner has been measured.** Precondition, from ADR 0008:
+record what `accessibility.yml`'s own runner reports for LCP, CLS and TBT, on the largest page
+and not only on the home page, over enough runs to know the spread. Locally the largest page
+reports 1,052 ms against a 1,500 ms line, and that is not headroom to calibrate a CI gate from a
+laptop. What this phase may not do: gate on a number nobody measured, or widen the budget to turn
+a red gate green without the argument for the wider budget appearing in the README.
+
+**Phase 3. What the Credential Registry publishes that a duty could be graded against.**
+Milestone 1's second open question, which ADR 0007 states plainly is not answered by a join: this
+project grades published disclosures against duties, and the join says only that the two corpora
+share institutions. The measurement takes the shape ADR 0007 set: walk once, commit the capture,
+reduce it to what the question needs, and publish the number even when the answer is that the
+registry carries no duty worth grading and the adapter should not be written. What this phase may
+not do: write the adapter and measure from its output, which ADR 0007 rejected by name, because
+an adapter that exists is an adapter somebody will publish figures from.
+
+**Phase 4. The CTDL adapter, if and only if phase 3 finds a duty.** It inherits a limit before it
+inherits anything else: roughly a quarter of the IPEDS directory is not in the registry at all,
+so those institutions have to render as outside the frame and never as institutions that
+disclosed nothing. That is a sixth thing a page can say about a field, beside the five
+classifications, and it needs its own name, its own rendering and its own tests before it needs
+an adapter.
+
+**Phase 5. The two accessibility artifacts recorded as open.** A human assistive-technology
+walkthrough and an ACR or VPAT, open in `docs/RESPONSIBLE-TECH-AUDITS.md` since 2026-08-07, where
+the automated evidence is explicitly stated not to substitute for them. Neither is code and
+neither can be produced by a gate; they need a person with a screen reader and a document written
+by hand.
+
+**Phase 6. The first release (milestone 4).** Supersedes ADR 0001 and brings with it the two
+artifacts the security declarations name as required at that point, an SBOM and signing, plus the
+hardened release workflow, the CHANGELOG's first tagged section, and the internationalization
+work `docs/I18N.md` defers to exactly this moment: the page templates' strings into a message
+catalog, with the five classification tokens kept as machine keys in the CSV export and
+translated only at the presentation layer. Milestone 4 is the first release and this sequence
+does not subdivide it away.
+
+**Owner-gated, and therefore not scheduled here.** Deploying `disclosed.ask` is the owner's
+decision (`deploy/README.md`); applying it moves the observability tier above, adds a
+subprocessor record to the privacy inventory and reopens the EU AI Act question. Issues #36 and
+#37 change the grading contract itself and are marked as needing the owner's decision rather than
+an implementer's.
+
+**Decided, and therefore not on this list.** Milestone 2, the veterans-page grading rule, stays
+ungraded because no universal publication duty exists, and a rule about who a duty reaches is
+worthless when the duty does not exist. That is a decision with a reason. Carrying it as pending
+work would misdescribe it.
+
 ## Observability
 
 Tier C (library/CLI). The project is a CLI that reads public archives and writes files; the
@@ -81,7 +147,9 @@ Per QUALITY-AND-METRICS-STANDARD's ledger shape. Values as measured 2026-08-07.
 | Lint, format, types | zero findings | ruff check + ruff format --check + strict mypy in `make verify` and CI, over `src`, `tests` and `.github/scripts` | AUTO |
 | Lighthouse accessibility | == 100 on all six page classes | `.github/workflows/accessibility.yml`; missing report or missing category fails | AUTO |
 | Resource counts | 0 of every non-document type, on every page | `tests/test_accessibility.py::TestTheResourceBudget` (one page of each kind) and `::TestTheResourceBudgetOverThePublishedSite` (all 617 pages of the committed build), both in `make verify` | AUTO |
-| Resource transfer sizes and timings | as stated in `lighthouse-budget.json` | **nothing** - `--budget-path` never fails a Lighthouse run and Lighthouse 12 emits no budget audit; recorded here rather than claimed as a gate | NONE |
+| Resource transfer sizes | every page inside the `resourceSizes` lines of `lighthouse-budget.json` (80 KiB document, 80 KiB total, zero for every other type) | `tests/test_accessibility.py::TestTheTransferSizeBudget` in `make verify`, over one page of each kind and again over all 617 pages of the committed build, reading the numbers out of the budget file rather than restating them; the largest published page (65.5 KiB) is a README figure recomputed from the build (ADR 0008) | AUTO |
+| Lighthouse timings (`largest-contentful-paint`, `cumulative-layout-shift`, `total-blocking-time`) | as stated in `lighthouse-budget.json` | **nothing** - `--budget-path` never fails a Lighthouse run and Lighthouse 12 emits no budget audit, and the three timing lines need a rendering engine no static checker has. Measured locally 2026-08-27 with `lighthouse@12`: home 752 ms LCP, state/CA 1052 ms, against a 1500 ms line, CLS and TBT exactly 0 on both. A laptop is not the runner, so ADR 0008 puts the runner's own numbers ahead of the gate. Recorded here rather than claimed as a gate | NONE |
+| Every budget line is in one register or the other | no line of `lighthouse-budget.json` enforced by nobody and unnamed | `tests/test_accessibility.py::TestEveryBudgetLineIsAccountedFor`; a new line that is neither enforced by a named check nor declared unenforceable with a reason fails `make verify`, and a register entry for a line the file no longer carries fails too | AUTO |
 | Static WCAG checks | zero violations | `tests/test_accessibility.py` (contrast both themes, landmarks, headings, table semantics, colour-independence) in `make verify` | AUTO |
 | Committed artifacts match their generators | byte-for-byte | tests tying `data/dataset.csv` / `data/national.json` to the code that writes them | AUTO |
 | SHA-pinned `uses:` | 100% | full 40-char SHAs in all workflows; Dependabot keeps them current | AUTO |
@@ -103,5 +171,5 @@ README conformance table.
 | Stage | Applicable? | Gate |
 |---|---|---|
 | 6. a11y | **Applicable** | Static WCAG suite in `make verify` + Lighthouse 100 gate in `accessibility.yml` |
-| 7. perf | **Applicable (budget form)** | Zero-subresource budget enforced statically over every page in `make verify`; the transfer-size and timing lines of `lighthouse-budget.json` are enforced by nothing and the ledger row says so. No load-test surface exists (static files, no server) |
+| 7. perf | **Applicable (budget form)** | Zero-subresource budget **and** the transfer-size lines of `lighthouse-budget.json` enforced statically over every page in `make verify`; the three timing lines are enforced by nothing and the ledger row says so, with ADR 0008 naming what has to be measured before they become a gate. No load-test surface exists (static files, no server) |
 | 8. responsible | **Applicable** | `docs/RESPONSIBLE-TECH-AUDITS.md`; the ethics constraints are code (classifier, scope refusals) and are tested |

@@ -368,6 +368,38 @@ the resource summary either. A gate that cannot fail is worse than no gate, beca
 the same colour. The budget file stays as the declaration of intent; the enforcement is now
 somewhere it can fail.
 
+### The budget file is read now, not only cited
+
+Moving the counts out of that file fixed one line and left the rest of it in the state the whole
+file had been in. The `resourceSizes` lines went on being cited here, in the workflow and in the
+metrics ledger, and went on being enforced by nothing; the ledger said so in as many words, which
+is honest and is not the same as a gate. They are enforced now, in `make verify`, over the
+six-page fixture and again over all 617 published pages: **80 KiB** for the document and **80 KiB**
+for the page in total, read out of `lighthouse-budget.json` rather than copied out of it, so
+widening the budget widens the test and has to be argued for here. The largest page the committed
+report renders is California's state page at **65.5 KiB**, and that figure is in this sentence
+because a budget with a hundredfold of slack passes for the same reason a gate that cannot fail
+does; a test recomputes it from the build, so the day a template change eats the headroom this
+paragraph has to say so.
+
+Two things it does not claim. It reads the bytes the generator writes, while Lighthouse's
+`transferSize` is what crossed the wire: the body after any content-encoding, plus the response
+headers. Served uncompressed, the state/CA page was 67,061 bytes on disk against 67,250 of
+`transferSize`, the difference being the headers; served from anything that compresses, the
+on-disk figure is far the larger of the two. So the static check is stricter than the wire in the
+ordinary case and looser by a few hundred bytes in the pathological one, and it is described that
+way rather than as the same measurement. And the three timing lines, largest contentful paint,
+cumulative layout shift and total blocking time, are still enforced by nothing: they need a
+rendering engine, and a paint time is a fact about a machine as much as about a document.
+Measured locally on 2026-08-27 with `lighthouse@12`, the home page reported an LCP of 752 ms and
+the state/CA page 1052 ms against the 1500 ms line, both with a layout shift and a blocking time
+of exactly zero. A laptop is not the CI runner, and 1052 of 1500 is not the headroom to calibrate
+a gate on, so
+[ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md) records
+that the runner gets measured before those lines become a gate, which is the rule ADR 0007 had
+just finished writing down for a different question. Until then the ledger row says NONE, and a
+test fails if the ledger stops saying it.
+
 ## Development
 
 ```sh
@@ -420,7 +452,7 @@ skips.
 | Documentation | Applies - `CHANGELOG.md`, `CITATION.cff`, `SECURITY.md`, `CONTRIBUTING.md`, ADR log (`docs/adr/`), roadmap and metrics ledger (`docs/ROADMAP.md`) |
 | Quality & Metrics | Applies - metrics ledger with AUTO/REVIEW gates in `docs/ROADMAP.md` |
 | Release & Versioning | N/A - nothing versioned is released; committed data plus a rebuildable static site, no downstream consumers (`docs/adr/0001-no-versioned-release.md`) |
-| Performance | Applies - zero non-document subresources, enforced in `make verify` over one page of every kind and again over all 617 pages of the committed build (`tests/test_accessibility.py`); `lighthouse-budget.json` states the same budget but Lighthouse enforces none of it, see Accessibility above. Transfer-size and timing budgets remain unenforced. No server-side surface to load-test |
+| Performance | Applies - zero non-document subresources **and** the transfer-size budget, both enforced in `make verify` over one page of every kind and again over all 617 pages of the committed build (`tests/test_accessibility.py`), with the sizes read out of `lighthouse-budget.json` rather than copied from it; Lighthouse itself enforces none of that file, see Accessibility above. The three timing lines remain enforced by nothing and the ledger row says NONE ([ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md)); a budget line that is in neither register fails the build. No server-side surface to load-test |
 | Incident Response | Applies - no incidents to date; postmortems will live in `docs/incidents/` |
 | Data Governance | Applies - public federal datasets only, each payload names its source and coverage in its `scope` block; data inventory in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | AI Development Measurement | Applies - declared in `docs/ROADMAP.md` metrics ledger |
