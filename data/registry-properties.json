@@ -1,0 +1,640 @@
+{
+  "distinct_property_names": 62,
+  "distinct_property_sets": 442,
+  "distinct_property_sets_among_joined": 34,
+  "identifier_type_names": [
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "EIN",
+      "organizations": 7526
+    },
+    {
+      "joined": true,
+      "joined_rate": 0.9817351598173516,
+      "name": "IPEDS NCES Data Year",
+      "organizations": 4730
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "CO Public Schools",
+      "organizations": 1599
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "Local Education Area",
+      "organizations": 1322
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "State Occupational License Data",
+      "organizations": 1170
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "Provider ID",
+      "organizations": 841
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "Provider Unique ID",
+      "organizations": 743
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "Reporting state",
+      "organizations": 730
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "NCES LEAID",
+      "organizations": 728
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "Campus ID",
+      "organizations": 662
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "Commuting Area",
+      "organizations": 434
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "Provider_System_ID",
+      "organizations": 425
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "State LEAID",
+      "organizations": 381
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "CO Non Public Schools",
+      "organizations": 353
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "NJDOL Provider ID",
+      "organizations": 304
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "Provider System ID",
+      "organizations": 211
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "CEEB",
+      "organizations": 47
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "State School ID",
+      "organizations": 36
+    },
+    {
+      "joined": true,
+      "joined_rate": 0.0062266500622665,
+      "name": "Provider ID",
+      "organizations": 30
+    },
+    {
+      "joined": true,
+      "joined_rate": 0.0026982150269821504,
+      "name": "Campus ID",
+      "organizations": 13
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "Reporting State",
+      "organizations": 13
+    },
+    {
+      "joined": true,
+      "joined_rate": 0.0006226650062266501,
+      "name": "Identifier",
+      "organizations": 3
+    },
+    {
+      "joined": true,
+      "joined_rate": 0.00020755500207555002,
+      "name": "EIN",
+      "organizations": 1
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "Arkansas GI-Bill Approved Schools Data Year",
+      "organizations": 1
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "IPEDS NCES Data Year",
+      "organizations": 1
+    },
+    {
+      "joined": false,
+      "joined_rate": null,
+      "name": "MCC TAP School Code",
+      "organizations": 1
+    }
+  ],
+  "kind": "credential-registry-property-report",
+  "largest_joined_property_set": {
+    "organizations": 4627,
+    "properties": [
+      "ceterms:address",
+      "ceterms:agentSectorType",
+      "ceterms:agentType",
+      "ceterms:ctid",
+      "ceterms:description",
+      "ceterms:fein",
+      "ceterms:identifier",
+      "ceterms:ipedsID",
+      "ceterms:lifeCycleStatusType",
+      "ceterms:name",
+      "ceterms:opeID",
+      "ceterms:subjectWebpage"
+    ],
+    "share_of_joined": 0.9603569946035699
+  },
+  "organizations": 33809,
+  "properties": [
+    {
+      "joined_organizations": 4818,
+      "joined_rate": 1.0,
+      "organizations": 33809,
+      "property": "ceterms:agentSectorType",
+      "rate": 1.0
+    },
+    {
+      "joined_organizations": 4818,
+      "joined_rate": 1.0,
+      "organizations": 33809,
+      "property": "ceterms:agentType",
+      "rate": 1.0
+    },
+    {
+      "joined_organizations": 4818,
+      "joined_rate": 1.0,
+      "organizations": 33809,
+      "property": "ceterms:ctid",
+      "rate": 1.0
+    },
+    {
+      "joined_organizations": 4818,
+      "joined_rate": 1.0,
+      "organizations": 33809,
+      "property": "ceterms:description",
+      "rate": 1.0
+    },
+    {
+      "joined_organizations": 4818,
+      "joined_rate": 1.0,
+      "organizations": 33809,
+      "property": "ceterms:name",
+      "rate": 1.0
+    },
+    {
+      "joined_organizations": 4818,
+      "joined_rate": 1.0,
+      "organizations": 33809,
+      "property": "ceterms:subjectWebpage",
+      "rate": 1.0
+    },
+    {
+      "joined_organizations": 4818,
+      "joined_rate": 1.0,
+      "organizations": 33614,
+      "property": "ceterms:lifeCycleStatusType",
+      "rate": 0.9942323050075423
+    },
+    {
+      "joined_organizations": 4818,
+      "joined_rate": 1.0,
+      "organizations": 33540,
+      "property": "ceterms:address",
+      "rate": 0.9920435387027123
+    },
+    {
+      "joined_organizations": 4733,
+      "joined_rate": 0.9823578248235783,
+      "organizations": 20125,
+      "property": "ceterms:identifier",
+      "rate": 0.5952557011446656
+    },
+    {
+      "joined_organizations": 52,
+      "joined_rate": 0.010792860107928601,
+      "organizations": 19161,
+      "property": "ceterms:email",
+      "rate": 0.5667425833357982
+    },
+    {
+      "joined_organizations": 4710,
+      "joined_rate": 0.9775840597758406,
+      "organizations": 5565,
+      "property": "ceterms:fein",
+      "rate": 0.16460114170782927
+    },
+    {
+      "joined_organizations": 4793,
+      "joined_rate": 0.9948111249481113,
+      "organizations": 4969,
+      "property": "ceterms:opeID",
+      "rate": 0.1469726995770357
+    },
+    {
+      "joined_organizations": 4818,
+      "joined_rate": 1.0,
+      "organizations": 4818,
+      "property": "ceterms:ipedsID",
+      "rate": 0.1425064331982608
+    },
+    {
+      "joined_organizations": 10,
+      "joined_rate": 0.0020755500207555004,
+      "organizations": 1296,
+      "property": "ceterms:offers",
+      "rate": 0.03833298825756455
+    },
+    {
+      "joined_organizations": 11,
+      "joined_rate": 0.00228310502283105,
+      "organizations": 1191,
+      "property": "ceterms:owns",
+      "rate": 0.035227306338548904
+    },
+    {
+      "joined_organizations": 1,
+      "joined_rate": 0.00020755500207555002,
+      "organizations": 628,
+      "property": "ceterms:parentOrganization",
+      "rate": 0.018574935668017392
+    },
+    {
+      "joined_organizations": 13,
+      "joined_rate": 0.0026982150269821504,
+      "organizations": 459,
+      "property": "ceterms:image",
+      "rate": 0.013576266674554112
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 254,
+      "property": "ceterms:supportServiceStatementDescription",
+      "rate": 0.00751279245171404
+    },
+    {
+      "joined_organizations": 17,
+      "joined_rate": 0.0035284350352843504,
+      "organizations": 252,
+      "property": "ceterms:accreditedBy",
+      "rate": 0.007453636605637552
+    },
+    {
+      "joined_organizations": 18,
+      "joined_rate": 0.0037359900373599006,
+      "organizations": 187,
+      "property": "ceterms:socialMedia",
+      "rate": 0.005531071608151676
+    },
+    {
+      "joined_organizations": 17,
+      "joined_rate": 0.0035284350352843504,
+      "organizations": 167,
+      "property": "ceterms:foundingDate",
+      "rate": 0.004939513147386791
+    },
+    {
+      "joined_organizations": 14,
+      "joined_rate": 0.0029057700290577005,
+      "organizations": 164,
+      "property": "ceterms:missionAndGoalsStatementDescription",
+      "rate": 0.004850779378272058
+    },
+    {
+      "joined_organizations": 13,
+      "joined_rate": 0.0026982150269821504,
+      "organizations": 145,
+      "property": "ceterms:missionAndGoalsStatement",
+      "rate": 0.004288798840545417
+    },
+    {
+      "joined_organizations": 13,
+      "joined_rate": 0.0026982150269821504,
+      "organizations": 143,
+      "property": "ceterms:availabilityListing",
+      "rate": 0.004229642994468929
+    },
+    {
+      "joined_organizations": 14,
+      "joined_rate": 0.0029057700290577005,
+      "organizations": 128,
+      "property": "ceterms:serviceType",
+      "rate": 0.0037859741488952647
+    },
+    {
+      "joined_organizations": 15,
+      "joined_rate": 0.00311332503113325,
+      "organizations": 127,
+      "property": "ceterms:duns",
+      "rate": 0.00375639622585702
+    },
+    {
+      "joined_organizations": 14,
+      "joined_rate": 0.0029057700290577005,
+      "organizations": 111,
+      "property": "ceterms:hasVerificationService",
+      "rate": 0.0032831494572451124
+    },
+    {
+      "joined_organizations": 6,
+      "joined_rate": 0.0012453300124533001,
+      "organizations": 93,
+      "property": "ceterms:hasCostManifest",
+      "rate": 0.0027507468425567155
+    },
+    {
+      "joined_organizations": 18,
+      "joined_rate": 0.0037359900373599006,
+      "organizations": 92,
+      "property": "ceterms:keyword",
+      "rate": 0.0027211689195184713
+    },
+    {
+      "joined_organizations": 4,
+      "joined_rate": 0.0008302200083022001,
+      "organizations": 91,
+      "property": "ceterms:industryType",
+      "rate": 0.002691590996480227
+    },
+    {
+      "joined_organizations": 2,
+      "joined_rate": 0.00041511000415110004,
+      "organizations": 86,
+      "property": "ceterms:subOrganization",
+      "rate": 0.002543701381289006
+    },
+    {
+      "joined_organizations": 8,
+      "joined_rate": 0.0016604400166044002,
+      "organizations": 74,
+      "property": "ceterms:agentPurposeDescription",
+      "rate": 0.002188766304830075
+    },
+    {
+      "joined_organizations": 4,
+      "joined_rate": 0.0008302200083022001,
+      "organizations": 70,
+      "property": "ceterms:agentPurpose",
+      "rate": 0.0020704546126770976
+    },
+    {
+      "joined_organizations": 2,
+      "joined_rate": 0.00041511000415110004,
+      "organizations": 69,
+      "property": "ceterms:renews",
+      "rate": 0.0020408766896388535
+    },
+    {
+      "joined_organizations": 7,
+      "joined_rate": 0.0014528850145288502,
+      "organizations": 66,
+      "property": "ceterms:jurisdiction",
+      "rate": 0.0019521429205241207
+    },
+    {
+      "joined_organizations": 4,
+      "joined_rate": 0.0008302200083022001,
+      "organizations": 63,
+      "property": "ceterms:alternateName",
+      "rate": 0.001863409151409388
+    },
+    {
+      "joined_organizations": 1,
+      "joined_rate": 0.00020755500207555002,
+      "organizations": 61,
+      "property": "ceterms:revokes",
+      "rate": 0.0018042533053328996
+    },
+    {
+      "joined_organizations": 3,
+      "joined_rate": 0.0006226650062266501,
+      "organizations": 59,
+      "property": "ceterms:approvedBy",
+      "rate": 0.001745097459256411
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 27,
+      "property": "ceterms:identifierValue",
+      "rate": 0.0007986039220325949
+    },
+    {
+      "joined_organizations": 1,
+      "joined_rate": 0.00020755500207555002,
+      "organizations": 26,
+      "property": "ceterms:supportServiceStatement",
+      "rate": 0.0007690259989943506
+    },
+    {
+      "joined_organizations": 1,
+      "joined_rate": 0.00020755500207555002,
+      "organizations": 26,
+      "property": "ceterms:transferValueStatement",
+      "rate": 0.0007690259989943506
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 19,
+      "property": "ceterms:maintenanceProcess",
+      "rate": 0.0005619805377266408
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 14,
+      "property": "ceterms:appealProcess",
+      "rate": 0.00041409092253541957
+    },
+    {
+      "joined_organizations": 3,
+      "joined_rate": 0.0006226650062266501,
+      "organizations": 14,
+      "property": "ceterms:hasConditionManifest",
+      "rate": 0.00041409092253541957
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 14,
+      "property": "ceterms:naics",
+      "rate": 0.00041409092253541957
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 13,
+      "property": "ceterms:administrationProcess",
+      "rate": 0.0003845129994971753
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 13,
+      "property": "ceterms:complaintProcess",
+      "rate": 0.0003845129994971753
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 13,
+      "property": "ceterms:revocationProcess",
+      "rate": 0.0003845129994971753
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 12,
+      "property": "ceterms:department",
+      "rate": 0.00035493507645893105
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 11,
+      "property": "ceterms:developmentProcess",
+      "rate": 0.0003253571534206868
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 11,
+      "property": "ceterms:reviewProcess",
+      "rate": 0.0003253571534206868
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 7,
+      "property": "ceterms:transferValueStatementDescription",
+      "rate": 0.00020704546126770979
+    },
+    {
+      "joined_organizations": 1,
+      "joined_rate": 0.00020755500207555002,
+      "organizations": 6,
+      "property": "ceterms:recognizedBy",
+      "rate": 0.00017746753822946553
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 4,
+      "property": "ceterms:recognizedIn",
+      "rate": 0.00011831169215297702
+    },
+    {
+      "joined_organizations": 3,
+      "joined_rate": 0.0006226650062266501,
+      "organizations": 4,
+      "property": "ceterms:regulatedBy",
+      "rate": 0.00011831169215297702
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 3,
+      "property": "ceterms:accreditedIn",
+      "rate": 8.873376911473276e-05
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 3,
+      "property": "ceterms:approvedIn",
+      "rate": 8.873376911473276e-05
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 2,
+      "property": "ceterms:legalName",
+      "rate": 5.915584607648851e-05
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 1,
+      "property": "ceterms:approves",
+      "rate": 2.9577923038244256e-05
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 1,
+      "property": "ceterms:isicv4",
+      "rate": 2.9577923038244256e-05
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 1,
+      "property": "ceterms:regulatedIn",
+      "rate": 2.9577923038244256e-05
+    },
+    {
+      "joined_organizations": 0,
+      "joined_rate": 0.0,
+      "organizations": 1,
+      "property": "ceterms:sameAs",
+      "rate": 2.9577923038244256e-05
+    }
+  ],
+  "publishing_an_ipeds_id": 4818,
+  "scope": {
+    "coverage": 1.0,
+    "institutions": 33809,
+    "kind": "national",
+    "note": "Which CTDL property names appear on each of the 33809 organizations the Credential Registry publishes under resource_type=organization, walked to the registry's own stated total on 2026-08-28T00:36:37Z. Names only: no value is read, and no organization is graded, named or scored. Rates are given over two denominators that are never added together, the whole walk and the 4818 organizations that publish a typed ceterms:ipedsID, because the second is the only population this project could grade and the first is mostly training providers that were never in IPEDS.",
+    "source": "Credential Registry",
+    "states": 0,
+    "universe": 33809
+  },
+  "universal_over_joined": [
+    "ceterms:agentSectorType",
+    "ceterms:agentType",
+    "ceterms:ctid",
+    "ceterms:description",
+    "ceterms:name",
+    "ceterms:subjectWebpage",
+    "ceterms:lifeCycleStatusType",
+    "ceterms:address",
+    "ceterms:ipedsID"
+  ]
+}

@@ -1083,3 +1083,111 @@ class TestTheRegistryVerbs:
         assert cli.main(["registry-fetch", "--out", str(out)]) == 1
         assert not out.exists()
         assert "refusing to write an empty capture" in capsys.readouterr().err
+
+
+class TestTheRegistryPropertyVerbs:
+    """``registry-properties`` and ``registry-property-report``.
+
+    The first walks and captures which CTDL property names each organization publishes; the
+    second reduces that to the rates ``docs/adr/0009`` is argued from. Both refuse rather than
+    write: a property rate over a walk that did not reach the end is a rate over the front of an
+    offset-paginated set, which is the mistake ADR 0007 exists because this project already made.
+    """
+
+    def _capture(self, *, exhausted: bool = True) -> Any:
+        from disclosed.sources import credential_registry
+
+        return credential_registry.Capture(
+            organizations=[
+                credential_registry.Organization(
+                    ctid="ce-1",
+                    name="Example College",
+                    ipeds_id="201885",
+                    ope_id=None,
+                    org_types=("orgType:Postsecondary",),
+                    state="Ohio",
+                    homepage_host="example.edu",
+                    properties=("ceterms:ctid", "ceterms:ipedsID", "ceterms:name"),
+                    identifier_type_names=("IPEDS NCES Data Year",),
+                ),
+                credential_registry.Organization(
+                    ctid="ce-2",
+                    name="Example Training",
+                    ipeds_id=None,
+                    ope_id=None,
+                    org_types=("orgType:TrainingProvider",),
+                    state="Ohio",
+                    homepage_host="training.test",
+                    properties=("ceterms:ctid", "ceterms:name"),
+                ),
+            ],
+            pages=[],
+            total_stated=2,
+            exhausted=exhausted,
+            limit=None,
+            walked_at="2026-08-27T00:00:00Z",
+            finished_at="2026-08-27T00:00:10Z",
+            duplicates=0,
+            unreduced=0,
+        )
+
+    def test_a_census_is_written_and_then_reduced_to_a_report(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        census = tmp_path / "nested" / "properties.json"
+        monkeypatch.setattr(cli.credential_registry, "walk", lambda **kwargs: self._capture())
+        assert cli.main(["registry-properties", "--out", str(census)]) == 0
+        assert "property census over 2 organizations" in capsys.readouterr().out
+
+        report = tmp_path / "report.json"
+        assert (
+            cli.main(["registry-property-report", "--census", str(census), "--out", str(report)])
+            == 0
+        )
+        payload = json.loads(report.read_text())
+        assert payload["kind"] == "credential-registry-property-report"
+        assert payload["publishing_an_ipeds_id"] == 1
+        # Ordered by how many organizations publish each, then by name, the same order the
+        # properties table itself is in: ctid and name are on both organizations, ipedsID on one.
+        assert payload["universal_over_joined"] == [
+            "ceterms:ctid",
+            "ceterms:name",
+            "ceterms:ipedsID",
+        ]
+        assert "largest joined set" in capsys.readouterr().out
+
+    def test_a_walk_short_of_the_registrys_total_writes_nothing(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        out = tmp_path / "properties.json"
+        monkeypatch.setattr(
+            cli.credential_registry, "walk", lambda **kwargs: self._capture(exhausted=False)
+        )
+        assert cli.main(["registry-properties", "--out", str(out)]) == 1
+        assert not out.exists()
+        assert "property census failed" in capsys.readouterr().err
+
+    def test_a_failed_walk_writes_nothing(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        from disclosed.sources import credential_registry
+
+        def boom(**kwargs: Any) -> None:
+            raise credential_registry.RegistryError("the registry said no")
+
+        out = tmp_path / "properties.json"
+        monkeypatch.setattr(cli.credential_registry, "walk", boom)
+        assert cli.main(["registry-properties", "--out", str(out)]) == 1
+        assert not out.exists()
+
+    def test_reducing_something_that_is_not_a_census_writes_nothing(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        census = tmp_path / "wrong.json"
+        census.write_text(json.dumps({"kind": "credential-registry-capture"}), encoding="utf-8")
+        out = tmp_path / "report.json"
+        assert (
+            cli.main(["registry-property-report", "--census", str(census), "--out", str(out)]) == 1
+        )
+        assert not out.exists()
+        assert "not a property census" in capsys.readouterr().err
