@@ -182,7 +182,7 @@ stop-reporting event is newsworthy well before it touches a majority of institut
 | --- | --- | --- |
 | College Scorecard | **Live** | Public API. `DEMO_KEY` works for small runs; set `DATA_GOV_API_KEY` for a higher rate limit. |
 | IPEDS | **Live** | Public bulk directory file, no key and no quota. Adds required disclosures the Scorecard doesn't carry, and lets the same institution be checked against two federal sources. |
-| Credential Registry (CTDL) | **Open, joinable, adapter unwritten** | Public and unauthenticated. `GET /ce-registry/search?resource_type=credential` answered 200 with `x-total: 133346` on 2026-08-15 with no key and no headers; `/ce-registry/envelopes` answered 200 with `x-total: 395878` and a full `decoded_resource` per envelope. This row previously said "blocked", and that was our error, not theirs: see below. The join to the two federal corpora has now been measured rather than assumed, and it is good; the adapter is still unwritten, which is a different sentence. |
+| Credential Registry (CTDL) | **Open, joinable, and there is nothing here to grade** | Public and unauthenticated. `GET /ce-registry/search?resource_type=credential` answered 200 with `x-total: 133346` on 2026-08-15 with no key and no headers; `/ce-registry/envelopes` answered 200 with `x-total: 395878` and a full `decoded_resource` per envelope. This row previously said "blocked", and that was our error, not theirs: see below. The join to the two federal corpora was then measured rather than assumed, and it is good. What the registry publishes about those organizations was measured after it, and it is identity: nine properties on 100% of them, none of them a disclosure with a duty behind it, and 96% carrying an identical property set. No adapter is written, and [ADR 0009](docs/adr/0009-the-registry-publishes-identity-not-disclosure.md) says what would reopen that. |
 
 A partial fetch is treated as a failure, not as data. Truncation would understate disclosure across
 every institution that never arrived, which looks identical to a real reporting collapse.
@@ -254,7 +254,44 @@ None of this makes the adapter written. It makes the question the roadmap asked 
 Credential Registry adapter would join cleanly to roughly three quarters of the IPEDS directory
 on a published federal identifier, which is a real third source rather than a few percent
 dressed as one. What it would grade there, and whether CTDL carries a disclosure duty worth
-grading, is a separate question and is not answered here.
+grading, is a separate question and is answered next.
+
+### The second question, and the reason the adapter is not written
+
+The join says the two populations overlap. It says nothing about whether the overlap carries
+anything to grade, and this project grades published disclosures against duties. So the registry
+was walked a second time, counting which CTDL property *names* appear on each organization,
+never what is inside them: a required disclosure is present or it is not, and a property nobody
+publishes cannot be a disclosure anybody is failing to make.
+
+Across the whole walk, **62** distinct property names and **442** distinct property sets. Over
+the **4,818** organizations that publish an IPEDS id, twelve properties are on effectively all of
+them and then there is a cliff. Nine are on every single one (`ceterms:ctid`, `ceterms:name`,
+`ceterms:description`, `ceterms:address`, `ceterms:subjectWebpage`, `ceterms:agentType`,
+`ceterms:agentSectorType`, `ceterms:lifeCycleStatusType`, `ceterms:ipedsID`), then
+`ceterms:opeID` on 4,793, `ceterms:identifier` on 4,733 and `ceterms:fein` on 4,710. The next
+most common property in the whole set, `ceterms:email`, is on **52** of them, 1.1%.
+
+Every one of the twelve is identity, location, a self-description or a federal id. Not one is a
+disclosure with a duty behind it. The nearest thing the vocabulary has to a cost disclosure,
+`ceterms:hasCostManifest`, is on **6** of the 4,818, which is 0.12%.
+
+Two more facts settle what kind of records these are. **4,627** of the 4,818, or 96.0%, carry
+exactly the same twelve properties: 34 distinct property sets across 4,818 organizations, against
+442 across the registry as a whole. And **4,730** of them, 98.2%, carry a free-text identifier
+whose type name is `IPEDS NCES Data Year`, which is the value the join measurement already had to
+name as a year rather than a unit id. That is not four thousand institutions describing
+themselves; it is a directory loaded from IPEDS, dated to the collection year this project
+already reads from IPEDS directly.
+
+So the adapter is not written, and that is a finding rather than a delay.
+[ADR 0009](docs/adr/0009-the-registry-publishes-identity-not-disclosure.md) records it, along
+with what would reopen it: if the registry's postsecondary organizations began publishing
+`ceterms:hasCostManifest` or another property carrying a published duty at a rate that is not a
+rounding error, `make registry-properties` would say so, and that number would be the argument.
+The one stated limit on the finding is that it is about organizations. The registry's
+`resource_type=credential` set, 133,346 records, has not been walked, because a credential is not
+an institution and this project grades institutions.
 
 IPEDS states absence three different ways, all negative integers: `-1` not reported, `-2` not
 applicable, `-3` not available. They are not interchangeable and only the first counts against an

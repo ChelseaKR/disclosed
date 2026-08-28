@@ -37,13 +37,24 @@ milestones, in order:
    `disclosed registry-join` produce them; `data/registry-join.json` is the committed artifact and
    replays byte-for-byte in `make verify`.
 
-   The adapter is still unwritten, which remains a different status and a different sentence.
-   What it inherits from the measurement is a stated limit as well as a stated basis: roughly a
-   quarter of the IPEDS directory is not in the registry at all, so anything built on this join
-   has to render those institutions as outside the frame rather than as institutions that
-   disclosed nothing. The second open question is what CTDL would be graded *on*: this project
-   grades published disclosures against duties, and whether the registry carries a duty worth
-   grading is not answered by the join.
+   The second open question was what CTDL would be graded *on*, and it is now answered too, in
+   the other direction. `docs/adr/0009`: the registry was walked again on 2026-08-27 counting
+   which CTDL property names each organization publishes. Over the 4,818 that publish an IPEDS
+   id, nine properties are on 100% of them and three more on over 97%, every one of them
+   identity, location, a self-description or a federal id; the next most common property in the
+   whole vocabulary is `ceterms:email` on 1.1%, and `ceterms:hasCostManifest`, the nearest thing
+   to a cost disclosure, is on 6. 96.0% of them carry an identical set of twelve properties and
+   98.2% carry a free-text `IPEDS NCES Data Year`. That is a directory loaded from IPEDS, dated
+   to the collection year this project already reads from IPEDS directly.
+
+   **So the adapter is not written, and this milestone closes as a finding rather than staying
+   open as a plan.** ADR 0009 states what would reopen it: a property carrying a published duty
+   appearing at a rate that is not a rounding error, which `make registry-properties` would
+   report on a rerun. The 25% of the IPEDS directory the registry does not reach stays recorded
+   in ADR 0007 as the limit whoever revisits this inherits; it is not spent, because there is no
+   adapter to spend it. One stated limit on the finding: it is about organizations, and the
+   registry's `resource_type=credential` set has not been walked, because a credential is not an
+   institution.
 
 2. **Veterans-page grading rule.** The IPEDS characteristics file could supply an
    applicability rule, but no universal publication duty exists, so it stays ungraded until a
@@ -67,8 +78,10 @@ phase whose precondition fails is a phase that gets rewritten, which has already
 once, when milestone 1's own precondition was measured on 2026-08-27 and came back the opposite
 way round from the note that set it (`docs/adr/0007`).
 
-Roughly: phases 2 and 3 are the coming year's work, phases 4 to 6 the two years after it, and
-phase 4 may never happen at all, which is the reason phase 3 comes first rather than a hedge.
+Roughly: phase 2 is the coming year's work and phases 5 and 6 the two years after it. Phase 3
+was expected to take much of the first year and instead answered itself in a day, which is what
+measuring first is for; phase 4 will now not happen at all, and that is the same fact rather than
+a setback.
 
 **Phase 1. The budget file is read where a static checker can read it. Built, 2026-08-27**
 (`docs/adr/0008`). The `resourceSizes` lines of `lighthouse-budget.json` are enforced in `make
@@ -84,21 +97,21 @@ reports 1,052 ms against a 1,500 ms line, and that is not headroom to calibrate 
 laptop. What this phase may not do: gate on a number nobody measured, or widen the budget to turn
 a red gate green without the argument for the wider budget appearing in the README.
 
-**Phase 3. What the Credential Registry publishes that a duty could be graded against.**
-Milestone 1's second open question, which ADR 0007 states plainly is not answered by a join: this
-project grades published disclosures against duties, and the join says only that the two corpora
-share institutions. The measurement takes the shape ADR 0007 set: walk once, commit the capture,
-reduce it to what the question needs, and publish the number even when the answer is that the
-registry carries no duty worth grading and the adapter should not be written. What this phase may
-not do: write the adapter and measure from its output, which ADR 0007 rejected by name, because
-an adapter that exists is an adapter somebody will publish figures from.
+**Phase 3. What the Credential Registry publishes that a duty could be graded against. Built,
+2026-08-27** (`docs/adr/0009`). Milestone 1's second open question, which ADR 0007 states plainly
+is not answered by a join. Measured the way ADR 0007 set: walk once, capture, reduce, publish the
+number whichever way it comes out. It came out that the registry publishes identity and not
+disclosure for the institutions this project could grade, so phase 4 below is not built. The
+adapter was not written first and measured from its output, which ADR 0007 rejected by name.
 
-**Phase 4. The CTDL adapter, if and only if phase 3 finds a duty.** It inherits a limit before it
-inherits anything else: roughly a quarter of the IPEDS directory is not in the registry at all,
-so those institutions have to render as outside the frame and never as institutions that
-disclosed nothing. That is a sixth thing a page can say about a field, beside the five
-classifications, and it needs its own name, its own rendering and its own tests before it needs
-an adapter.
+**Phase 4. The CTDL adapter. Not built, and not pending: phase 3 answered it.** The condition was
+"if and only if phase 3 finds a duty", and phase 3 found nine universal properties of which none
+is a disclosure with a duty behind it. Writing the adapter anyway would mean grading institutions
+on a voluntary listing that is 96% a bulk load of a corpus this project already reads. The limit
+it would have inherited, that roughly a quarter of the IPEDS directory is not in the registry and
+those institutions must render as outside the frame rather than as institutions that disclosed
+nothing, stays written in ADR 0007 for whoever reopens this. ADR 0009 names the measurement that
+would reopen it.
 
 **Phase 5. The two accessibility artifacts recorded as open.** A human assistive-technology
 walkthrough and an ACR or VPAT, open in `docs/RESPONSIBLE-TECH-AUDITS.md` since 2026-08-07, where
@@ -155,6 +168,7 @@ Per QUALITY-AND-METRICS-STANDARD's ledger shape. Values as measured 2026-08-07.
 | SHA-pinned `uses:` | 100% | full 40-char SHAs in all workflows; Dependabot keeps them current | AUTO |
 | Secret / SAST / dependency scan | zero unwaived findings | `.github/workflows/security.yml` (gitleaks, semgrep, pip-audit), blocking, with no severity floor on semgrep and no `.semgrepignore` exclusions; the three waived findings carry an inline `nosemgrep` and a reason | AUTO |
 | Snapshot cadence | daily, or a loud failure | `.github/workflows/snapshot.yml`; the post-condition checks `origin/master`, the commit is gated by `verify.yml` and `security.yml` dispatched on a staging ref, and each dispatched job's watched result is transcribed to a commit status before the push (ADR 0004; ADR 0003 alone was rejected twice on its first real run) | AUTO |
+| Credential Registry property census | measured, never assumed; the report replays from the committed census, and the census is proven to describe the same walk as the join capture | `data/registry-properties.json` rebuilt from `data/registry/properties.json` in `tests/test_registry_properties.py::TestTheCommittedPropertyCensus`; every README figure in that section re-derived in `tests/test_doc_counts.py` (ADR 0009) | AUTO |
 | Credential Registry join | measured, never assumed; the artifact replays from committed inputs | `data/registry-join.json` rebuilt from `data/registry/organizations.json`, `data/HD2023.zip` and `data/census/scorecard.json` in `tests/test_registry.py::TestTheCommittedMeasurement`; every README figure in that section re-derived in `tests/test_doc_counts.py` | AUTO |
 | Fetch provenance | every page recorded; key never in git | `disclosed fetch` writes redacted URL, time, status, bytes, SHA-256 and rate-limit headers per page; the `census` workflow refuses to commit a capture containing the key; `tests/test_sources.py::TestProvenance` | AUTO |
 | Scorecard census coverage | national, not a 600-institution slice; every figure re-derived and stated beside the sample | `data/census/scorecard.json` (6,273 institutions, provenance-proven exhaustive) reduced by `disclosed census-report` to `data/scorecard-census.json`; byte-for-byte replay in `tests/test_census_replay.py`; README's "What is a sample and what is national" states both frames' composition | AUTO |

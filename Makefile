@@ -2,7 +2,7 @@ PYTHON ?= .venv/bin/python
 
 .PHONY: verify lint typecheck test fetch grade site dataset crosscheck national census-report \
         snapshot replay census-replay ipeds-snapshots registry-fetch registry-join \
-        registry-replay
+        registry-replay registry-properties registry-property-report registry-property-replay
 
 verify: lint typecheck test
 
@@ -87,6 +87,24 @@ registry-join:
 registry-replay:
 	$(PYTHON) -m disclosed.cli registry-join --capture data/registry/organizations.json --cache data/HD2023.zip --source data/census/scorecard.json --out /tmp/registry-join.json
 	diff -u data/registry-join.json /tmp/registry-join.json && echo "data/registry-join.json replays exactly"
+
+# Walk the registry again, capturing which CTDL property names each organization publishes rather
+# than the identifiers a join needs. A second capture and not two more columns on the first one:
+# written per organization the property names add about 8.5 MB to a 7.9 MB file, and aggregated to
+# distinct property sets they are 245 KiB. Serves from the same page cache, so a rerun after
+# `registry-fetch` costs no network at all.
+registry-properties:
+	$(PYTHON) -m disclosed.cli registry-properties --out data/registry/properties.json --cache-dir .cache/registry
+
+# Reduce the census to the rates docs/adr/0009 is argued from. Offline: the census is committed.
+registry-property-report:
+	$(PYTHON) -m disclosed.cli registry-property-report --census data/registry/properties.json --out data/registry-properties.json
+
+# Same contract as `registry-replay`. `tests/test_registry_properties.py` is the pytest form and
+# is what gates `make verify`; this is what you run to see the diff when it fails.
+registry-property-replay:
+	$(PYTHON) -m disclosed.cli registry-property-report --census data/registry/properties.json --out /tmp/registry-properties.json
+	diff -u data/registry-properties.json /tmp/registry-properties.json && echo "data/registry-properties.json replays exactly"
 
 # The three-year IPEDS history the systemic threshold is argued from. Same contract as `replay`.
 ipeds-snapshots:
