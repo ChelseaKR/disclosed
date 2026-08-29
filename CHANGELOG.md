@@ -10,6 +10,27 @@ file is the human-readable one.
 
 ### Added
 
+- **The daily Scorecard snapshots are replayed, not merely committed.**
+  `data/snapshots/scorecard/` held nine committed artifacts that nothing regenerated and nothing
+  compared. `tests/test_replay.py` replays every IPEDS snapshot from its own archives and
+  `tests/test_census_replay.py` replays `data/scorecard-census.json` from the committed capture;
+  the series beside them had neither, and the only thing in the repository that mentioned it was
+  `tests/test_workflows.py` asserting that a path string appears in the workflow YAML. They were
+  counts standing in for a computation, with nothing checking the counts were still what the
+  computation produces. All nine replay byte-identically today, which is the point: nothing was
+  keeping them that way. The snapshot taken on the day of the committed capture is now held to
+  byte equality against what that capture regrades to, with the date read out of the capture's own
+  provenance so refreshing the capture moves it, and `make scorecard-snapshot-replay` shows the
+  diff when it fails. The other days are deliberately **not** frozen to that replay: their
+  captures were ninety-day workflow artifacts and are gone, and a series that exists to record
+  drift must not be gated on never drifting. They are held instead to what is true of them
+  whatever the Scorecard published that morning: the date they claim, the walk they came from,
+  and their own arithmetic. `snapshot.yml` commits a provenance sidecar beside every snapshot so
+  that "a drift finding can be traced to the bytes it was computed from", and nothing checked the
+  sidecar was there or that the two files describe the same run; both are checked now. The glob
+  the series is discovered through is asserted non-empty before anything is parametrized over it,
+  because an empty one parametrizes into zero tests and reports as a passing suite.
+
 - **What the Credential Registry publishes, counted, and the adapter decided against
   ([ADR 0009](docs/adr/0009-the-registry-publishes-identity-not-disclosure.md)).** ADR 0007
   measured the join and said in as many words that a join does not tell you what there is to
