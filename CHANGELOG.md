@@ -8,7 +8,45 @@ file is the human-readable one.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Two different colleges were one page in every result list.** Unit 104708,
+  Glendale Community College in Arizona, graded B, and unit 115001, Glendale
+  Community College in California, graded D, rendered the identical
+  `<title>` and near-identical description: title by name alone, and the name
+  alone does not identify an institution. That is this project's own subject
+  matter, two different facts rendered as one, appearing in its own `<head>`.
+  Institution titles and descriptions now carry the state, which was already
+  on the page in the breadcrumb and the facts list. Where the report publishes
+  no state the qualifier is left off rather than filled in.
+- The home page's `<title>` read "disclosed: what US colleges do not tell you
+  | disclosed". `_shell` appends " | disclosed" to every title, so the site's
+  name appeared twice in fifty-four characters on the page most likely to be
+  seen in a result list. The page title is now "What US colleges do not tell
+  you".
+
 ### Added
+
+- **`check_site_origin.py` checks three more promises, and says what its
+  fourth cannot do.** It held canonicals, the sitemap and robots.txt to the
+  deploy target. It now also refuses a page whose `og:url` disagrees with its
+  own canonical, a page carrying a root-relative `href`, `src` or `content`,
+  and any page with an empty or duplicated title or description. The
+  root-relative check is issue #2 one level down: this site is served at a
+  path on an origin five sibling projects share, and
+  `https://chelseakr.github.io/` is itself a 404, so `href="/methodology/"`
+  resolves against the origin and lands on another project or on nothing.
+  The duplicate-title check found the Glendale defect above on its first run.
+
+  Its docstring now also records what `robots.txt` here is not. A crawler
+  reads one robots.txt per origin, at `https://chelseakr.github.io/robots.txt`,
+  which this repository does not own and which serves a 404. The file written
+  under `/disclosed/` is correct for anyone who fetches it and is discovered
+  by nobody, so its `Sitemap:` line advertises the sitemap to no one. It stays,
+  because it is true and is where a reader will look; getting the sitemap seen
+  is a submission and the owner's action, not a file this build can write.
+
+- Every page carries `og:site_name` and `twitter:card`.
 
 - **What the Credential Registry publishes, counted, and the adapter decided against
   ([ADR 0009](docs/adr/0009-the-registry-publishes-identity-not-disclosure.md)).** ADR 0007

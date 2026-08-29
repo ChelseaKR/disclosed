@@ -414,7 +414,7 @@ is honest and is not the same as a gate. They are enforced now, in `make verify`
 six-page fixture and again over all 617 published pages: **80 KiB** for the document and **80 KiB**
 for the page in total, read out of `lighthouse-budget.json` rather than copied out of it, so
 widening the budget widens the test and has to be argued for here. The largest page the committed
-report renders is California's state page at **65.5 KiB**, and that figure is in this sentence
+report renders is California's state page at **65.6 KiB**, and that figure is in this sentence
 because a budget with a hundredfold of slack passes for the same reason a gate that cannot fail
 does; a test recomputes it from the build, so the day a template change eats the headroom this
 paragraph has to say so.

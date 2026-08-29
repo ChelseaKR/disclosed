@@ -147,6 +147,87 @@ class TestEachCheckCanFail:
         )
         assert _run(built) == 1
 
+    def test_a_page_whose_og_url_disagrees_with_its_canonical_is_refused(self, built: Path) -> None:
+        """The page names itself twice. Answering the question differently is worse than not
+        answering it, because each answer looks authoritative on its own."""
+        page = built / "methodology" / "index.html"
+        page.write_text(
+            page.read_text(encoding="utf-8").replace(
+                f'<meta property="og:url" content="{_ORIGIN}/methodology/">',
+                '<meta property="og:url" content="https://elsewhere.test/methodology/">',
+            ),
+            encoding="utf-8",
+        )
+        assert _run(built) == 1
+
+    def test_a_root_relative_reference_is_refused(self, built: Path) -> None:
+        """The origin hazard one level down from issue #2.
+
+        This site is served at a path on an origin five sibling projects also publish under, and
+        the bare origin is a 404. ``href="/methodology/"`` therefore does not point at this
+        site's methodology page: it points at another project or at nothing. A browser shows
+        nothing wrong, because the browser already has the page it is rendering.
+        """
+        page = built / "index.html"
+        page.write_text(
+            page.read_text(encoding="utf-8").replace(
+                '<a class="skip" href="#content">', '<a class="skip" href="/#content">'
+            ),
+            encoding="utf-8",
+        )
+        assert _run(built) == 1
+
+    def test_two_pages_sharing_a_description_are_refused(self, built: Path) -> None:
+        """617 pages describing themselves identically is 617 pages a result list cannot tell
+        apart, and it is the state the sibling documentation site was actually found in."""
+        home = built / "index.html"
+        other = built / "methodology" / "index.html"
+        described = re.search(
+            r'<meta name="description" content="([^"]*)"', home.read_text(encoding="utf-8")
+        )
+        assert described is not None
+        text = other.read_text(encoding="utf-8")
+        replaced = re.sub(
+            r'<meta name="description" content="[^"]*"',
+            f'<meta name="description" content="{described.group(1)}"',
+            text,
+            count=1,
+        )
+        assert replaced != text
+        other.write_text(replaced, encoding="utf-8")
+        assert _run(built) == 1
+
+    def test_two_pages_sharing_a_title_are_refused(self, built: Path) -> None:
+        home = built / "index.html"
+        other = built / "state" / "CA" / "index.html"
+        titled = re.search(r"<title>(.*?)</title>", home.read_text(encoding="utf-8"), re.S)
+        assert titled is not None
+        other.write_text(
+            re.sub(
+                r"<title>.*?</title>",
+                f"<title>{titled.group(1)}</title>",
+                other.read_text(encoding="utf-8"),
+                count=1,
+                flags=re.S,
+            ),
+            encoding="utf-8",
+        )
+        assert _run(built) == 1
+
+    def test_a_page_with_an_empty_description_is_refused(self, built: Path) -> None:
+        """``content=""`` reads as "described" to everything that looks for the attribute."""
+        page = built / "state" / "CA" / "index.html"
+        page.write_text(
+            re.sub(
+                r'<meta name="description" content="[^"]*"',
+                '<meta name="description" content=""',
+                page.read_text(encoding="utf-8"),
+                count=1,
+            ),
+            encoding="utf-8",
+        )
+        assert _run(built) == 1
+
     def test_a_sitemap_promising_a_page_that_was_never_built_is_refused(self, built: Path) -> None:
         """A sitemap is a promise the URLs in it exist. An entry with no file behind it is a 404
         with an invitation attached."""

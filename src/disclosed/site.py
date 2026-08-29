@@ -261,12 +261,27 @@ that is intended. If you believe a field is marked wrongly, the
 <a href="../../methodology/">methodology</a> states every rule and the reasoning behind it.</p>
 {_ask_widget(str(row.get("unit_id")), ask_endpoint) if ask_endpoint else ""}
 """
+    # The name alone does not identify an institution, and this project of all
+    # projects should not pretend otherwise. Two institutions in the committed
+    # report are both called "Glendale Community College": unit 104708 in
+    # Arizona, graded B, and unit 115001 in California, graded D. Titled by
+    # name alone they were the same string, so a result list showed one page
+    # twice and a reader had no way to tell which grade belonged to which
+    # school. That is this project's own subject matter -- two different facts
+    # rendered identically -- appearing in its own <head>.
+    #
+    # The state is already on the page, in the breadcrumb and in the facts
+    # list, so naming it here adds nothing that was not published; it only
+    # stops the head saying less than the body. Where the report publishes no
+    # state, the qualifier is left off rather than filled in: an absence is not
+    # a value here either.
+    qualified = f"{name} ({state})" if state else name
     return Page(
         path=path,
-        title=f"{name}: disclosure grade",
+        title=f"{qualified}: disclosure grade",
         description=(
-            f"What {name} publishes and what it does not, graded on disclosure rather than on "
-            f"performance. Disclosure score {_pct(score)}."
+            f"What {qualified} publishes and what it does not, graded on disclosure rather "
+            f"than on performance. Disclosure score {_pct(score)}."
         ),
         body=body,
     )
@@ -1000,7 +1015,12 @@ it, and why a suppressed field is never held against an institution.</p>
 """
     return Page(
         path="",
-        title="disclosed: what US colleges do not tell you",
+        # Not "disclosed: what US colleges do not tell you". _shell appends
+        # " | disclosed" to every title, so that one rendered as "disclosed:
+        # what US colleges do not tell you | disclosed" -- the site's name
+        # twice in fifty-four characters, on the one page most likely to be
+        # seen in a result list.
+        title="What US colleges do not tell you",
         description=(
             "Grades US higher-education institutions on what they disclose rather than on how "
             "they perform. Which fields go unreported, which published values are not "
@@ -1088,6 +1108,13 @@ footer { margin-top: 3rem; font-size: .9rem; color: #555; }
 
 
 def _shell(page: Page, *, canonical: str, generated: str) -> str:
+    # Every in-page link is relative, and it has to stay that way. This site is
+    # served at a path under an origin five sibling projects also publish
+    # under, and https://chelseakr.github.io/ is itself a 404, so an
+    # `href="/methodology/"` would not be a shorter way of writing the link: it
+    # would resolve against the origin and land on another project or on
+    # nothing. `root` is why there is no root-relative href here, and
+    # .github/scripts/check_site_origin.py refuses a build that grows one.
     root = "../" * page.path.count("/") + ("../" if page.path else "")
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -1100,7 +1127,9 @@ def _shell(page: Page, *, canonical: str, generated: str) -> str:
 <meta property="og:title" content="{html.escape(page.title)}">
 <meta property="og:description" content="{html.escape(page.description)}">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="disclosed">
 <meta property="og:url" content="{html.escape(canonical)}">
+<meta name="twitter:card" content="summary">
 <style>{_STYLE}</style>
 </head>
 <body>
@@ -1220,6 +1249,21 @@ def build(
             _shell(page, canonical=canonical, generated=generated), encoding="utf-8"
         )
 
+    # robots.txt, written where this site lives rather than where robots.txt is
+    # read. Worth being plain about, because the file looks like coverage it
+    # does not provide: a crawler asks one URL per origin,
+    # https://chelseakr.github.io/robots.txt, and this repository does not own
+    # that path -- it is a 404, because there is no user site at that origin at
+    # all. So the Sitemap: line below is not discovered by anything, and the
+    # Allow: line changes nothing, since a missing robots.txt already means
+    # "crawl freely".
+    #
+    # It is still written, and deliberately not removed. It is correct for
+    # anyone who fetches it, it is what a reader looking for the sitemap will
+    # try first, and check_site_origin.py holds its origin to the deploy
+    # target. What it is not is a way to have the sitemap found: that needs the
+    # sitemap submitted directly, which is the owner's action and not a file
+    # this build can write.
     (out_dir / "robots.txt").write_text(
         f"User-agent: *\nAllow: /\nSitemap: {origin}/sitemap.xml\n", encoding="utf-8"
     )
