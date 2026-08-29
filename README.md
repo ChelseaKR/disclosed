@@ -7,7 +7,7 @@ how many colleges did not report one, or which fields quietly stopped being publ
 That is what this grades.
 
 **Status:** Beta, pre-release (`0.1.0.dev0`). The five-way classification, both federal
-adapters, and drift measurement are complete and tested behind a 90% branch-coverage gate.
+adapters, and drift measurement are complete and tested behind a 95% branch-coverage gate.
 There are deliberately no tagged releases: nothing here is consumed downstream, and [ADR
 0001](docs/adr/0001-no-versioned-release.md) records why a release pipeline with nothing to
 release would be exactly the kind of gate that never fails.
@@ -446,7 +446,7 @@ make crosscheck # grade the whole IPEDS directory, no key needed
 make national   # reduce that to the committed national artifact
 ```
 
-Python 3.12+, no runtime dependencies. Strict mypy, ruff, and a 90% branch-coverage gate.
+Python 3.12+, no runtime dependencies. Strict mypy, ruff, and a 95% branch-coverage gate.
 `make verify` is the single local gate and the same target CI runs; `CONTRIBUTING.md` has the
 setup.
 
@@ -479,7 +479,7 @@ skips.
 | Standard | State |
 |---|---|
 | Responsible-Tech Framework | Applies - audit record in `docs/RESPONSIBLE-TECH-AUDITS.md`; the ethics constraints (suppression never punished, no grade is not a zero, refuse-to-overclaim scope) are code and are tested |
-| Code Quality | Applies - ruff (incl. bandit `S` rules, complexity <= 10) + `ruff format --check` + strict mypy + pytest with a 90% branch-coverage floor, over `src`, `tests` **and** `.github/scripts`; `uv.lock` and `.python-version` committed; dev deps in a PEP 735 group |
+| Code Quality | Applies - ruff (incl. bandit `S` rules, complexity <= 10) + `ruff format --check` + strict mypy + pytest with a 95% branch-coverage floor, over `src`, `tests` **and** `.github/scripts`; `uv.lock` and `.python-version` committed; dev deps in a PEP 735 group |
 | Security & Supply-Chain | Applies - gitleaks, semgrep, and pip-audit as blocking CI gates (`.github/workflows/security.yml`), with no severity floor and no `.semgrepignore` exclusions, both of which had been quietly making the SAST pass unfailable; all actions SHA-pinned; Dependabot for deps and action pins; ASVS L1 declared in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | CI/CD | Applies - `verify.yml` runs `make verify` verbatim (local/CI parity) with `uv lock --check` as the lockfile-drift check and `uv sync --locked` as the install; workflows are permission-scoped. Branch protection is a GitHub settings action, recorded as open in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | Observability | Applies - Tier C for the CLI and static build (no hosted runtime); the optional `disclosed.ask` service is not deployed, and the prepared deployment shape records the observability it would need (`docs/ROADMAP.md`) |

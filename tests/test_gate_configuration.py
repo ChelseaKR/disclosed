@@ -163,14 +163,14 @@ class TestTheMeasuredSetIsTheSetTheDocumentsClaim:
     one of them is a single token in ``pyproject.toml``.
     """
 
-    def test_the_coverage_floor_is_at_least_the_ninety_percent_stated(self) -> None:
+    def test_the_coverage_floor_is_at_least_the_ninety_five_percent_stated(self) -> None:
         match = re.search(r"--cov-fail-under=(\d+)", _addopts())
         assert match is not None, (
             "pytest no longer fails under a coverage floor, so the percentage in the report is a "
             "number printed beside a green check rather than a gate."
         )
-        assert int(match.group(1)) >= 90, (
-            f"the coverage floor is {match.group(1)}%, below the 90% the README, AGENTS.md and "
+        assert int(match.group(1)) >= 95, (
+            f"the coverage floor is {match.group(1)}%, below the 95% the README, AGENTS.md and "
             "the Standards Conformance table all state."
         )
 
