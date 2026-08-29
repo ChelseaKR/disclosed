@@ -1,8 +1,9 @@
 PYTHON ?= .venv/bin/python
 
 .PHONY: verify lint typecheck test fetch grade site dataset crosscheck national census-report \
-        snapshot replay census-replay ipeds-snapshots registry-fetch registry-join \
-        registry-replay registry-properties registry-property-report registry-property-replay
+        snapshot replay census-replay scorecard-snapshot-replay ipeds-snapshots registry-fetch \
+        registry-join registry-replay registry-properties registry-property-report \
+        registry-property-replay
 
 verify: lint typecheck test
 
@@ -52,6 +53,20 @@ census-report:
 
 snapshot:
 	$(PYTHON) -m disclosed.cli snapshot --taken $(TAKEN) --out data/snapshots/scorecard/$(TAKEN).json
+
+# The daily Scorecard series, regenerated from the committed capture. Only one date in it can be
+# checked this way: the capture is a single walk, and the other days' captures were ninety-day
+# workflow artifacts that have since expired. That one is enough to make the series reproducible
+# rather than merely committed, and it is the day this target replays -- read out of the capture's
+# own provenance, so refreshing the capture moves it. No network and no key.
+# `tests/test_census_replay.py::TestTheCommittedScorecardSnapshots` is the pytest form and is what
+# gates `make verify`; this is what you run to see the diff when it fails.
+scorecard-snapshot-replay:
+	$(PYTHON) -m disclosed.cli grade --source data/census/scorecard.json --out /tmp/census-graded.json
+	taken=$$($(PYTHON) -c "import json; print(json.load(open('data/census/scorecard.json'))['provenance']['walked_at'][:10])") && \
+	$(PYTHON) -m disclosed.cli snapshot --report /tmp/census-graded.json --taken $$taken --out /tmp/scorecard-snapshot.json && \
+	diff -u data/snapshots/scorecard/$$taken.json /tmp/scorecard-snapshot.json && \
+	echo "data/snapshots/scorecard/$$taken.json replays exactly"
 
 # Regenerate the committed national artifact from the committed archives and show what moved. The
 # test suite asserts these are identical on every push; this is the target you run when it says

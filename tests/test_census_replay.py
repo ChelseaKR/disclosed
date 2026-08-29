@@ -165,3 +165,144 @@ class TestTheCensusArtifactAddsUp:
         did not fold blank or malformed values into a state bucket."""
         for label in census_artifact["composition"]["states"]:
             assert isinstance(label, str) and label.strip() and label == label.strip()
+
+
+SNAPSHOTS = DATA / "snapshots" / "scorecard"
+PROVENANCE = SNAPSHOTS / "provenance"
+
+#: Every committed daily Scorecard snapshot, by the date it is filed under. Read from the
+#: directory rather than listed, because the series accrues one file a day and a hand-maintained
+#: list would stop covering it the moment nobody remembered to extend it. ``glob`` returning
+#: nothing would silently parametrize every test below into zero tests, which is why
+#: ``test_the_series_is_here_at_all`` asserts the list is not empty before any of them run.
+SNAPSHOT_DATES = sorted(path.stem for path in SNAPSHOTS.glob("*.json"))
+
+#: The day the committed capture was walked. The one date whose snapshot can be regenerated from
+#: bytes in this repository, derived from the capture instead of written down so that refreshing
+#: the capture moves it.
+CAPTURE_DATE = json.loads(CAPTURE.read_text(encoding="utf-8"))["provenance"]["walked_at"][:10]
+
+
+class TestTheCommittedScorecardSnapshots:
+    """``data/snapshots/scorecard/``, which nothing regenerated and nothing compared.
+
+    ``tests/test_replay.py`` replays every committed IPEDS snapshot from its own archives, and
+    ``TestTheCommittedCensusArtifact`` above replays ``data/scorecard-census.json`` from the
+    committed capture. The nine daily Scorecard snapshots beside them had neither: no test opened
+    them, no ``make`` target regenerated them, and the only thing in the repository that mentioned
+    them was ``tests/test_workflows.py`` asserting that a path string appears in the workflow YAML.
+    They were committed counts standing in for a computation, with nothing checking the counts were
+    still what the computation produces.
+
+    What is gated here, and what deliberately is not:
+
+    * The snapshot taken on the day of the committed capture is held to **byte equality** against
+      what that capture regrades to. That is the missing gate, and it is the whole of it: it is the
+      only snapshot whose input is in the repository.
+    * The other snapshots are **not** compared against that replay. Their captures were ninety-day
+      workflow artifacts and are gone, and more importantly the series exists to record drift. A
+      day whose counts moved is the finding, not a failure, and freezing every file to today's
+      replay would be a gate that forbids the thing being measured. They are held instead to what
+      is true of them whatever the Scorecard published that morning: the date they claim, the walk
+      they came from, and their own arithmetic.
+
+    All nine replay byte-identically today, which is worth saying and is not worth asserting.
+    """
+
+    def test_the_series_is_here_at_all(self) -> None:
+        """Run before anything parametrized over ``SNAPSHOT_DATES``, because an empty glob
+        parametrizes into zero tests and reports as a passing suite."""
+        assert SNAPSHOT_DATES, (
+            f"{SNAPSHOTS} holds no snapshots. Every test below is parametrized over that "
+            "directory, so an empty one turns this class into nothing at all."
+        )
+        assert CAPTURE_DATE in SNAPSHOT_DATES, (
+            f"the committed capture was walked on {CAPTURE_DATE} and no snapshot is filed under "
+            "that date, so no committed Scorecard snapshot can be regenerated from anything in "
+            "this repository. Take the snapshot for that day, or commit the capture the series "
+            "was actually taken from."
+        )
+
+    def test_the_snapshot_from_the_committed_capture_replays_byte_for_byte(
+        self, graded: Path, tmp_path: Path
+    ) -> None:
+        """The one test that makes a committed Scorecard snapshot a claim a reader can check.
+
+        Compared as bytes, the same discipline the national and census artifacts are held to.
+        ``disclosed snapshot`` writes with ``sort_keys=True`` and a fixed indent, so the bytes are
+        deterministic and a reformat that changes them is itself worth noticing.
+        """
+        out = tmp_path / f"{CAPTURE_DATE}.json"
+        assert (
+            cli.main(
+                ["snapshot", "--report", str(graded), "--taken", CAPTURE_DATE, "--out", str(out)]
+            )
+            == 0
+        )
+        assert out.read_bytes() == (SNAPSHOTS / f"{CAPTURE_DATE}.json").read_bytes(), (
+            f"data/snapshots/scorecard/{CAPTURE_DATE}.json does not match what the committed "
+            "capture regrades to. Either a rule moved and the snapshot was not regenerated, or it "
+            "was edited by hand. Run `make scorecard-snapshot-replay` to see the difference."
+        )
+
+    @pytest.mark.parametrize("taken", SNAPSHOT_DATES)
+    def test_each_snapshot_names_the_day_it_is_filed_under(self, taken: str) -> None:
+        """A snapshot whose ``taken`` disagrees with its filename would be read as drift on a day
+        it was not taken, and `drift` orders the series by the name on the file."""
+        recorded = json.loads((SNAPSHOTS / f"{taken}.json").read_text(encoding="utf-8"))
+        assert recorded["taken"] == taken
+        assert recorded["source"] == "College Scorecard"
+
+    @pytest.mark.parametrize("taken", SNAPSHOT_DATES)
+    def test_each_snapshot_is_paired_with_the_walk_it_was_computed_from(self, taken: str) -> None:
+        """``snapshot.yml`` commits a provenance sidecar beside every snapshot so that "a drift
+        finding can be traced to the bytes it was computed from". Nothing checked that the two
+        files describe the same walk, or that the sidecar was there at all.
+
+        The capture digests the sidecars record cannot be verified here: those captures are
+        ninety-day workflow artifacts and have expired. What can be verified is that the walk
+        claimed exhaustion and that the snapshot counted exactly the institutions the walk
+        returned, which is the link a drift finding actually rests on.
+        """
+        sidecar = PROVENANCE / f"{taken}.json"
+        assert sidecar.is_file(), (
+            f"{sidecar} is missing. A snapshot with no provenance is a count with no walk behind "
+            "it, and the drift it takes part in cannot be traced to anything."
+        )
+        walk = json.loads(sidecar.read_text(encoding="utf-8"))
+        assert walk["exhausted"] is True, (
+            f"{taken}: the walk did not confirm exhaustion, so this snapshot is a sample filed in "
+            "a series that reads as national."
+        )
+        assert walk["total_stated"] == walk["records"]
+        recorded = json.loads((SNAPSHOTS / f"{taken}.json").read_text(encoding="utf-8"))
+        assert recorded["institutions"] == walk["records"], (
+            f"{taken}: the snapshot counted {recorded['institutions']} institutions and the walk "
+            f"beside it returned {walk['records']}. They are not the same run."
+        )
+
+    @pytest.mark.parametrize("taken", SNAPSHOT_DATES)
+    def test_each_snapshot_adds_up(self, taken: str) -> None:
+        """Internal arithmetic, checked independently of what produced the file. A replay proves
+        one snapshot matches this code; this catches one written halfway or edited by hand,
+        including on the days whose inputs are gone."""
+        recorded = json.loads((SNAPSHOTS / f"{taken}.json").read_text(encoding="utf-8"))
+        labels = {field.label for field in FIELDS}
+        for section in ("applicable", "reported", "missing"):
+            assert set(recorded[section]) == labels, (
+                f"{taken}: {section} does not name the six fields this project grades"
+            )
+        for label in labels:
+            applicable = recorded["applicable"][label]
+            reported = recorded["reported"][label]
+            missing = recorded["missing"][label]
+            assert 0 <= applicable <= recorded["institutions"], (
+                f"{taken}/{label}: applicable is outside 0..institutions"
+            )
+            # Not equality: implausible and suppressed values are applicable and are neither
+            # reported nor missing, and folding them into either would be the collapse of the five
+            # states this project exists to keep apart.
+            assert reported >= 0 and missing >= 0
+            assert reported + missing <= applicable, (
+                f"{taken}/{label}: reported + missing exceeds applicable"
+            )
