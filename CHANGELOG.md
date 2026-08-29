@@ -10,6 +10,55 @@ file is the human-readable one.
 
 ### Added
 
+- **What the Credential Registry publishes, counted, and the adapter decided against
+  ([ADR 0009](docs/adr/0009-the-registry-publishes-identity-not-disclosure.md)).** ADR 0007
+  measured the join and said in as many words that a join does not tell you what there is to
+  grade. `disclosed registry-properties` walks the same set with the same adapter, the same page
+  cache and the same refusal to report a walk it cannot prove reached the end, and captures which
+  CTDL property *names* each organization publishes, never what is inside them;
+  `disclosed registry-property-report` reduces that to rates over two denominators that are never
+  summed. The answer, over the 4,818 organizations that publish an IPEDS id: nine properties on
+  100% of them and three more above 97%, every one identity, location, a self-description or a
+  federal id; `ceterms:email`, the next most common property in the whole vocabulary, on 52;
+  `ceterms:hasCostManifest` on 6. 96.0% carry an identical set of twelve properties and 98.2%
+  carry a free-text `IPEDS NCES Data Year`, which is a year. That is a directory loaded from
+  IPEDS. **No adapter is written**, milestone 1 closes as a finding, and the ADR states the
+  measurement that would reopen it. The capture is aggregated to distinct property sets, 403 KB
+  rather than the 8.5 MB the same facts cost per organization, and the report replays
+  byte-for-byte in `make verify`.
+
+- **The transfer-size budget is a gate, and every line of the budget file is accounted for
+  ([ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md)).**
+  `lighthouse-budget.json` had its resource *counts* moved into `make verify` when Lighthouse
+  turned out to enforce none of the file; the `resourceSizes` lines did not move with them, and
+  the metrics ledger has carried a "Gate: NONE" row ever since. They move now:
+  `tests/test_accessibility.py::TestTheTransferSizeBudget` holds every page of the six-page
+  fixture and all 617 pages of the committed build to the file's own 80 KiB document and total
+  lines, reading the numbers out of the file rather than restating them, and reporting a page
+  that fetches something as unweighable rather than as a zero it invented. The largest published
+  page, 65.5 KiB, is now a README figure a test recomputes from the build, because a budget with
+  a hundredfold of slack passes for the same reason a gate that cannot fail does.
+  `::TestEveryBudgetLineIsAccountedFor` closes the class rather than the instance: a budget line
+  that is neither enforced by a named check nor declared unenforceable with a written reason
+  fails the build, and so does a register entry naming a line the file no longer carries. The
+  three timing lines stay enforced by nothing, with the reason, the local measurement (home
+  752 ms LCP, state/CA 1,052 ms against a 1,500 ms line, CLS and TBT exactly 0) and the
+  precondition for gating them written down; a test fails if the ledger stops saying so.
+
+- **The Credential Registry join, measured before an adapter is designed around it
+  ([ADR 0007](docs/adr/0007-the-credential-registry-join-is-measured-before-it-is-adapted.md)).**
+  `disclosed.sources.credential_registry` walks `resource_type=organization` to the registry's own
+  `x-total`, records the provenance of every page, caches pages so a rerun resumes rather than
+  starting over, and refuses to report a walk it cannot prove reached the end, including on a
+  stated total of zero, which is what the registry also answers to an unmatched filter.
+  `disclosed.registry` measures three candidate keys separately and never sums them: the typed
+  `ceterms:ipedsID`, the `ceterms:opeID` it counts and joins to nothing because neither committed
+  corpus carries one, and the web host it treats as weaker and reports as both what it resolves to
+  and what it adds. Two new verbs, `registry-fetch` and `registry-join`. The answer, on 2026-08-27:
+  33,809 organizations, of which 4,818 publish an IPEDS unit id reaching 4,794 of the 6,163
+  institutions in the IPEDS directory and 4,510 of the 6,273 in the Scorecard census. The
+  roadmap's precondition is met and the adapter remains unwritten, which is a different sentence.
+  Nothing here grades an institution or touches `disclosed.ask`.
 - **`deploy/`: the prepared, unapplied deployment shape.** A SAM template (JSON, so the test
   suite reads it with the standard library) for one Lambda behind a Function URL with CORS locked
   to the Pages origin, reserved concurrency of 2, IAM limited to invoking the one configured

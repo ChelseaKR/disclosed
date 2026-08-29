@@ -214,3 +214,96 @@ directed that the project add a runtime question-answering layer
   decision.
 - The grading pipeline, the committed dataset, and the static pages contain no model-generated
   content. That claim narrows; it does not change.
+
+## Addendum 2026-08-27: a third source is read, and only measured
+
+Appended rather than edited, per the append-only rule above. The recheck cadence in section F
+says "on any new data source"; this is that.
+
+- **A fourth item in the data inventory.** `data/registry/organizations.json`: 33,809 Credential
+  Registry organization records reduced to what a join needs (registry ctid, published name,
+  `ceterms:ipedsID`, `ceterms:opeID`, CTDL organization types, address region, and the host of the
+  published web address), walked to the registry's own stated total on 2026-08-27. No personal
+  data: these are organizations, published openly by Credential Engine under a public,
+  unauthenticated endpoint with no key, no quota and no crawl directives (`/robots.txt` 404s). No
+  credential of any kind exists for this source, so there is none to keep out of git. Retention:
+  committed, for the reason `data/census/scorecard.json` is committed, that a rerun does not
+  reproduce it.
+- **D Transparency.** The measurement (`data/registry-join.json`) carries a `scope` block like
+  every other payload, and that block says in words that its `states` figure counts distinct
+  free-text `ceterms:addressRegion` values, including regions outside the United States, rather
+  than states. A count is named after what it counted.
+- **A Ethics: nothing is graded from this source.** The adapter reads and reduces; it classifies
+  nobody, adds no field, and changes no institution's grade. `docs/adr/0007` records why the
+  measurement had to come first: an adapter built on an unmeasured join would render an
+  institution the join missed exactly like an institution that disclosed nothing, which is this
+  project's own defect class turned inward. Roughly a quarter of the IPEDS directory is not in the
+  registry at all, and that limit is written into the ADR as the first thing a future adapter
+  inherits.
+- **F Security.** No new secret, no new credential, no new network path at grading time: the join
+  runs offline from three committed inputs. The one network verb (`disclosed registry-fetch`) is a
+  read-only GET against a fixed scheme and host with an urlencoded query, waived at the line for
+  the same scanner finding, and with the same reason, as the two existing adapters.
+
+## Addendum 2026-08-27: the budget file is read, and what still is not
+
+Appended rather than edited, per the append-only rule above. Section E states, under
+**Budgets**, that "`lighthouse-budget.json` budgets every resource type except the document at
+zero, so a script, font, image, or third-party request is a build failure." That sentence was
+already known to be wrong about the mechanism when it was written down, and the correction lived
+in the README rather than here. Both halves are now accurate, and the difference between them is
+recorded rather than smoothed over.
+
+- **E Accessibility, budgets, corrected and extended.** Lighthouse enforces nothing in that file:
+  `--budget-path` never makes it exit non-zero and `lighthouse@12` (12.8.2) emits no budget audit,
+  reconfirmed on 2026-08-27. The **resource counts** are enforced instead by
+  `tests/test_accessibility.py::TestTheResourceBudget` in `make verify`, over one page of each
+  kind and again over all 617 pages of the committed build. As of `docs/adr/0008` the
+  **transfer sizes** are enforced there too, by `::TestTheTransferSizeBudget`, reading the
+  `resourceSizes` lines out of the budget file rather than restating them, and holding the bytes
+  the generator writes to the 80 KiB document line. The largest published page is 65.5 KiB, which
+  the README states and a test recomputes, so the headroom is a published figure and not an
+  assumption.
+- **What is still enforced by nothing, said here as well as in the ledger.** The three timing
+  lines, largest contentful paint, cumulative layout shift and total blocking time. They need a
+  rendering engine. Measured locally on 2026-08-27 with `lighthouse@12` against the built site:
+  home 752 ms LCP, state/CA 1,052 ms, against the file's 1,500 ms line, with a layout shift and a
+  blocking time of exactly zero on both. Those are a laptop's numbers, not the CI runner's, and
+  ADR 0008 records the decision to measure the runner before gating rather than calibrate a gate
+  on the wrong machine.
+- **The class, not only the instance.** `::TestEveryBudgetLineIsAccountedFor` fails the build on
+  any line of `lighthouse-budget.json` that is neither enforced by a named check nor declared
+  unenforceable with a written reason, and fails equally on a register entry for a line the file
+  no longer carries. The reason this exists is in this file's own history: a control described
+  here as automated, which nothing was running.
+- **No new data, no new network path, no new secret.** This addendum changes no item in the data
+  inventory in section C and adds no runtime code. The measurement above ran locally against a
+  site built from committed artifacts.
+
+## Addendum 2026-08-27: the third source is measured a second time, and declined
+
+Appended rather than edited. The addendum above records the Credential Registry being read and
+only measured. This records the second measurement and the decision it produced.
+
+- **A fifth and sixth item in the data inventory.** `data/registry/properties.json` (403 KB): for
+  each of the 33,809 organizations walked on 2026-08-27, which CTDL property *names* appear on its
+  node, aggregated to the 442 distinct property sets and their counts, split by whether the
+  organization publishes a typed `ceterms:ipedsID`. No value is captured, only names, and the
+  aggregation deliberately gives up the ability to say which organization carried which set.
+  `data/registry-properties.json` (17 KB) is the reduction the published figures are read from.
+  No personal data: these are property names from a vocabulary, counted over organizations.
+  Retention: committed, for the reason the other two captures are.
+- **A Ethics: the decision this produced is not to build.** Over the 4,818 organizations that
+  join to IPEDS, nine CTDL properties are on 100% of them and three more on over 97%, and every
+  one of the twelve is identity, location, a self-description or a federal id. 96.0% carry an
+  identical property set and 98.2% carry a free-text `IPEDS NCES Data Year`. `docs/adr/0009`
+  records that no adapter is written, and records why building one anyway would have been
+  grading institutions on a voluntary listing that is largely a bulk load of a corpus this
+  project already reads. Grading participation is not grading disclosure.
+- **D Transparency.** The report carries a `scope` block that says in words that it counts
+  property names and that no organization is graded, named or scored. The README section states
+  every figure and `tests/test_doc_counts.py` re-derives each one from the artifact, including
+  the two qualitative claims about the cliff and the identical property set.
+- **F Security.** No new secret, no new credential, no new network path at grading time. The
+  census walk uses the same read-only GET against the same fixed scheme and host as the existing
+  adapter, served entirely from the page cache the first walk wrote.

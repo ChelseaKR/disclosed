@@ -182,7 +182,7 @@ stop-reporting event is newsworthy well before it touches a majority of institut
 | --- | --- | --- |
 | College Scorecard | **Live** | Public API. `DEMO_KEY` works for small runs; set `DATA_GOV_API_KEY` for a higher rate limit. |
 | IPEDS | **Live** | Public bulk directory file, no key and no quota. Adds required disclosures the Scorecard doesn't carry, and lets the same institution be checked against two federal sources. |
-| Credential Registry (CTDL) | **Open, adapter unwritten** | Public and unauthenticated. `GET /ce-registry/search?resource_type=credential` answered 200 with `x-total: 133346` on 2026-08-15 with no key and no headers; `/ce-registry/envelopes` answered 200 with `x-total: 395878` and a full `decoded_resource` per envelope. This row previously said "blocked", and that was our error, not theirs: see below. |
+| Credential Registry (CTDL) | **Open, joinable, and there is nothing here to grade** | Public and unauthenticated. `GET /ce-registry/search?resource_type=credential` answered 200 with `x-total: 133346` on 2026-08-15 with no key and no headers; `/ce-registry/envelopes` answered 200 with `x-total: 395878` and a full `decoded_resource` per envelope. This row previously said "blocked", and that was our error, not theirs: see below. The join to the two federal corpora was then measured rather than assumed, and it is good. What the registry publishes about those organizations was measured after it, and it is identity: nine properties on 100% of them, none of them a disclosure with a duty behind it, and 96% carrying an identical property set. No adapter is written, and [ADR 0009](docs/adr/0009-the-registry-publishes-identity-not-disclosure.md) says what would reopen that. |
 
 A partial fetch is treated as a failure, not as data. Truncation would understate disclosure across
 every institution that never arrived, which looks identical to a real reporting collapse.
@@ -205,10 +205,93 @@ in the repository that grades other people for it, and the misreading stopped wo
 source for weeks.
 
 `/robots.txt` 404s, so the registry publishes no crawl directives (RFC 9309 §2.2.3 treats a 4xx
-as unrestricted). Whether a CTDL adapter can be joined to the two federal corpora is a separate
-and still-open question: in the first 200 organizations
-(`?resource_type=organization&per_page=100`, pages 1 and 2, fetched the same day) only 8 records
-mentioned IPEDS at all, so the join rate has to be measured before anything is built on it.
+as unrestricted).
+
+### The join was measured before anything was built on it, and it is better than the sample said
+
+The roadmap set one condition ahead of any Credential Registry adapter: measure whether registry
+organizations can be joined to the two federal corpora, rather than designing around a guess. An
+adapter built on an unmeasured join publishes findings for whichever institutions happened to
+match, and on the page an institution the join missed looks exactly like an institution that
+disclosed nothing, which is this project's own defect class turned inward.
+
+So the registry was walked to its own stated total on 2026-08-27: **33,809 organizations** over
+340 pages, of which **6,799** are typed as postsecondary institutions. That walk is committed as
+`data/registry/organizations.json`, reduced to the fields a join needs, and the measurement it
+supports is `data/registry-join.json`.
+
+The registry publishes two federal identifiers as typed CTDL properties, and the strong one
+carries most of the weight. **4,818** organizations publish a `ceterms:ipedsID`, **4,690** of
+them among the postsecondary ones. Those resolve to **4,794 of the 6,163 institutions in the
+IPEDS directory** and **4,510 of the 6,273 in the Scorecard census**; only **6** of the 4,800
+distinct unit ids the registry publishes fail to resolve in the 2023 directory at all. A further
+**4,969** organizations publish a `ceterms:opeID`, which is counted and joined to nothing,
+because neither committed corpus carries an OPE id: reporting it as unmatched would understate
+the registry and reporting it as matched would invent a join.
+
+**The earlier note in this file said the opposite, and the difference is the measurement.** It
+recorded that in the first 200 organizations only 8 records mentioned IPEDS at all, and read that
+as a reason to doubt the join. Two hundred records out of 33,809 is a sample of six-tenths of one
+percent, taken from the front of an offset-paginated set, which is the same shape of frame this
+project already had to publish a census to correct once. The string "IPEDS" is also not the thing
+to look for: the registry's most common IPEDS-shaped free-text identifier is
+`"IPEDS NCES Data Year": "2023"`, which is a year and not a unit id, while the identifier that
+actually joins is the typed `ceterms:ipedsID` property. The adapter reads the typed property and
+reads nothing out of `ceterms:identifier`, because a join rate is only as honest as the field it
+was counted from.
+
+A third, weaker key is reported separately and never added to the first. Matching the host of
+`ceterms:subjectWebpage` against the host of the IPEDS web address this project already grades,
+over the **28,997** organizations the identifier key left unresolved, **1,514** resolve to
+exactly one IPEDS institution and **255** to more than one. The ambiguous ones are excluded
+rather than resolved to whichever row came first, because 283 hosts in the IPEDS directory belong
+to more than one institution and a host is not an identifier. What that key resolves to and what
+it *adds* are also two different numbers: it reaches 1,026 institutions, of which **831** are
+institutions the identifier join had not already reached, and only the second number is what an
+adapter would gain.
+
+None of this makes the adapter written. It makes the question the roadmap asked answerable: a
+Credential Registry adapter would join cleanly to roughly three quarters of the IPEDS directory
+on a published federal identifier, which is a real third source rather than a few percent
+dressed as one. What it would grade there, and whether CTDL carries a disclosure duty worth
+grading, is a separate question and is answered next.
+
+### The second question, and the reason the adapter is not written
+
+The join says the two populations overlap. It says nothing about whether the overlap carries
+anything to grade, and this project grades published disclosures against duties. So the registry
+was walked a second time, counting which CTDL property *names* appear on each organization,
+never what is inside them: a required disclosure is present or it is not, and a property nobody
+publishes cannot be a disclosure anybody is failing to make.
+
+Across the whole walk, **62** distinct property names and **442** distinct property sets. Over
+the **4,818** organizations that publish an IPEDS id, twelve properties are on effectively all of
+them and then there is a cliff. Nine are on every single one (`ceterms:ctid`, `ceterms:name`,
+`ceterms:description`, `ceterms:address`, `ceterms:subjectWebpage`, `ceterms:agentType`,
+`ceterms:agentSectorType`, `ceterms:lifeCycleStatusType`, `ceterms:ipedsID`), then
+`ceterms:opeID` on 4,793, `ceterms:identifier` on 4,733 and `ceterms:fein` on 4,710. The next
+most common property in the whole set, `ceterms:email`, is on **52** of them, 1.1%.
+
+Every one of the twelve is identity, location, a self-description or a federal id. Not one is a
+disclosure with a duty behind it. The nearest thing the vocabulary has to a cost disclosure,
+`ceterms:hasCostManifest`, is on **6** of the 4,818, which is 0.12%.
+
+Two more facts settle what kind of records these are. **4,627** of the 4,818, or 96.0%, carry
+exactly the same twelve properties: 34 distinct property sets across 4,818 organizations, against
+442 across the registry as a whole. And **4,730** of them, 98.2%, carry a free-text identifier
+whose type name is `IPEDS NCES Data Year`, which is the value the join measurement already had to
+name as a year rather than a unit id. That is not four thousand institutions describing
+themselves; it is a directory loaded from IPEDS, dated to the collection year this project
+already reads from IPEDS directly.
+
+So the adapter is not written, and that is a finding rather than a delay.
+[ADR 0009](docs/adr/0009-the-registry-publishes-identity-not-disclosure.md) records it, along
+with what would reopen it: if the registry's postsecondary organizations began publishing
+`ceterms:hasCostManifest` or another property carrying a published duty at a rate that is not a
+rounding error, `make registry-properties` would say so, and that number would be the argument.
+The one stated limit on the finding is that it is about organizations. The registry's
+`resource_type=credential` set, 133,346 records, has not been walked, because a credential is not
+an institution and this project grades institutions.
 
 IPEDS states absence three different ways, all negative integers: `-1` not reported, `-2` not
 applicable, `-3` not available. They are not interchangeable and only the first counts against an
@@ -322,6 +405,38 @@ the resource summary either. A gate that cannot fail is worse than no gate, beca
 the same colour. The budget file stays as the declaration of intent; the enforcement is now
 somewhere it can fail.
 
+### The budget file is read now, not only cited
+
+Moving the counts out of that file fixed one line and left the rest of it in the state the whole
+file had been in. The `resourceSizes` lines went on being cited here, in the workflow and in the
+metrics ledger, and went on being enforced by nothing; the ledger said so in as many words, which
+is honest and is not the same as a gate. They are enforced now, in `make verify`, over the
+six-page fixture and again over all 617 published pages: **80 KiB** for the document and **80 KiB**
+for the page in total, read out of `lighthouse-budget.json` rather than copied out of it, so
+widening the budget widens the test and has to be argued for here. The largest page the committed
+report renders is California's state page at **65.5 KiB**, and that figure is in this sentence
+because a budget with a hundredfold of slack passes for the same reason a gate that cannot fail
+does; a test recomputes it from the build, so the day a template change eats the headroom this
+paragraph has to say so.
+
+Two things it does not claim. It reads the bytes the generator writes, while Lighthouse's
+`transferSize` is what crossed the wire: the body after any content-encoding, plus the response
+headers. Served uncompressed, the state/CA page was 67,061 bytes on disk against 67,250 of
+`transferSize`, the difference being the headers; served from anything that compresses, the
+on-disk figure is far the larger of the two. So the static check is stricter than the wire in the
+ordinary case and looser by a few hundred bytes in the pathological one, and it is described that
+way rather than as the same measurement. And the three timing lines, largest contentful paint,
+cumulative layout shift and total blocking time, are still enforced by nothing: they need a
+rendering engine, and a paint time is a fact about a machine as much as about a document.
+Measured locally on 2026-08-27 with `lighthouse@12`, the home page reported an LCP of 752 ms and
+the state/CA page 1052 ms against the 1500 ms line, both with a layout shift and a blocking time
+of exactly zero. A laptop is not the CI runner, and 1052 of 1500 is not the headroom to calibrate
+a gate on, so
+[ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md) records
+that the runner gets measured before those lines become a gate, which is the rule ADR 0007 had
+just finished writing down for a different question. Until then the ledger row says NONE, and a
+test fails if the ledger stops saying it.
+
 ## Development
 
 ```sh
@@ -374,7 +489,7 @@ skips.
 | Documentation | Applies - `CHANGELOG.md`, `CITATION.cff`, `SECURITY.md`, `CONTRIBUTING.md`, ADR log (`docs/adr/`), roadmap and metrics ledger (`docs/ROADMAP.md`) |
 | Quality & Metrics | Applies - metrics ledger with AUTO/REVIEW gates in `docs/ROADMAP.md` |
 | Release & Versioning | N/A - nothing versioned is released; committed data plus a rebuildable static site, no downstream consumers (`docs/adr/0001-no-versioned-release.md`) |
-| Performance | Applies - zero non-document subresources, enforced in `make verify` over one page of every kind and again over all 617 pages of the committed build (`tests/test_accessibility.py`); `lighthouse-budget.json` states the same budget but Lighthouse enforces none of it, see Accessibility above. Transfer-size and timing budgets remain unenforced. No server-side surface to load-test |
+| Performance | Applies - zero non-document subresources **and** the transfer-size budget, both enforced in `make verify` over one page of every kind and again over all 617 pages of the committed build (`tests/test_accessibility.py`), with the sizes read out of `lighthouse-budget.json` rather than copied from it; Lighthouse itself enforces none of that file, see Accessibility above. The three timing lines remain enforced by nothing and the ledger row says NONE ([ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md)); a budget line that is in neither register fails the build. No server-side surface to load-test |
 | Incident Response | Applies - no incidents to date; postmortems will live in `docs/incidents/` |
 | Data Governance | Applies - public federal datasets only, each payload names its source and coverage in its `scope` block; data inventory in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | AI Development Measurement | Applies - declared in `docs/ROADMAP.md` metrics ledger |
