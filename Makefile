@@ -12,7 +12,7 @@ verify: lint typecheck test
 # file nobody checks. check_site_origin.py sat outside `src` and was therefore outside the lint,
 # outside strict mypy, and outside the coverage floor, so the 98% the report prints was 98% of
 # the code that was being looked at.
-LINTED = src tests .github/scripts
+LINTED = src tests .github/scripts tools
 
 lint:
 	$(PYTHON) -m ruff check $(LINTED)

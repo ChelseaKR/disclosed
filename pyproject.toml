@@ -50,7 +50,7 @@ python_version = "3.12"
 # whether the published site may name the origin it names, and it was the one executable here
 # that no gate looked at: outside the lint targets, outside `files`, outside the coverage
 # source. A coverage floor is a floor over its denominator, and that file was not in it.
-files = ["src", ".github/scripts"]
+files = ["src", ".github/scripts", "tools"]
 
 [tool.ruff]
 line-length = 100
