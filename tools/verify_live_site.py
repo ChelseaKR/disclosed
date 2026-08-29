@@ -52,6 +52,7 @@ import ssl
 import subprocess
 import sys
 import tempfile
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -296,6 +297,23 @@ def compare(
     return differences
 
 
+def refuse_an_empty_comparison(count: int, minimum: int, what: str) -> None:
+    """A check that compares nothing must fail, not pass."""
+    if count < minimum:
+        raise LiveSiteError(
+            f"{what} holds {count} file(s), below the floor of {minimum}. "
+            f"A check that compares nothing must fail, not pass."
+        )
+
+
+def refuse_unbounded_options(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    """Bounds on the knobs, so a typo cannot quietly turn the check into nothing."""
+    if not 1 <= args.attempts <= 10:
+        parser.error("--attempts must be between 1 and 10")
+    if not 0 <= args.retry_seconds <= 120:
+        parser.error("--retry-seconds must be between 0 and 120")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--url", default=LIVE_URL, help=f"live site root (default {LIVE_URL})")
@@ -306,22 +324,48 @@ def main(argv: list[str] | None = None) -> int:
         default=MINIMUM_FILES,
         help="refuse to pass on fewer rebuilt files than this",
     )
+    parser.add_argument(
+        "--attempts",
+        type=int,
+        default=3,
+        help="how many times to look before reporting a difference (default 3)",
+    )
+    parser.add_argument(
+        "--retry-seconds",
+        type=float,
+        default=20.0,
+        help="seconds to wait between attempts, for a deploy to settle (default 20)",
+    )
     args = parser.parse_args(argv)
+    refuse_unbounded_options(parser, args)
 
-    try:
-        origin = Origin(args.url, timeout_seconds=args.timeout_seconds)
-        nonce = secrets.token_hex(16)
-        prove_the_origin_discriminates(origin, nonce)
-        generated, live_index = live_generated_date(origin, nonce)
-        inventory = build_expected(generated)
-        if len(inventory) < args.minimum:
-            raise LiveSiteError(
-                f"the rebuild produced {len(inventory)} file(s), below the floor of "
-                f"{args.minimum}. A check that compares nothing must fail, not pass."
+    last_error: LiveSiteError | None = None
+    differences: list[str] = []
+    for attempt in range(1, args.attempts + 1):
+        last_error = None
+        try:
+            origin = Origin(args.url, timeout_seconds=args.timeout_seconds)
+            nonce = secrets.token_hex(16)
+            prove_the_origin_discriminates(origin, nonce)
+            generated, live_index = live_generated_date(origin, nonce)
+            inventory = build_expected(generated)
+            refuse_an_empty_comparison(len(inventory), args.minimum, "the rebuild")
+            differences = compare(origin, inventory, nonce, live_index)
+        except LiveSiteError as exc:
+            last_error = exc
+            differences = []
+        if last_error is None and not differences:
+            break
+        if attempt < args.attempts:
+            reason = last_error if last_error else f"{len(differences)} difference(s)"
+            print(
+                f"attempt {attempt}/{args.attempts}: {reason}; waiting "
+                f"{args.retry_seconds:.0f}s in case a deploy is still settling",
+                file=sys.stderr,
             )
-        differences = compare(origin, inventory, nonce, live_index)
-    except LiveSiteError as exc:
-        print(f"live integrity check could not run: {exc}", file=sys.stderr)
+            time.sleep(args.retry_seconds)
+    if last_error is not None:
+        print(f"live integrity check could not run: {last_error}", file=sys.stderr)
         return EXIT_CANNOT_RUN
 
     if differences:
