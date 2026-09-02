@@ -29,6 +29,66 @@ flattered itself would guess. The
 composition side by side; the sample figure above is unchanged and describes
 the 600 institutions it has always described.
 
+## Install
+
+There is no package to install from an index, and that is a decision rather than an omission:
+nothing consumes this repository, so [ADR 0001](docs/adr/0001-no-versioned-release.md) declines
+a release pipeline with nothing to release. Install it from a clone.
+
+```sh
+git clone https://github.com/ChelseaKR/disclosed
+cd disclosed
+uv sync                     # dev environment, including the linters and the test suite
+```
+
+Or, without `uv`, the way [`.github/workflows/pages.yml`](.github/workflows/pages.yml) installs
+it before rendering the published site:
+
+```sh
+python -m pip install -e .  # Python 3.12+, no runtime dependencies
+disclosed --help
+```
+
+Both give you the `disclosed` command. The optional question-answering layer
+([ADR 0006](docs/adr/0006-ai-at-the-edges-the-classified-dataset-is-the-only-evidence.md)) is the
+only part with dependencies, and it is an extra: `pip install -e '.[ask]'`, or `.[ask-bedrock]`
+to reach the same models through Amazon Bedrock.
+
+## Quickstart
+
+Every command below runs offline and needs no API key. The federal captures they read are
+committed, which is the point: a number this project publishes has to be reproducible by
+somebody who does not have a key.
+
+```sh
+uv sync
+make verify        # the one local gate: ruff, strict mypy, tests, accessibility checks
+```
+
+Rebuild the published site from committed data and open it:
+
+```sh
+make site          # renders ./site from data/report.json, data/national.json and the census
+python -m http.server -d site
+```
+
+Regrade the full College Scorecard census and check it still reproduces byte for byte:
+
+```sh
+make census-replay # regrades data/census/scorecard.json and diffs against the committed artifact
+make replay        # the same contract for the IPEDS national artifact, from the committed archives
+```
+
+Export the classified dataset, or grade the census yourself:
+
+```sh
+make dataset       # data/dataset.csv plus its Table Schema, generated in one pass
+disclosed grade --source data/census/scorecard.json --out /tmp/census-graded.json
+```
+
+Only `make fetch` and `make grade` reach the network, and only those need `DATA_GOV_API_KEY`.
+`CONTRIBUTING.md` has the rest of the development setup.
+
 ## What it does
 
 Every value from a publisher is classified before anything else touches it:
@@ -414,7 +474,7 @@ is honest and is not the same as a gate. They are enforced now, in `make verify`
 six-page fixture and again over all 617 published pages: **80 KiB** for the document and **80 KiB**
 for the page in total, read out of `lighthouse-budget.json` rather than copied out of it, so
 widening the budget widens the test and has to be argued for here. The largest page the committed
-report renders is California's state page at **65.6 KiB**, and that figure is in this sentence
+report renders is California's state page at **66.6 KiB**, and that figure is in this sentence
 because a budget with a hundredfold of slack passes for the same reason a gate that cannot fail
 does; a test recomputes it from the build, so the day a template change eats the headroom this
 paragraph has to say so.
