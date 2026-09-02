@@ -128,8 +128,17 @@ class FieldDrift:
         131 institutions left the population underneath it. Reading the direction off the count
         printed "lost" beside a rise of 1.67 points: the count was right and the finding was
         backwards, which is worse than a wrong number because it comes with a word attached.
+
+        A rate that moved by exactly zero is its own case, "unchanged", not "lost": a field whose
+        applicable population and reporters both moved (so the record is not skipped by
+        :func:`compare`) but whose share of reporters did not move has, by this module's own
+        argument, had nothing gained or lost. Falling into "lost" for that case would be the
+        exact defect this project exists to name, on the one property whose docstring most
+        loudly promises not to commit it.
         """
         if self.rate_change is not None:
+            if self.rate_change == 0.0:
+                return "unchanged"
             return "gained" if self.rate_change > 0 else "lost"
         return "gained" if self.delta > 0 else "lost"
 
