@@ -154,6 +154,10 @@ class TestVerifyClaims:
             "The institution did not provide an admission rate.",
             "The school lacks an admission rate.",
             "The admission rate is not available for this school.",
+            "The institution does not report an admission rate.",
+            "The school did not report its admission rate this year.",
+            "Its admission rate is not published.",
+            "The institution never reports an admission rate.",
         ],
     )
     def test_an_absence_rendered_as_a_non_state_is_withheld(
@@ -269,6 +273,45 @@ class TestVerifyClaims:
             pack, corpus, {"text": "No record here is suppressed.", "cites": ["note:2"]}
         )
         assert len(out.claims) == 1
+
+    def test_a_claim_citing_only_a_drift_record_may_not_name_a_state(
+        self, evidence: Evidence, corpus: Corpus
+    ) -> None:
+        """A drift id is citable (``Pack.citable_ids()``), but a drift record says how a field's
+        national reporting rate moved, not what any one institution's field is classified as.
+        Naming a state and citing only a drift id must be withheld, not skipped because no
+        ``ClassificationRecord`` happened to be cited -- the exact gap GitHub issue #40 names."""
+        drift_pack = lookup.assemble(
+            _q(
+                intent="drift_in_a_field",
+                institution_hint=None,
+                field_labels=("Equity in athletics disclosure",),
+                source="IPEDS",
+            ),
+            evidence,
+            corpus,
+        )
+        systemic = next(d for d in drift_pack.drift if d.is_systemic)
+        narration = narrate.narrate(
+            drift_pack,
+            FakeProvider(
+                [
+                    _narration(
+                        [
+                            {
+                                "text": "The athletics disclosure is suppressed, not missing.",
+                                "cites": [systemic.id],
+                            }
+                        ]
+                    )
+                ]
+            ),
+        )
+        out = verify.verify(narration, drift_pack, corpus)
+        assert out.claims == ()
+        assert out.withheld_claims[0].reason == (
+            "names a classification without citing a classification record"
+        )
 
 
 class TestVerifyQuotes:
