@@ -1,8 +1,9 @@
 PYTHON ?= .venv/bin/python
 
 .PHONY: verify lint typecheck test fetch grade site dataset crosscheck national census-report \
-        snapshot replay census-replay ipeds-snapshots registry-fetch registry-join \
-        registry-replay
+        snapshot replay census-replay scorecard-snapshot-replay ipeds-snapshots registry-fetch \
+        registry-join registry-replay registry-properties registry-property-report \
+        registry-property-replay
 
 verify: lint typecheck test
 
@@ -11,7 +12,7 @@ verify: lint typecheck test
 # file nobody checks. check_site_origin.py sat outside `src` and was therefore outside the lint,
 # outside strict mypy, and outside the coverage floor, so the 98% the report prints was 98% of
 # the code that was being looked at.
-LINTED = src tests .github/scripts
+LINTED = src tests .github/scripts tools
 
 lint:
 	$(PYTHON) -m ruff check $(LINTED)
@@ -53,6 +54,20 @@ census-report:
 snapshot:
 	$(PYTHON) -m disclosed.cli snapshot --taken $(TAKEN) --out data/snapshots/scorecard/$(TAKEN).json
 
+# The daily Scorecard series, regenerated from the committed capture. Only one date in it can be
+# checked this way: the capture is a single walk, and the other days' captures were ninety-day
+# workflow artifacts that have since expired. That one is enough to make the series reproducible
+# rather than merely committed, and it is the day this target replays -- read out of the capture's
+# own provenance, so refreshing the capture moves it. No network and no key.
+# `tests/test_census_replay.py::TestTheCommittedScorecardSnapshots` is the pytest form and is what
+# gates `make verify`; this is what you run to see the diff when it fails.
+scorecard-snapshot-replay:
+	$(PYTHON) -m disclosed.cli grade --source data/census/scorecard.json --out /tmp/census-graded.json
+	taken=$$($(PYTHON) -c "import json; print(json.load(open('data/census/scorecard.json'))['provenance']['walked_at'][:10])") && \
+	$(PYTHON) -m disclosed.cli snapshot --report /tmp/census-graded.json --taken $$taken --out /tmp/scorecard-snapshot.json && \
+	diff -u data/snapshots/scorecard/$$taken.json /tmp/scorecard-snapshot.json && \
+	echo "data/snapshots/scorecard/$$taken.json replays exactly"
+
 # Regenerate the committed national artifact from the committed archives and show what moved. The
 # test suite asserts these are identical on every push; this is the target you run when it says
 # they are not, because a diff is more use than an assertion failure. No network and no key: both
@@ -87,6 +102,24 @@ registry-join:
 registry-replay:
 	$(PYTHON) -m disclosed.cli registry-join --capture data/registry/organizations.json --cache data/HD2023.zip --source data/census/scorecard.json --out /tmp/registry-join.json
 	diff -u data/registry-join.json /tmp/registry-join.json && echo "data/registry-join.json replays exactly"
+
+# Walk the registry again, capturing which CTDL property names each organization publishes rather
+# than the identifiers a join needs. A second capture and not two more columns on the first one:
+# written per organization the property names add about 8.5 MB to a 7.9 MB file, and aggregated to
+# distinct property sets they are 245 KiB. Serves from the same page cache, so a rerun after
+# `registry-fetch` costs no network at all.
+registry-properties:
+	$(PYTHON) -m disclosed.cli registry-properties --out data/registry/properties.json --cache-dir .cache/registry
+
+# Reduce the census to the rates docs/adr/0009 is argued from. Offline: the census is committed.
+registry-property-report:
+	$(PYTHON) -m disclosed.cli registry-property-report --census data/registry/properties.json --out data/registry-properties.json
+
+# Same contract as `registry-replay`. `tests/test_registry_properties.py` is the pytest form and
+# is what gates `make verify`; this is what you run to see the diff when it fails.
+registry-property-replay:
+	$(PYTHON) -m disclosed.cli registry-property-report --census data/registry/properties.json --out /tmp/registry-properties.json
+	diff -u data/registry-properties.json /tmp/registry-properties.json && echo "data/registry-properties.json replays exactly"
 
 # The three-year IPEDS history the systemic threshold is argued from. Same contract as `replay`.
 ipeds-snapshots:

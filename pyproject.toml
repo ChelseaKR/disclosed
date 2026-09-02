@@ -50,7 +50,7 @@ python_version = "3.12"
 # whether the published site may name the origin it names, and it was the one executable here
 # that no gate looked at: outside the lint targets, outside `files`, outside the coverage
 # source. A coverage floor is a floor over its denominator, and that file was not in it.
-files = ["src", ".github/scripts"]
+files = ["src", ".github/scripts", "tools"]
 
 [tool.ruff]
 line-length = 100
@@ -70,7 +70,13 @@ testpaths = ["tests"]
 # Bare `--cov`, so the measured set is the one named in [tool.coverage.run] below and there is
 # one place to change it. `--cov=disclosed` named the package, which quietly meant the coverage
 # floor could never see anything that is not in it.
-addopts = "--strict-markers --strict-config --import-mode=importlib --cov --cov-branch --cov-fail-under=90"
+# The floor was 90 while the suite measured 97.99% branch coverage over 822 tests
+# (2026-08-29). A floor is only a floor where it can be reached: eight points of gap meant
+# a regression could drop a real amount of covered code and still leave the build green,
+# which is the same class of hole as the denominator defect the comment above records. The
+# gate now sits a few points under what is measured: enough slack that an unrelated change
+# does not fail the build, not enough to hide a real loss.
+addopts = "--strict-markers --strict-config --import-mode=importlib --cov --cov-branch --cov-fail-under=95"
 
 [tool.coverage.run]
 source = ["src/disclosed", ".github/scripts"]

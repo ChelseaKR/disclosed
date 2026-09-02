@@ -10,6 +10,44 @@ file is the human-readable one.
 
 ### Added
 
+- **The daily Scorecard snapshots are replayed, not merely committed.**
+  `data/snapshots/scorecard/` held nine committed artifacts that nothing regenerated and nothing
+  compared. `tests/test_replay.py` replays every IPEDS snapshot from its own archives and
+  `tests/test_census_replay.py` replays `data/scorecard-census.json` from the committed capture;
+  the series beside them had neither, and the only thing in the repository that mentioned it was
+  `tests/test_workflows.py` asserting that a path string appears in the workflow YAML. They were
+  counts standing in for a computation, with nothing checking the counts were still what the
+  computation produces. All nine replay byte-identically today, which is the point: nothing was
+  keeping them that way. The snapshot taken on the day of the committed capture is now held to
+  byte equality against what that capture regrades to, with the date read out of the capture's own
+  provenance so refreshing the capture moves it, and `make scorecard-snapshot-replay` shows the
+  diff when it fails. The other days are deliberately **not** frozen to that replay: their
+  captures were ninety-day workflow artifacts and are gone, and a series that exists to record
+  drift must not be gated on never drifting. They are held instead to what is true of them
+  whatever the Scorecard published that morning: the date they claim, the walk they came from,
+  and their own arithmetic. `snapshot.yml` commits a provenance sidecar beside every snapshot so
+  that "a drift finding can be traced to the bytes it was computed from", and nothing checked the
+  sidecar was there or that the two files describe the same run; both are checked now. The glob
+  the series is discovered through is asserted non-empty before anything is parametrized over it,
+  because an empty one parametrizes into zero tests and reports as a passing suite.
+
+- **What the Credential Registry publishes, counted, and the adapter decided against
+  ([ADR 0009](docs/adr/0009-the-registry-publishes-identity-not-disclosure.md)).** ADR 0007
+  measured the join and said in as many words that a join does not tell you what there is to
+  grade. `disclosed registry-properties` walks the same set with the same adapter, the same page
+  cache and the same refusal to report a walk it cannot prove reached the end, and captures which
+  CTDL property *names* each organization publishes, never what is inside them;
+  `disclosed registry-property-report` reduces that to rates over two denominators that are never
+  summed. The answer, over the 4,818 organizations that publish an IPEDS id: nine properties on
+  100% of them and three more above 97%, every one identity, location, a self-description or a
+  federal id; `ceterms:email`, the next most common property in the whole vocabulary, on 52;
+  `ceterms:hasCostManifest` on 6. 96.0% carry an identical set of twelve properties and 98.2%
+  carry a free-text `IPEDS NCES Data Year`, which is a year. That is a directory loaded from
+  IPEDS. **No adapter is written**, milestone 1 closes as a finding, and the ADR states the
+  measurement that would reopen it. The capture is aggregated to distinct property sets, 403 KB
+  rather than the 8.5 MB the same facts cost per organization, and the report replays
+  byte-for-byte in `make verify`.
+
 - **The transfer-size budget is a gate, and every line of the budget file is accounted for
   ([ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md)).**
   `lighthouse-budget.json` had its resource *counts* moved into `make verify` when Lighthouse
