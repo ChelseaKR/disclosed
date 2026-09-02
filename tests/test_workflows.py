@@ -73,6 +73,7 @@ _WORKFLOW = _read("snapshot.yml")
 _SECURITY = _read("security.yml")
 _PAGES = _read("pages.yml")
 _VERIFY = _read("verify.yml")
+_ACCESSIBILITY = _read("accessibility.yml")
 
 
 def _flat(text: str) -> list[str]:
@@ -451,3 +452,72 @@ class TestThePublishedSiteCannotNameAnOriginNobodyConfirmed:
 
     def test_a_render_that_produced_nothing_is_not_published(self) -> None:
         assert "test -s site/index.html" in _PAGES
+
+
+# The two reports the timing gate reads, named as accessibility.yml names them. These are
+# strings matched against a workflow file, not paths this suite opens, so the hardcoded-tmp rule
+# is waived at the line rather than by loosening it anywhere.
+_TIMED_REPORTS = ("/tmp/home.json", "/tmp/CA.json")  # noqa: S108 -- matched, never opened
+
+
+class TestTheTimingBudgetIsActuallyEnforced:
+    """The timing gate ``docs/adr/0010`` added, pinned to the shape that makes it one.
+
+    The gate lives in ``.github/scripts/check_lighthouse_timings.py``, which
+    ``tests/test_lighthouse_timings.py`` exercises directly. What that file cannot see is the
+    workflow: the script is only a gate while the job runs it, and only measures anything while
+    the reports it is given were audited with the performance category. Lighthouse collects no
+    timings without it, and the script would then report three missing metrics rather than
+    passing, so this is checked here as well as there. Both halves are needed and they break
+    independently.
+    """
+
+    def _steps(self) -> list[str]:
+        return _steps(_ACCESSIBILITY)
+
+    def _index(self, pattern: str) -> int:
+        for position, line in enumerate(self._steps()):
+            if re.search(pattern, line):
+                return position
+        raise AssertionError(
+            f"accessibility.yml has no step matching {pattern!r}. Every assertion in this class "
+            "guards a step that stops enforcing the timing budget when it moves."
+        )
+
+    def test_the_gate_runs_the_script_over_the_budget_file(self) -> None:
+        lines = self._steps()
+        position = self._index(r"check_lighthouse_timings\.py")
+        joined = " ".join(lines[position : position + 3])
+        assert "lighthouse-budget.json" in joined, (
+            "the timing gate no longer reads the budget file, so it is checking numbers that "
+            "live somewhere the README does not point at"
+        )
+        for report in _TIMED_REPORTS:
+            assert report in joined, f"the timing gate no longer checks {report}"
+
+    def test_the_pages_it_gates_are_audited_with_the_performance_category(self) -> None:
+        """Without it lighthouse writes a report with no timings in it at all.
+
+        The script fails on a missing metric rather than passing, so this cannot silently
+        disable the gate; it can only turn it into a red build for a confusing reason. Pinning
+        it here makes the reason obvious in the file rather than in a CI log.
+        """
+        text = " ".join(self._steps())
+        for page in _TIMED_REPORTS:
+            head = text.split(page)[0]
+            audit = head[head.rindex("npx --yes lighthouse@12") :]
+            tail = text.split(page)[1].split("npx --yes lighthouse@12")[0]
+            assert "performance" in audit + tail, (
+                f"the audit that writes {page} no longer asks for the performance category, so "
+                "the report it writes carries no timing metrics for the gate to read"
+            )
+
+    def test_the_gate_follows_the_audit_that_produces_what_it_reads(self) -> None:
+        assert self._index(r"npx --yes lighthouse@12") < self._index(r"check_lighthouse_timings")
+
+    def test_the_gate_is_not_softened(self) -> None:
+        """``|| true`` on this line would restore the state ADR 0008 found and named."""
+        position = self._index(r"check_lighthouse_timings\.py")
+        for line in self._steps()[position : position + 3]:
+            assert "|| true" not in line
+            assert "continue-on-error" not in line
