@@ -182,6 +182,28 @@ def _cited(
     return records, drifts, contradictions
 
 
+def _classification_reason(claim: Claim, records: list[ClassificationRecord]) -> str | None:
+    """Why a claim's classification word does not stand, or ``None`` when it does.
+
+    A claim naming a classification state has to be checked against an actual
+    ``ClassificationRecord``, not skipped because none happened to be cited. A drift or
+    contradiction id is citable (:meth:`Pack.citable_ids`) but proves nothing about which of the
+    five states one institution's one field is in; only a note id -- fixed text this project
+    wrote itself -- is exempt, the same exemption the fidelity check has always given a
+    note-only citation.
+    """
+    named = {STATE_WORDS[m.lower().replace("_", " ")] for m in _STATE_PATTERN.findall(claim.text)}
+    if not named:
+        return None
+    if not records:
+        if all(c.startswith("note:") for c in claim.cites):
+            return None
+        return "names a classification without citing a classification record"
+    if not (named & {r.classification for r in records}):
+        return "names a classification none of its cited records is in"
+    return None
+
+
 def _check_claim(claim: Claim, pack: Pack) -> str | None:
     """The first reason to withhold a claim, or ``None`` when it stands."""
     citable = pack.citable_ids()
@@ -190,20 +212,9 @@ def _check_claim(claim: Claim, pack: Pack) -> str | None:
     if any(c not in citable for c in claim.cites):
         return "cites a record not in the pack"
     records, drifts, contradictions = _cited(pack, claim.cites)
-    named = {STATE_WORDS[m.lower().replace("_", " ")] for m in _STATE_PATTERN.findall(claim.text)}
-    if named:
-        # A claim naming a classification state has to be checked against an actual
-        # ClassificationRecord, not skipped because none happened to be cited. A drift or
-        # contradiction id is citable (Pack.citable_ids()) but proves nothing about which of the
-        # five states one institution's one field is in; only a note id -- fixed text this
-        # project wrote itself -- is exempt, the same exemption the fidelity check has always
-        # given a note-only citation.
-        cites_only_notes = all(c.startswith("note:") for c in claim.cites)
-        if not records and not cites_only_notes:
-            return "names a classification without citing a classification record"
-        cited_states = {r.classification for r in records}
-        if records and not (named & cited_states):
-            return "names a classification none of its cited records is in"
+    classification_reason = _classification_reason(claim, records)
+    if classification_reason is not None:
+        return classification_reason
     if _COLLAPSE.search(claim.text):
         return "renders an absence as a non-state"
     if JUDGEMENT.search(claim.text):
