@@ -1,0 +1,106 @@
+{
+ "suite": "drift_direction",
+ "status": "run",
+ "provenance": {
+  "provider": "live",
+  "model": "global.anthropic.claude-sonnet-4-6",
+  "prompt_version": "2026-08-21.1",
+  "harness_version": "1",
+  "commit": "40b5a84bf5eaed482d9173f822456285415c4cf3",
+  "date": "2026-08-22"
+ },
+ "scores": {
+  "correct": 9,
+  "no_direction_named": 1,
+  "shown": 2,
+  "n": 12,
+  "wrong": 0,
+  "wrong_tolerance": 0
+ },
+ "outcomes": [
+  {
+   "case_id": "drift-01",
+   "verdict": "correct",
+   "kind": "national",
+   "measured_pairs": 3,
+   "shown_claims": 3
+  },
+  {
+   "case_id": "drift-02",
+   "verdict": "correct",
+   "kind": "national",
+   "measured_pairs": 3,
+   "shown_claims": 3
+  },
+  {
+   "case_id": "drift-03",
+   "verdict": "correct",
+   "kind": "national",
+   "measured_pairs": 3,
+   "shown_claims": 3
+  },
+  {
+   "case_id": "drift-04",
+   "verdict": "no_direction_named",
+   "kind": "national",
+   "measured_pairs": 3,
+   "shown_claims": 2
+  },
+  {
+   "case_id": "drift-05",
+   "verdict": "correct",
+   "kind": "national",
+   "measured_pairs": 3,
+   "shown_claims": 3
+  },
+  {
+   "case_id": "drift-06",
+   "verdict": "correct",
+   "kind": "national",
+   "measured_pairs": 3,
+   "shown_claims": 4
+  },
+  {
+   "case_id": "drift-07",
+   "verdict": "correct",
+   "kind": "national",
+   "measured_pairs": 3,
+   "shown_claims": 3
+  },
+  {
+   "case_id": "drift-08",
+   "verdict": "correct",
+   "kind": "national",
+   "measured_pairs": 0,
+   "shown_claims": 0
+  },
+  {
+   "case_id": "drift-09",
+   "verdict": "correct",
+   "kind": "national",
+   "measured_pairs": 0,
+   "shown_claims": 0
+  },
+  {
+   "case_id": "drift-10",
+   "verdict": "correct",
+   "kind": "cross_source",
+   "measured_pairs": 0,
+   "shown_claims": 0
+  },
+  {
+   "case_id": "drift-11",
+   "verdict": "shown",
+   "kind": "institution",
+   "measured_pairs": 3,
+   "shown_claims": 2
+  },
+  {
+   "case_id": "drift-12",
+   "verdict": "shown",
+   "kind": "institution",
+   "measured_pairs": 0,
+   "shown_claims": 3
+  }
+ ]
+}

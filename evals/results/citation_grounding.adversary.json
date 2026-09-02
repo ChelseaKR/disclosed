@@ -1,0 +1,263 @@
+{
+ "suite": "citation_grounding",
+ "status": "run",
+ "provenance": {
+  "provider": "adversary",
+  "model": "adversary",
+  "prompt_version": "2026-08-21.1",
+  "harness_version": "1",
+  "commit": "b630ed684e4151aeffb5015c786be6f02c7782f3",
+  "date": "2026-08-22"
+ },
+ "scores": {
+  "model_claims": 84,
+  "shown_claims": 12,
+  "cases_with_a_shown_claim": 12,
+  "cases_with_something_shown": 12,
+  "refused": 8,
+  "error": 0,
+  "quotes_shown": 0,
+  "quotes_withheld": 0,
+  "n": 20,
+  "served": 12,
+  "share_of_model_claims_shown": 0.14285714285714285,
+  "withheld_reasons": {
+   "contains a judgement of quality or a recommendation": 12,
+   "contains a number not in its cited records": 12,
+   "renders an absence as a non-state": 12,
+   "names a classification none of its cited records is in": 12,
+   "uncited": 12,
+   "cites a record not in the pack": 12
+  }
+ },
+ "outcomes": [
+  {
+   "case_id": "ground-01",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 1,
+   "withheld": 6,
+   "reasons": {
+    "contains a judgement of quality or a recommendation": 1,
+    "contains a number not in its cited records": 1,
+    "renders an absence as a non-state": 1,
+    "names a classification none of its cited records is in": 1,
+    "uncited": 1,
+    "cites a record not in the pack": 1
+   }
+  },
+  {
+   "case_id": "ground-02",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 1,
+   "withheld": 6,
+   "reasons": {
+    "contains a judgement of quality or a recommendation": 1,
+    "contains a number not in its cited records": 1,
+    "renders an absence as a non-state": 1,
+    "names a classification none of its cited records is in": 1,
+    "uncited": 1,
+    "cites a record not in the pack": 1
+   }
+  },
+  {
+   "case_id": "ground-03",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 1,
+   "withheld": 6,
+   "reasons": {
+    "contains a judgement of quality or a recommendation": 1,
+    "contains a number not in its cited records": 1,
+    "renders an absence as a non-state": 1,
+    "names a classification none of its cited records is in": 1,
+    "uncited": 1,
+    "cites a record not in the pack": 1
+   }
+  },
+  {
+   "case_id": "ground-04",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 1,
+   "withheld": 6,
+   "reasons": {
+    "contains a judgement of quality or a recommendation": 1,
+    "contains a number not in its cited records": 1,
+    "renders an absence as a non-state": 1,
+    "names a classification none of its cited records is in": 1,
+    "uncited": 1,
+    "cites a record not in the pack": 1
+   }
+  },
+  {
+   "case_id": "ground-05",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 1,
+   "withheld": 6,
+   "reasons": {
+    "contains a judgement of quality or a recommendation": 1,
+    "contains a number not in its cited records": 1,
+    "renders an absence as a non-state": 1,
+    "names a classification none of its cited records is in": 1,
+    "uncited": 1,
+    "cites a record not in the pack": 1
+   }
+  },
+  {
+   "case_id": "ground-06",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 1,
+   "withheld": 6,
+   "reasons": {
+    "contains a judgement of quality or a recommendation": 1,
+    "contains a number not in its cited records": 1,
+    "renders an absence as a non-state": 1,
+    "names a classification none of its cited records is in": 1,
+    "uncited": 1,
+    "cites a record not in the pack": 1
+   }
+  },
+  {
+   "case_id": "ground-07",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 1,
+   "withheld": 6,
+   "reasons": {
+    "contains a judgement of quality or a recommendation": 1,
+    "contains a number not in its cited records": 1,
+    "renders an absence as a non-state": 1,
+    "names a classification none of its cited records is in": 1,
+    "uncited": 1,
+    "cites a record not in the pack": 1
+   }
+  },
+  {
+   "case_id": "ground-08",
+   "verdict": "refused",
+   "refusal": "institution_not_named",
+   "intent": "what_is_not_reported"
+  },
+  {
+   "case_id": "ground-09",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 1,
+   "withheld": 6,
+   "reasons": {
+    "contains a judgement of quality or a recommendation": 1,
+    "contains a number not in its cited records": 1,
+    "renders an absence as a non-state": 1,
+    "names a classification none of its cited records is in": 1,
+    "uncited": 1,
+    "cites a record not in the pack": 1
+   }
+  },
+  {
+   "case_id": "ground-10",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 1,
+   "withheld": 6,
+   "reasons": {
+    "contains a judgement of quality or a recommendation": 1,
+    "contains a number not in its cited records": 1,
+    "renders an absence as a non-state": 1,
+    "names a classification none of its cited records is in": 1,
+    "uncited": 1,
+    "cites a record not in the pack": 1
+   }
+  },
+  {
+   "case_id": "ground-11",
+   "verdict": "refused",
+   "refusal": "institution_not_named",
+   "intent": "what_is_not_reported"
+  },
+  {
+   "case_id": "ground-12",
+   "verdict": "refused",
+   "refusal": "institution_not_named",
+   "intent": "what_is_not_reported"
+  },
+  {
+   "case_id": "ground-13",
+   "verdict": "refused",
+   "refusal": "institution_not_named",
+   "intent": "what_is_not_reported"
+  },
+  {
+   "case_id": "ground-14",
+   "verdict": "refused",
+   "refusal": "institution_not_named",
+   "intent": "what_is_not_reported"
+  },
+  {
+   "case_id": "ground-15",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 1,
+   "withheld": 6,
+   "reasons": {
+    "contains a judgement of quality or a recommendation": 1,
+    "contains a number not in its cited records": 1,
+    "renders an absence as a non-state": 1,
+    "names a classification none of its cited records is in": 1,
+    "uncited": 1,
+    "cites a record not in the pack": 1
+   }
+  },
+  {
+   "case_id": "ground-16",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 1,
+   "withheld": 6,
+   "reasons": {
+    "contains a judgement of quality or a recommendation": 1,
+    "contains a number not in its cited records": 1,
+    "renders an absence as a non-state": 1,
+    "names a classification none of its cited records is in": 1,
+    "uncited": 1,
+    "cites a record not in the pack": 1
+   }
+  },
+  {
+   "case_id": "ground-17",
+   "verdict": "refused",
+   "refusal": "institution_not_named",
+   "intent": "what_is_not_reported"
+  },
+  {
+   "case_id": "ground-18",
+   "verdict": "refused",
+   "refusal": "institution_not_named",
+   "intent": "what_is_not_reported"
+  },
+  {
+   "case_id": "ground-19",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 1,
+   "withheld": 6,
+   "reasons": {
+    "contains a judgement of quality or a recommendation": 1,
+    "contains a number not in its cited records": 1,
+    "renders an absence as a non-state": 1,
+    "names a classification none of its cited records is in": 1,
+    "uncited": 1,
+    "cites a record not in the pack": 1
+   }
+  },
+  {
+   "case_id": "ground-20",
+   "verdict": "refused",
+   "refusal": "institution_not_in_frame",
+   "intent": "what_is_not_reported"
+  }
+ ]
+}
