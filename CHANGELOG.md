@@ -23,6 +23,13 @@ file is the human-readable one.
   everything, which is the state the whole file was in while three documents called it a gate.
   The metrics ledger's last `Gate: NONE` row becomes AUTO, and
   `TestEveryBudgetLineIsAccountedFor`'s unenforced register is now empty.
+  ADR 0010's 2026-09-01 amendment moves `total-blocking-time` off the `0` it had been carrying:
+  the headroom argument that kept paint time at 1500 ms was never applied to it, and the gate
+  reported `total-blocking-time is 34 against a budget of 0` on its own next run, on a tree whose
+  only change was the gate. The site ships no script, so 34 ms is a shared runner's main thread.
+  The line is 200 ms, where Lighthouse's own scoring stops calling blocking time good — a
+  published boundary rather than a reading off this runner. `cumulative-layout-shift` stays at 0,
+  because with no script, image, stylesheet or font on any page there is nothing that can shift.
 
 - **The daily Scorecard snapshots are replayed, not merely committed.**
   `data/snapshots/scorecard/` held nine committed artifacts that nothing regenerated and nothing

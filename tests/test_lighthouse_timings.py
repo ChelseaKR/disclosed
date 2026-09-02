@@ -72,7 +72,7 @@ class TestTheBudgetItReads:
         assert budgets == {
             "largest-contentful-paint": 1500.0,
             "cumulative-layout-shift": 0.0,
-            "total-blocking-time": 0.0,
+            "total-blocking-time": 200.0,
         }
 
     def test_a_budget_file_with_two_path_entries_is_refused(self, tmp_path: Path) -> None:
@@ -112,6 +112,32 @@ class TestOneReport:
         )
         problems = check.check(check.timing_budgets(_BUDGET_FILE), report)
         assert problems == ["CA.json: cumulative-layout-shift is 0.01 against a budget of 0"]
+
+    def test_the_blocking_time_the_second_run_reported_is_inside_the_budget(
+        self, tmp_path: Path
+    ) -> None:
+        """Run 33139828844 reported 34 ms of total blocking time on the home page, against the
+        0 ms this budget line was first set to from a single run that reported 0.
+
+        The page ships no script at all -- ``resourceCounts.script`` is budgeted at 0 and held
+        there statically -- so 34 ms is a shared runner's main thread, not this site's code. A
+        budget set to a single observation of a noisy metric is the failure ADR 0008 wrote the
+        rule about, and this is the case that proves the line is no longer set that way.
+        """
+        report = _written(
+            tmp_path, "home.json", _report(**{**_RUNNER_CA, "total-blocking-time": 34})
+        )
+        assert check.check(check.timing_budgets(_BUDGET_FILE), report) == []
+
+    def test_a_blocking_time_past_lighthouses_good_threshold_fails(self, tmp_path: Path) -> None:
+        """200 ms is where Lighthouse itself stops scoring total blocking time as good. A
+        document with no script that blocks the main thread for longer than that is a
+        regression in the document, not runner noise."""
+        report = _written(
+            tmp_path, "CA.json", _report(**{**_RUNNER_CA, "total-blocking-time": 200.5})
+        )
+        problems = check.check(check.timing_budgets(_BUDGET_FILE), report)
+        assert problems == ["CA.json: total-blocking-time is 200.5 against a budget of 200"]
 
     def test_a_report_without_the_audit_is_a_failure_and_not_a_pass(self, tmp_path: Path) -> None:
         """The way this gate would otherwise stop applying without anybody noticing.

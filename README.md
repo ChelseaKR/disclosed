@@ -451,6 +451,14 @@ records both halves, including why the budget stayed at 1500 ms rather than bein
 30 ms above the measurement: a budget set just above today's number gets widened under deadline
 instead of investigated.
 
+That rule was applied to the paint time and not to the other two lines, and the gate caught it on
+its next run: `total-blocking-time is 34 against a budget of 0`, on a tree whose only change was
+the gate itself. The site ships no script, so 34 ms is a shared runner's main thread rather than
+this document. The line is **200 ms** now, where Lighthouse's own scoring stops calling blocking
+time good — a published boundary rather than a reading off this project's runner. The layout
+shift line stays at 0, because with no script, image, stylesheet or font on any page there is
+nothing on it that can shift. The amendment to ADR 0010 records both.
+
 Every line of `lighthouse-budget.json` is now enforced by something named, and a line that is in
 neither register fails the build.
 

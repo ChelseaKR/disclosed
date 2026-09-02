@@ -325,7 +325,10 @@ that paragraph.
   laptop and set the precondition; run 33129896655 measured the runner and reported within a
   millisecond of the laptop on both pages, because lighthouse throttles by simulation;
   `docs/adr/0010` records the measurement and the gate, including the decision to keep the budget
-  at 1500 ms rather than tighten it to 30 ms above what was measured.
+  at 1500 ms rather than tighten it to 30 ms above what was measured. That rule was not applied
+  to `total-blocking-time`, which was left at the `0` the same run reported and failed at 34 ms
+  on a shared runner the next time it ran; the ADR's 2026-09-01 amendment moves it to 200 ms,
+  Lighthouse's own boundary for good, and records why `cumulative-layout-shift` stays at 0.
 - **The script is inside the gate that checks it.** It lives in `.github/scripts`, which
   `make verify` lints, type-checks and covers, for the reason recorded when `check_site_origin.py`
   moved into scope: the thing that decides whether a build passes cannot be the one file nobody

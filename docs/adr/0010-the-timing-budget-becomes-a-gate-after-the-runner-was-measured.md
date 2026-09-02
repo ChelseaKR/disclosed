@@ -109,3 +109,37 @@ Gate the three timing lines in `accessibility.yml`, and keep the budget where it
 - **Leave the row at NONE, since the sizes are gated and the timings correlate with them.**
   Rejected. It is true that the document size dominates the paint time here, and that is an
   argument, not a measurement. This project spends its time telling other people the difference.
+
+## Amendment 2026-09-01: the total-blocking-time line was set to a single observation
+
+Decision 5 above kept `largest-contentful-paint` at 1,500 ms rather than tightening it to the
+1,052 ms that was measured, and wrote down why: a budget set just above today's number fails on
+the first ordinary change and gets widened under deadline. That reasoning was applied to the one
+line the table above had a non-zero number in, and not to the other two, which were left at the
+`0` they had been carrying since before anything read this file. For `cumulative-layout-shift`
+that is right: the site ships no script, no image, no stylesheet and no font — `resourceCounts`
+budgets all four at 0 and `TestTheResourceBudget` holds every one of the 617 built pages to it —
+so there is no source of a layout shift on the page, and 0 is a property of the document rather
+than a reading off a machine.
+
+For `total-blocking-time` it was wrong, and the gate said so on its own next run.
+[Run 33139828844](https://github.com/ChelseaKR/disclosed/actions/runs/33139828844) reported
+`home.json: total-blocking-time is 34 against a budget of 0` on a tree whose only change since
+the measuring run was this gate. Nothing about the page moved. Total blocking time is the part of
+every main-thread task over 50 ms between first contentful paint and time to interactive, and on
+a shared `ubuntu-latest` runner a document can accumulate that from parse, style and layout under
+somebody else's CPU load. The 0 ms in the table is one sample of a noisy measurement, which is
+exactly the thing decision 5 refuses to calibrate on.
+
+**The line moves to 200 ms**, which is where Lighthouse's own scoring curve stops calling total
+blocking time good. It is a published third-party boundary rather than a number read off this
+project's runner, which is the property that makes it a budget instead of a tripwire. A
+script-free document that blocks the main thread for a fifth of a second is a regression in the
+document; 34 ms is a busy runner.
+
+The alternative was to move the line into
+`TestEveryBudgetLineIsAccountedFor._NOT_ENFORCED` with "too noisy on a shared runner" as the
+written reason, and to put the ledger row back to NONE for it. Rejected: the metric is not
+unmeasurable, it was budgeted at a number no measurement supports. A gate held at a defensible
+threshold is worth more than a gate deleted, and the register exists for lines nothing can hold,
+not for lines somebody set badly.
