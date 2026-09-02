@@ -1,0 +1,210 @@
+{
+ "suite": "citation_grounding",
+ "status": "run",
+ "provenance": {
+  "provider": "live",
+  "model": "global.anthropic.claude-sonnet-4-6",
+  "prompt_version": "2026-08-21.1",
+  "harness_version": "1",
+  "commit": "40b5a84bf5eaed482d9173f822456285415c4cf3",
+  "date": "2026-08-22"
+ },
+ "scores": {
+  "model_claims": 53,
+  "shown_claims": 43,
+  "cases_with_a_shown_claim": 16,
+  "cases_with_something_shown": 18,
+  "refused": 1,
+  "error": 0,
+  "quotes_shown": 11,
+  "quotes_withheld": 8,
+  "n": 20,
+  "served": 19,
+  "share_of_model_claims_shown": 0.8113207547169812,
+  "withheld_reasons": {
+   "contains a number not in its cited records": 10,
+   "is not a verbatim quote of the passage": 2,
+   "quotes a passage not in the pack": 6
+  }
+ },
+ "outcomes": [
+  {
+   "case_id": "ground-01",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 2,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-02",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 4,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-03",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 3,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-04",
+   "verdict": "shown",
+   "intent": "is_value_real",
+   "shown": 2,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-05",
+   "verdict": "shown",
+   "intent": "is_value_real",
+   "shown": 3,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-06",
+   "verdict": "shown",
+   "intent": "did_anything_change",
+   "shown": 4,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-07",
+   "verdict": "shown",
+   "intent": "did_anything_change",
+   "shown": 3,
+   "withheld": 1,
+   "reasons": {
+    "contains a number not in its cited records": 1
+   }
+  },
+  {
+   "case_id": "ground-08",
+   "verdict": "shown",
+   "intent": "why_absent",
+   "shown": 2,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-09",
+   "verdict": "shown",
+   "intent": "why_absent",
+   "shown": 4,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-10",
+   "verdict": "shown",
+   "intent": "why_absent",
+   "shown": 3,
+   "withheld": 1,
+   "reasons": {
+    "contains a number not in its cited records": 1,
+    "is not a verbatim quote of the passage": 1
+   }
+  },
+  {
+   "case_id": "ground-11",
+   "verdict": "shown",
+   "intent": "field_definition",
+   "shown": 1,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-12",
+   "verdict": "shown",
+   "intent": "field_definition",
+   "shown": 0,
+   "withheld": 4,
+   "reasons": {
+    "contains a number not in its cited records": 4,
+    "is not a verbatim quote of the passage": 1
+   }
+  },
+  {
+   "case_id": "ground-13",
+   "verdict": "shown",
+   "intent": "field_definition",
+   "shown": 1,
+   "withheld": 1,
+   "reasons": {
+    "contains a number not in its cited records": 1
+   }
+  },
+  {
+   "case_id": "ground-14",
+   "verdict": "shown",
+   "intent": "field_definition",
+   "shown": 0,
+   "withheld": 1,
+   "reasons": {
+    "contains a number not in its cited records": 1
+   }
+  },
+  {
+   "case_id": "ground-15",
+   "verdict": "shown",
+   "intent": "sources_disagree",
+   "shown": 2,
+   "withheld": 0,
+   "reasons": {}
+  },
+  {
+   "case_id": "ground-16",
+   "verdict": "nothing_shown",
+   "intent": "sources_disagree",
+   "shown": 0,
+   "withheld": 1,
+   "reasons": {
+    "contains a number not in its cited records": 1
+   }
+  },
+  {
+   "case_id": "ground-17",
+   "verdict": "shown",
+   "intent": "drift_in_a_field",
+   "shown": 3,
+   "withheld": 0,
+   "reasons": {
+    "quotes a passage not in the pack": 3
+   }
+  },
+  {
+   "case_id": "ground-18",
+   "verdict": "shown",
+   "intent": "drift_in_a_field",
+   "shown": 4,
+   "withheld": 0,
+   "reasons": {
+    "quotes a passage not in the pack": 3
+   }
+  },
+  {
+   "case_id": "ground-19",
+   "verdict": "shown",
+   "intent": "what_is_not_reported",
+   "shown": 2,
+   "withheld": 1,
+   "reasons": {
+    "contains a number not in its cited records": 1
+   }
+  },
+  {
+   "case_id": "ground-20",
+   "verdict": "refused",
+   "refusal": "institution_not_in_frame",
+   "intent": "is_value_real"
+  }
+ ]
+}

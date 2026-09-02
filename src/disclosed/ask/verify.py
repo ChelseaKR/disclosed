@@ -8,10 +8,14 @@ fails:
 2. **Classification fidelity.** It names a classification state that none of the records it
    cites is in. "Suppressed" over a ``missing`` record is the defect this project exists to name,
    and it is caught here by the word. A claim that names several states (a contrast: "missing,
-   not suppressed") passes if at least one of them is a cited record's state.
+   not suppressed") passes if at least one of them is a cited record's state. A claim that names a
+   state but cites no ``ClassificationRecord`` at all -- only a drift id, a contradiction id, or
+   both -- is withheld outright rather than skipped: a drift or contradiction record proves
+   nothing about one institution's one field, so there is nothing here to check the word against.
+   A note id is the one exception, because a note is fixed text this project wrote itself.
 3. **Collapse.** It renders an absence as a non-state -- "has no", "no data", "unavailable",
-   "not available", "did not provide" -- about a field, instead of saying which of the five
-   states the record is in.
+   "not available", "did not provide", "does not report", "not published" -- about a field,
+   instead of saying which of the five states the record is in.
 4. **Numbers.** It contains a number that cannot be found in the cited records: anything but a
    snapshot, a year, a unit id, an ``implausible_value``, the counts and rate change of a cited
    drift record, or a count of the cited records themselves (how many fields, how many in each
@@ -32,7 +36,7 @@ from dataclasses import dataclass, field
 from typing import Final
 
 from .corpus import Corpus
-from .evidence import ClassificationRecord, DriftRecord
+from .evidence import ClassificationRecord, ContradictionRecord, DriftRecord
 from .lookup import Pack
 from .narrate import Claim, Narration, Quote
 
@@ -53,9 +57,13 @@ _STATE_PATTERN: Final[re.Pattern[str]] = re.compile(
 
 # Renderings of an absence that are not one of the five states. Each is the sentence this
 # project's README warns about, and none is allowed to reach a reader as a description of a field.
+# "report"/"published" phrasing is caught alongside "have"/"provide": a disclosure project's most
+# natural paraphrase of an absent field is "does not report it", and that collapses the five
+# states exactly as "has no" does.
 _COLLAPSE: Final[re.Pattern[str]] = re.compile(
     r"\b(has no |have no |no data|unavailable|not available|did not provide|does not have|"
-    r"doesn't have|don't have|lacks?\b|is blank|left blank|no information)",
+    r"doesn't have|don't have|lacks?\b|is blank|left blank|no information|"
+    r"does(?:n't| not) report|did(?:n't| not) report|not published|never report(?:ed|s)?)",
     re.IGNORECASE,
 )
 
@@ -103,13 +111,20 @@ def _numbers_in(text: str) -> set[float]:
 
 
 def _allowed_numbers(
-    records: Iterable[ClassificationRecord], drifts: Iterable[DriftRecord]
+    records: Iterable[ClassificationRecord],
+    drifts: Iterable[DriftRecord],
+    contradictions: Iterable[ContradictionRecord] = (),
 ) -> set[float]:
-    """Every number a claim may carry, from the records it cites."""
+    """Every number a claim may carry, from the records it cites: identifiers, snapshots, the
+    digits in a field label ("150% of normal time") or an applicability reason ("INSTCAT -2"),
+    an implausible value, a drift record's counts, and a contradiction's coded values."""
     allowed: set[float] = set()
     for r in records:
         allowed |= _numbers_in(r.snapshot)
         allowed |= _numbers_in(r.unit_id)
+        allowed |= _numbers_in(r.field_label)
+        allowed |= _numbers_in(r.institution)
+        allowed |= _numbers_in(r.not_applicable_because or "")
         if r.implausible_value is not None:
             allowed |= _numbers_in(str(r.implausible_value))
             if isinstance(r.implausible_value, int | float):
@@ -131,6 +146,9 @@ def _allowed_numbers(
             for digits in (0, 1, 2):
                 allowed.add(round(points, digits))
                 allowed.add(abs(round(points, digits)))
+    for c in contradictions:
+        allowed |= _numbers_in(c.scorecard_value) | _numbers_in(c.ipeds_value)
+        allowed |= _numbers_in(c.snapshot) | _numbers_in(c.unit_id) | _numbers_in(c.institution)
     return allowed
 
 
@@ -157,10 +175,33 @@ def _countable(pack: Pack, records: list[ClassificationRecord]) -> set[float]:
 
 def _cited(
     pack: Pack, cites: tuple[str, ...]
-) -> tuple[list[ClassificationRecord], list[DriftRecord]]:
+) -> tuple[list[ClassificationRecord], list[DriftRecord], list[ContradictionRecord]]:
     records = [r for r in pack.records if r.id in cites]
     drifts = [d for d in pack.drift if d.id in cites]
-    return records, drifts
+    contradictions = [c for c in pack.contradictions if c.id in cites]
+    return records, drifts, contradictions
+
+
+def _classification_reason(claim: Claim, records: list[ClassificationRecord]) -> str | None:
+    """Why a claim's classification word does not stand, or ``None`` when it does.
+
+    A claim naming a classification state has to be checked against an actual
+    ``ClassificationRecord``, not skipped because none happened to be cited. A drift or
+    contradiction id is citable (:meth:`Pack.citable_ids`) but proves nothing about which of the
+    five states one institution's one field is in; only a note id -- fixed text this project
+    wrote itself -- is exempt, the same exemption the fidelity check has always given a
+    note-only citation.
+    """
+    named = {STATE_WORDS[m.lower().replace("_", " ")] for m in _STATE_PATTERN.findall(claim.text)}
+    if not named:
+        return None
+    if not records:
+        if all(c.startswith("note:") for c in claim.cites):
+            return None
+        return "names a classification without citing a classification record"
+    if not (named & {r.classification for r in records}):
+        return "names a classification none of its cited records is in"
+    return None
 
 
 def _check_claim(claim: Claim, pack: Pack) -> str | None:
@@ -170,16 +211,25 @@ def _check_claim(claim: Claim, pack: Pack) -> str | None:
         return "uncited"
     if any(c not in citable for c in claim.cites):
         return "cites a record not in the pack"
-    records, drifts = _cited(pack, claim.cites)
-    named = {STATE_WORDS[m.lower().replace("_", " ")] for m in _STATE_PATTERN.findall(claim.text)}
-    cited_states = {r.classification for r in records}
-    if named and records and not (named & cited_states):
-        return "names a classification none of its cited records is in"
+    records, drifts, contradictions = _cited(pack, claim.cites)
+    classification_reason = _classification_reason(claim, records)
+    if classification_reason is not None:
+        return classification_reason
     if _COLLAPSE.search(claim.text):
         return "renders an absence as a non-state"
     if JUDGEMENT.search(claim.text):
         return "contains a judgement of quality or a recommendation"
-    stray = _numbers_in(claim.text) - _allowed_numbers(records, drifts) - _countable(pack, records)
+    noted = {c for c in claim.cites if c.startswith("note:")}
+    in_notes: set[float] = set()
+    for index, text in enumerate(pack.notes):
+        if f"note:{index}" in noted:
+            in_notes |= _numbers_in(text)
+    stray = (
+        _numbers_in(claim.text)
+        - _allowed_numbers(records, drifts, contradictions)
+        - _countable(pack, records)
+        - in_notes
+    )
     if stray:
         return f"contains a number not in its cited records: {sorted(stray)[0]:g}"
     return None

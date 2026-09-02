@@ -1,0 +1,935 @@
+{
+ "suite": "classification_fidelity",
+ "description": "Ground-truth classifications; scored per state on whether the shown narration rendered the wrong state. Real records for four states; suppressed cases are constructed because the committed federal data contains no suppressed value (tests/test_evidence.py pins that), and are labelled so.",
+ "zero_tolerance": "wrong",
+ "cases": [
+  {
+   "id": "fidelity-reported-01",
+   "unit_id": "100654",
+   "institution": "Alabama A & M University",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Median earnings 10 years after entry",
+   "expected_state": "reported",
+   "record_id": "scorecard:2026-08-21:100654:earnings_10_yrs_after_entry_median",
+   "question": "Does Alabama A & M University report its median earnings 10 years after entry? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Median earnings 10 years after entry"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-reported-02",
+   "unit_id": "100663",
+   "institution": "University of Alabama at Birmingham",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Median earnings 10 years after entry",
+   "expected_state": "reported",
+   "record_id": "scorecard:2026-08-21:100663:earnings_10_yrs_after_entry_median",
+   "question": "Does University of Alabama at Birmingham report its median earnings 10 years after entry? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Median earnings 10 years after entry"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-reported-03",
+   "unit_id": "100690",
+   "institution": "Amridge University",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Completion rate, 150% of normal time",
+   "expected_state": "reported",
+   "record_id": "scorecard:2026-08-21:100690:completion_completion_rate_4yr_150nt",
+   "question": "Does Amridge University report its completion rate, 150% of normal time? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Completion rate, 150% of normal time"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-reported-04",
+   "unit_id": "100706",
+   "institution": "University of Alabama in Huntsville",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Completion rate, 150% of normal time",
+   "expected_state": "reported",
+   "record_id": "scorecard:2026-08-21:100706:completion_completion_rate_4yr_150nt",
+   "question": "Does University of Alabama in Huntsville report its completion rate, 150% of normal time? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Completion rate, 150% of normal time"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-reported-05",
+   "unit_id": "100724",
+   "institution": "Alabama State University",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Admission rate",
+   "expected_state": "reported",
+   "record_id": "scorecard:2026-08-21:100724:admissions_admission_rate_overall",
+   "question": "Does Alabama State University report its admission rate? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Admission rate"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-reported-06",
+   "unit_id": "100751",
+   "institution": "The University of Alabama",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Admission rate",
+   "expected_state": "reported",
+   "record_id": "scorecard:2026-08-21:100751:admissions_admission_rate_overall",
+   "question": "Does The University of Alabama report its admission rate? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Admission rate"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-reported-07",
+   "unit_id": "100760",
+   "institution": "Central Alabama Community College",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Median debt at completion",
+   "expected_state": "reported",
+   "record_id": "scorecard:2026-08-21:100760:aid_median_debt_completers_overall",
+   "question": "Does Central Alabama Community College report its median debt at completion? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Median debt at completion"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-reported-08",
+   "unit_id": "100812",
+   "institution": "Athens State University",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Median debt at completion",
+   "expected_state": "reported",
+   "record_id": "scorecard:2026-08-21:100812:aid_median_debt_completers_overall",
+   "question": "Does Athens State University report its median debt at completion? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Median debt at completion"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-reported-09",
+   "unit_id": "100830",
+   "institution": "Auburn University at Montgomery",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "In-state tuition",
+   "expected_state": "reported",
+   "record_id": "scorecard:2026-08-21:100830:cost_tuition_in_state",
+   "question": "Does Auburn University at Montgomery report its in-state tuition? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "In-state tuition"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-reported-10",
+   "unit_id": "100858",
+   "institution": "Auburn University",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "In-state tuition",
+   "expected_state": "reported",
+   "record_id": "scorecard:2026-08-21:100858:cost_tuition_in_state",
+   "question": "Does Auburn University report its in-state tuition? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "In-state tuition"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-implausible-01",
+   "unit_id": "110468",
+   "institution": "Alliant International University-San Diego",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Admission rate",
+   "expected_state": "implausible",
+   "record_id": "scorecard:2026-08-21:110468:admissions_admission_rate_overall",
+   "question": "Does Alliant International University-San Diego report its admission rate? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Admission rate"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-implausible-02",
+   "unit_id": "124487",
+   "institution": "Epic Bible College & Graduate School",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Completion rate, 150% of normal time",
+   "expected_state": "implausible",
+   "record_id": "scorecard:2026-08-21:124487:completion_completion_rate_4yr_150nt",
+   "question": "Does Epic Bible College & Graduate School report its completion rate, 150% of normal time? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Completion rate, 150% of normal time"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-implausible-03",
+   "unit_id": "125499",
+   "institution": "West Valley College",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "In-state tuition",
+   "expected_state": "implausible",
+   "record_id": "scorecard:2026-08-21:125499:cost_tuition_in_state",
+   "question": "Does West Valley College report its in-state tuition? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "In-state tuition"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-implausible-04",
+   "unit_id": "131803",
+   "institution": "Strayer University-District of Columbia",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Completion rate, 150% of normal time",
+   "expected_state": "implausible",
+   "record_id": "scorecard:2026-08-21:131803:completion_completion_rate_4yr_150nt",
+   "question": "Does Strayer University-District of Columbia report its completion rate, 150% of normal time? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Completion rate, 150% of normal time"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-implausible-05",
+   "unit_id": "166045",
+   "institution": "Hebrew College",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Enrollment",
+   "expected_state": "implausible",
+   "record_id": "scorecard:2026-08-21:166045:student_size",
+   "question": "Does Hebrew College report its enrollment? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Enrollment"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-implausible-06",
+   "unit_id": "190956",
+   "institution": "Belanger School of Nursing",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Admission rate",
+   "expected_state": "implausible",
+   "record_id": "scorecard:2026-08-21:190956:admissions_admission_rate_overall",
+   "question": "Does Belanger School of Nursing report its admission rate? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Admission rate"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-implausible-07",
+   "unit_id": "210438",
+   "institution": "University of Western States",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Enrollment",
+   "expected_state": "implausible",
+   "record_id": "scorecard:2026-08-21:210438:student_size",
+   "question": "Does University of Western States report its enrollment? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Enrollment"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-implausible-08",
+   "unit_id": "211893",
+   "institution": "Curtis Institute of Music",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "In-state tuition",
+   "expected_state": "implausible",
+   "record_id": "scorecard:2026-08-21:211893:cost_tuition_in_state",
+   "question": "Does Curtis Institute of Music report its in-state tuition? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "In-state tuition"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-not_applicable-01",
+   "unit_id": "100690",
+   "institution": "Amridge University",
+   "source": "IPEDS",
+   "snapshot": "2023",
+   "field_label": "Equity in athletics disclosure",
+   "expected_state": "not_applicable",
+   "record_id": "ipeds:2023:100690:ipeds_athurl",
+   "question": "Does Amridge University report its equity in athletics disclosure? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Equity in athletics disclosure"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-not_applicable-02",
+   "unit_id": "100733",
+   "institution": "University of Alabama System Office",
+   "source": "IPEDS",
+   "snapshot": "2023",
+   "field_label": "Net price calculator",
+   "expected_state": "not_applicable",
+   "record_id": "ipeds:2023:100733:ipeds_npricurl",
+   "question": "Does University of Alabama System Office report its net price calculator? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Net price calculator"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-not_applicable-03",
+   "unit_id": "100812",
+   "institution": "Athens State University",
+   "source": "IPEDS",
+   "snapshot": "2023",
+   "field_label": "Equity in athletics disclosure",
+   "expected_state": "not_applicable",
+   "record_id": "ipeds:2023:100812:ipeds_athurl",
+   "question": "Does Athens State University report its equity in athletics disclosure? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Equity in athletics disclosure"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-not_applicable-04",
+   "unit_id": "101541",
+   "institution": "Judson College",
+   "source": "IPEDS",
+   "snapshot": "2021",
+   "field_label": "Net price calculator",
+   "expected_state": "not_applicable",
+   "record_id": "ipeds:2021:101541:ipeds_npricurl",
+   "question": "Does Judson College report its net price calculator? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Net price calculator"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-not_applicable-05",
+   "unit_id": "103529",
+   "institution": "University of Alaska System of Higher Education",
+   "source": "IPEDS",
+   "snapshot": "2023",
+   "field_label": "Financial aid information",
+   "expected_state": "not_applicable",
+   "record_id": "ipeds:2023:103529:ipeds_faidurl",
+   "question": "Does University of Alaska System of Higher Education report its financial aid information? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Financial aid information"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-not_applicable-06",
+   "unit_id": "104188",
+   "institution": "Southwest University of Visual Arts-Tucson",
+   "source": "IPEDS",
+   "snapshot": "2021",
+   "field_label": "Financial aid information",
+   "expected_state": "not_applicable",
+   "record_id": "ipeds:2021:104188:ipeds_faidurl",
+   "question": "Does Southwest University of Visual Arts-Tucson report its financial aid information? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Financial aid information"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-not_applicable-07",
+   "unit_id": "105136",
+   "institution": "Maricopa Community College System Office",
+   "source": "IPEDS",
+   "snapshot": "2023",
+   "field_label": "Disability services information",
+   "expected_state": "not_applicable",
+   "record_id": "ipeds:2023:105136:ipeds_disaurl",
+   "question": "Does Maricopa Community College System Office report its disability services information? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Disability services information"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-not_applicable-08",
+   "unit_id": "106360",
+   "institution": "Arthur's Beauty College",
+   "source": "IPEDS",
+   "snapshot": "2023",
+   "field_label": "Disability services information",
+   "expected_state": "not_applicable",
+   "record_id": "ipeds:2023:106360:ipeds_disaurl",
+   "question": "Does Arthur's Beauty College report its disability services information? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Disability services information"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-not_applicable-09",
+   "unit_id": "108056",
+   "institution": "University of Arkansas System Office",
+   "source": "IPEDS",
+   "snapshot": "2023",
+   "field_label": "Admissions information",
+   "expected_state": "not_applicable",
+   "record_id": "ipeds:2023:108056:ipeds_adminurl",
+   "question": "Does University of Arkansas System Office report its admissions information? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Admissions information"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-not_applicable-10",
+   "unit_id": "109086",
+   "institution": "American Conservatory Theater",
+   "source": "IPEDS",
+   "snapshot": "2022",
+   "field_label": "Admissions information",
+   "expected_state": "not_applicable",
+   "record_id": "ipeds:2022:109086:ipeds_adminurl",
+   "question": "Does American Conservatory Theater report its admissions information? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Admissions information"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-missing-01",
+   "unit_id": "100654",
+   "institution": "Alabama A & M University",
+   "source": "IPEDS",
+   "snapshot": "2023",
+   "field_label": "Equity in athletics disclosure",
+   "expected_state": "missing",
+   "record_id": "ipeds:2023:100654:ipeds_athurl",
+   "question": "Does Alabama A & M University report its equity in athletics disclosure? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Equity in athletics disclosure"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-missing-02",
+   "unit_id": "100690",
+   "institution": "Amridge University",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Admission rate",
+   "expected_state": "missing",
+   "record_id": "scorecard:2026-08-21:100690:admissions_admission_rate_overall",
+   "question": "Does Amridge University report its admission rate? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Admission rate"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-missing-03",
+   "unit_id": "100760",
+   "institution": "Central Alabama Community College",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Completion rate, 150% of normal time",
+   "expected_state": "missing",
+   "record_id": "scorecard:2026-08-21:100760:completion_completion_rate_4yr_150nt",
+   "question": "Does Central Alabama Community College report its completion rate, 150% of normal time? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Completion rate, 150% of normal time"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-missing-04",
+   "unit_id": "100812",
+   "institution": "Athens State University",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Completion rate, 150% of normal time",
+   "expected_state": "missing",
+   "record_id": "scorecard:2026-08-21:100812:completion_completion_rate_4yr_150nt",
+   "question": "Does Athens State University report its completion rate, 150% of normal time? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Completion rate, 150% of normal time"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-missing-05",
+   "unit_id": "101028",
+   "institution": "Chattahoochee Valley Community College",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Admission rate",
+   "expected_state": "missing",
+   "record_id": "scorecard:2026-08-21:101028:admissions_admission_rate_overall",
+   "question": "Does Chattahoochee Valley Community College report its admission rate? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Admission rate"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-missing-06",
+   "unit_id": "101240",
+   "institution": "Gadsden State Community College",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Median debt at completion",
+   "expected_state": "missing",
+   "record_id": "scorecard:2026-08-21:101240:aid_median_debt_completers_overall",
+   "question": "Does Gadsden State Community College report its median debt at completion? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Median debt at completion"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-missing-07",
+   "unit_id": "101277",
+   "institution": "New Beginning College of Cosmetology",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Median earnings 10 years after entry",
+   "expected_state": "missing",
+   "record_id": "scorecard:2026-08-21:101277:earnings_10_yrs_after_entry_median",
+   "question": "Does New Beginning College of Cosmetology report its median earnings 10 years after entry? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Median earnings 10 years after entry"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-missing-08",
+   "unit_id": "101286",
+   "institution": "George C Wallace Community College-Dothan",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Median debt at completion",
+   "expected_state": "missing",
+   "record_id": "scorecard:2026-08-21:101286:aid_median_debt_completers_overall",
+   "question": "Does George C Wallace Community College-Dothan report its median debt at completion? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Median debt at completion"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-missing-09",
+   "unit_id": "101301",
+   "institution": "George C Wallace State Community College-Selma",
+   "source": "IPEDS",
+   "snapshot": "2023",
+   "field_label": "Equity in athletics disclosure",
+   "expected_state": "missing",
+   "record_id": "ipeds:2023:101301:ipeds_athurl",
+   "question": "Does George C Wallace State Community College-Selma report its equity in athletics disclosure? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Equity in athletics disclosure"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-missing-10",
+   "unit_id": "101471",
+   "institution": "J F Ingram State Technical College",
+   "source": "College Scorecard",
+   "snapshot": "2026-08-21",
+   "field_label": "Median earnings 10 years after entry",
+   "expected_state": "missing",
+   "record_id": "scorecard:2026-08-21:101471:earnings_10_yrs_after_entry_median",
+   "question": "Does J F Ingram State Technical College report its median earnings 10 years after entry? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Median earnings 10 years after entry"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-suppressed-01",
+   "unit_id": "100654",
+   "institution": "Alabama A & M University",
+   "source": "College Scorecard",
+   "snapshot": "constructed",
+   "field_label": "Median debt at completion",
+   "expected_state": "suppressed",
+   "record_id": null,
+   "constructed": true,
+   "question": "Does Alabama A & M University report its median debt at completion? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Median debt at completion"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-suppressed-02",
+   "unit_id": "104717",
+   "institution": "Grand Canyon University",
+   "source": "College Scorecard",
+   "snapshot": "constructed",
+   "field_label": "Completion rate, 150% of normal time",
+   "expected_state": "suppressed",
+   "record_id": null,
+   "constructed": true,
+   "question": "Does Grand Canyon University report its completion rate, 150% of normal time? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Completion rate, 150% of normal time"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-suppressed-03",
+   "unit_id": "166027",
+   "institution": "Harvard University",
+   "source": "College Scorecard",
+   "snapshot": "constructed",
+   "field_label": "Median earnings 10 years after entry",
+   "expected_state": "suppressed",
+   "record_id": null,
+   "constructed": true,
+   "question": "Does Harvard University report its median earnings 10 years after entry? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Median earnings 10 years after entry"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-suppressed-04",
+   "unit_id": "110468",
+   "institution": "Alliant International University-San Diego",
+   "source": "College Scorecard",
+   "snapshot": "constructed",
+   "field_label": "Enrollment",
+   "expected_state": "suppressed",
+   "record_id": null,
+   "constructed": true,
+   "question": "Does Alliant International University-San Diego report its enrollment? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Enrollment"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-suppressed-05",
+   "unit_id": "100663",
+   "institution": "University of Alabama at Birmingham",
+   "source": "College Scorecard",
+   "snapshot": "constructed",
+   "field_label": "Admission rate",
+   "expected_state": "suppressed",
+   "record_id": null,
+   "constructed": true,
+   "question": "Does University of Alabama at Birmingham report its admission rate? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Admission rate"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-suppressed-06",
+   "unit_id": "100706",
+   "institution": "University of Alabama in Huntsville",
+   "source": "College Scorecard",
+   "snapshot": "constructed",
+   "field_label": "In-state tuition",
+   "expected_state": "suppressed",
+   "record_id": null,
+   "constructed": true,
+   "question": "Does University of Alabama in Huntsville report its in-state tuition? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "In-state tuition"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-suppressed-07",
+   "unit_id": "100724",
+   "institution": "Alabama State University",
+   "source": "IPEDS",
+   "snapshot": "constructed",
+   "field_label": "Net price calculator",
+   "expected_state": "suppressed",
+   "record_id": null,
+   "constructed": true,
+   "question": "Does Alabama State University report its net price calculator? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Net price calculator"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "fidelity-suppressed-08",
+   "unit_id": "100751",
+   "institution": "The University of Alabama",
+   "source": "IPEDS",
+   "snapshot": "constructed",
+   "field_label": "Equity in athletics disclosure",
+   "expected_state": "suppressed",
+   "record_id": null,
+   "constructed": true,
+   "question": "Does The University of Alabama report its equity in athletics disclosure? What is the status of that field?",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [
+     "Equity in athletics disclosure"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  }
+ ]
+}

@@ -27,6 +27,27 @@ file is the human-readable one.
 
 ### Added
 
+- **The daily Scorecard snapshots are replayed, not merely committed.**
+  `data/snapshots/scorecard/` held nine committed artifacts that nothing regenerated and nothing
+  compared. `tests/test_replay.py` replays every IPEDS snapshot from its own archives and
+  `tests/test_census_replay.py` replays `data/scorecard-census.json` from the committed capture;
+  the series beside them had neither, and the only thing in the repository that mentioned it was
+  `tests/test_workflows.py` asserting that a path string appears in the workflow YAML. They were
+  counts standing in for a computation, with nothing checking the counts were still what the
+  computation produces. All nine replay byte-identically today, which is the point: nothing was
+  keeping them that way. The snapshot taken on the day of the committed capture is now held to
+  byte equality against what that capture regrades to, with the date read out of the capture's own
+  provenance so refreshing the capture moves it, and `make scorecard-snapshot-replay` shows the
+  diff when it fails. The other days are deliberately **not** frozen to that replay: their
+  captures were ninety-day workflow artifacts and are gone, and a series that exists to record
+  drift must not be gated on never drifting. They are held instead to what is true of them
+  whatever the Scorecard published that morning: the date they claim, the walk they came from,
+  and their own arithmetic. `snapshot.yml` commits a provenance sidecar beside every snapshot so
+  that "a drift finding can be traced to the bytes it was computed from", and nothing checked the
+  sidecar was there or that the two files describe the same run; both are checked now. The glob
+  the series is discovered through is asserted non-empty before anything is parametrized over it,
+  because an empty one parametrizes into zero tests and reports as a passing suite.
+
 - **`check_site_origin.py` checks three more promises, and says what its
   fourth cannot do.** It held canonicals, the sitemap and robots.txt to the
   deploy target. It now also refuses a page whose `og:url` disagrees with its
@@ -97,6 +118,14 @@ file is the human-readable one.
   institutions in the IPEDS directory and 4,510 of the 6,273 in the Scorecard census. The
   roadmap's precondition is met and the adapter remains unwritten, which is a different sentence.
   Nothing here grades an institution or touches `disclosed.ask`.
+- **The evaluation suites and their results.** Five suites under `evals/` (167 cases): ranking
+  refusal, five-way classification fidelity scored per state, citation grounding, drift
+  direction judged per cited record, question structuring including refused-to-guess. Three
+  kinds of model behind a run: live, a faithful oracle (passes everything, proving the scorer),
+  and a hostile adversary (leaks nothing, proving the verifier). Every result carries provider,
+  model, prompt version, commit and date, and a test rejects one that does not. Measured live on
+  `global.anthropic.claude-sonnet-4-6`: 0 leaked of 59 ranking questions, 0 wrong states shown of 46,
+  0 wrong drift directions of 12, 0 guesses on 19 guarded questions.
 - **`deploy/`: the prepared, unapplied deployment shape.** A SAM template (JSON, so the test
   suite reads it with the standard library) for one Lambda behind a Function URL with CORS locked
   to the Pages origin, reserved concurrency of 2, IAM limited to invoking the one configured
@@ -188,6 +217,26 @@ file is the human-readable one.
 
 ### Fixed
 
+- **`disclosed.ask`'s absence-collapse check missed the field's own most natural phrasing.**
+  `_COLLAPSE` (`src/disclosed/ask/verify.py`) caught "has no", "no data", "unavailable", "did not
+  provide" and kin, but not "does not report", "did not report", "not published", or "never
+  reported" — a disclosure project's most natural paraphrase for an absent field. A correctly
+  cited claim using that phrasing passed verification unchecked. The pattern now catches it;
+  `tests/test_narrate_verify.py` gains four cases.
+- **A claim naming a classification state, cited only to a drift or contradiction record, skipped
+  the classification-fidelity check entirely.** `_check_claim` (`src/disclosed/ask/verify.py`)
+  only checked a named state against `ClassificationRecord`s among the claim's citations; a claim
+  citing only a drift or contradiction id — both citable per `Pack.citable_ids()` — had no
+  `ClassificationRecord` to check against, so "suppressed" over a field with no suppressed record
+  anywhere in the frame could stand unverified. Such a claim is now withheld outright, with the
+  same exemption a note-only citation has always had.
+- **`FieldDrift.direction` reported an unchanged reporting rate as "lost".** When `rate_change` is
+  exactly `0.0` — the applicable population and the count of reporters both moved, in exact
+  proportion, so the record is not skipped by `compare()` — `direction` fell through to the
+  branch built for a real loss and returned `"lost"`, the same "absence rendered as a value"
+  defect this module's own docstring argues against. It is now its own case, `"unchanged"`;
+  `disclosed.ask.narrate`'s prompt and `tests/test_grading.py`/`tests/test_evidence.py` are
+  updated to match.
 - A Scorecard walk that cannot confirm exhaustion now fails instead of reporting national
   figures.
 - Drift no longer reports a shrinking directory as a reporting collapse.

@@ -15,7 +15,7 @@ a measurement, a blank that was a policy, a "no data" that was "does not apply".
 ## The gate
 
 `make verify` is the whole local gate and the same target CI runs: ruff (including the bandit
-rules), `ruff format --check`, strict mypy, and pytest with a **90% branch-coverage floor** over
+rules), `ruff format --check`, strict mypy, and pytest with a **95% branch-coverage floor** over
 `src`, `tests` and `.github/scripts`. Nothing merges red. `uv sync --locked` installs exactly
 the lockfile; `uv lock --check` is the drift check. Run `.venv/bin/python`, not `uv run`, for
 the gate — a bare `uv run` re-locks silently.
