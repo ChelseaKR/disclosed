@@ -22,10 +22,12 @@ name: accessibility
 # `make verify`, by tests/test_accessibility.py. As of docs/adr/0008 the resourceSizes lines are
 # enforced there too, read out of the budget file rather than restated, and every line of that
 # file is now either enforced by a named check or declared unenforceable with a written reason.
-# The three timing lines are the ones still enforced by nothing: they need this job's rendering
-# engine, and ADR 0008 says this runner's own numbers get measured before they become a gate. The
-# flag is left below because the budget file is still the readable statement of intent and
-# lighthouse may enforce it again one day; nothing in this job is counted as a gate on it.
+# The three timing lines need this job's rendering engine, and as of docs/adr/0010 they are a
+# gate here: the runner was measured first, per ADR 0008, and reported within a millisecond of
+# the laptop because lighthouse throttles by simulation. `Require the timing budget` below reads
+# the budget file and fails on a metric over it, on a metric a report does not carry, and on a
+# report that was never written. The --budget-path flag is still left on every audit because the
+# file is the readable statement of intent; lighthouse itself still enforces none of it.
 #
 # That paragraph used to say the budget was enforced "over every one of the 616 generated
 # pages" (the site's total at the time), and it was not. TestTheResourceBudget runs over a
@@ -88,12 +90,34 @@ jobs:
             --output=json --output-path=/tmp/home.json --quiet --chrome-flags="--headless" \
             --budget-path=lighthouse-budget.json \
             --only-categories=accessibility,best-practices,seo,performance
-          for page in methodology national census state/CA institution/110468; do
+          # state/CA is the largest page the generator produces, and it is the one a timing
+          # budget is about: the home page is a tenth of its size, so a timing measured only
+          # there is a measurement of the easiest page in the site. It gets the performance
+          # category for that reason; the other four do not need it.
+          npx --yes lighthouse@12 http://127.0.0.1:8000/state/CA/ \
+            --output=json --output-path=/tmp/CA.json --quiet --chrome-flags="--headless" \
+            --budget-path=lighthouse-budget.json \
+            --only-categories=accessibility,performance
+          for page in methodology national census institution/110468; do
             npx --yes lighthouse@12 "http://127.0.0.1:8000/${page}/" \
               --output=json --output-path="/tmp/$(basename "$page").json" --quiet \
               --chrome-flags="--headless" --budget-path=lighthouse-budget.json \
               --only-categories=accessibility
           done
+
+      # ADR 0008 said the three timing lines of lighthouse-budget.json would not become a gate
+      # until this runner's own numbers were known, because the numbers in that ADR are a
+      # laptop's. They are known now, and they are the laptop's: 751.7 ms against 752.3 on the
+      # home page and 1052.4 against 1051.8 on state/CA, because lighthouse's default throttling
+      # is simulated rather than applied. docs/adr/0010 records the measurement and this step is
+      # what it licensed. It fails on a metric over budget, on a metric the report does not
+      # carry, and on a report that was never written; the first is the budget, the second is how
+      # a gate stops applying when somebody trims a --only-categories flag, and the third is the
+      # rule the accessibility scorer below already states in words.
+      - name: Require the timing budget
+        run: |
+          python .github/scripts/check_lighthouse_timings.py \
+            lighthouse-budget.json /tmp/home.json /tmp/CA.json
 
       - name: Require 100 on accessibility
         run: |

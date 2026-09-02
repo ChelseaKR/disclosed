@@ -307,3 +307,34 @@ only measured. This records the second measurement and the decision it produced.
 - **F Security.** No new secret, no new credential, no new network path at grading time. The
   census walk uses the same read-only GET against the same fixed scheme and host as the existing
   adapter, served entirely from the page cache the first walk wrote.
+
+## Addendum 2026-08-28: the last unenforced budget line is gated
+
+Appended rather than edited. "Addendum 2026-08-27: the budget file is read, and what still is
+not" records the transfer sizes becoming a gate and names the three timing lines as still
+enforced by nothing. That is no longer true, and the correction is here rather than in an edit to
+that paragraph.
+
+- **E Accessibility, budgets, completed.** `largest-contentful-paint`, `cumulative-layout-shift`
+  and `total-blocking-time` are enforced by
+  `.github/scripts/check_lighthouse_timings.py`, run by `.github/workflows/accessibility.yml`
+  over the home page and the largest page, both audited with the performance category. Every line
+  of `lighthouse-budget.json` is now held by a named check, and
+  `tests/test_accessibility.py::TestEveryBudgetLineIsAccountedFor` fails on any line that is not.
+- **The order matters and is recorded.** `docs/adr/0008` refused to gate on numbers measured on a
+  laptop and set the precondition; run 33129896655 measured the runner and reported within a
+  millisecond of the laptop on both pages, because lighthouse throttles by simulation;
+  `docs/adr/0010` records the measurement and the gate, including the decision to keep the budget
+  at 1500 ms rather than tighten it to 30 ms above what was measured. That rule was not applied
+  to `total-blocking-time`, which was left at the `0` the same run reported and failed at 34 ms
+  on a shared runner the next time it ran; the ADR's 2026-09-01 amendment moves it to 200 ms,
+  Lighthouse's own boundary for good, and records why `cumulative-layout-shift` stays at 0.
+- **The script is inside the gate that checks it.** It lives in `.github/scripts`, which
+  `make verify` lints, type-checks and covers, for the reason recorded when `check_site_origin.py`
+  moved into scope: the thing that decides whether a build passes cannot be the one file nobody
+  checks. `tests/test_lighthouse_timings.py` runs it over real report shapes broken one way at a
+  time, and `tests/test_workflows.py` pins that the job runs it, unsoftened, after the audits that
+  produce what it reads.
+- **No new data, no new secret, no new network path.** The job already ran Lighthouse against a
+  locally served build of committed artifacts. One more page now collects the performance
+  category.

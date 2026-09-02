@@ -21,7 +21,7 @@
     "timings": [
       { "metric": "largest-contentful-paint", "budget": 1500 },
       { "metric": "cumulative-layout-shift", "budget": 0 },
-      { "metric": "total-blocking-time", "budget": 0 }
+      { "metric": "total-blocking-time", "budget": 200 }
     ]
   }
 ]
