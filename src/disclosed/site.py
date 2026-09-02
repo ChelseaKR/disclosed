@@ -40,6 +40,23 @@ __all__ = ["Page", "build", "slug"]
 
 DEFAULT_ORIGIN: Final[str] = "https://chelseakr.github.io/disclosed"
 
+#: Where a reader goes to check any of this. Every page carries it, because a site that grades
+#: other people's disclosure and does not say where its own rules are readable is asking for a
+#: trust it has not earned.
+SOURCE_URL: Final[str] = "https://github.com/ChelseaKR/disclosed"
+
+#: The share card. A link preview strips a page to its title, one sentence and this image, so the
+#: card is written into the output beside the pages rather than named as a URL somewhere else: an
+#: ``og:image`` is fetched once, by a crawler, and a 404 there is reported to nobody.
+_OG_CARD_SOURCE: Final[Path] = Path(__file__).resolve().parent / "assets" / "og-card.png"
+OG_CARD_NAME: Final[str] = "og-card.png"
+OG_CARD_WIDTH: Final[int] = 1200
+OG_CARD_HEIGHT: Final[int] = 630
+OG_CARD_ALT: Final[str] = (
+    "disclosed: what US colleges do not tell you. Grades US higher-education institutions on "
+    "what they disclose, not on how they perform."
+)
+
 # What each classification means to a reader, and whether the institution is answerable for it.
 # Written for a person who has just been told their college scored badly and wants to know why.
 _DISCLOSURE_COPY: Final[dict[Disclosure, tuple[str, str]]] = {
@@ -1107,7 +1124,17 @@ footer { margin-top: 3rem; font-size: .9rem; color: #555; }
 """
 
 
-def _shell(page: Page, *, canonical: str, generated: str) -> str:
+def _shell(page: Page, *, canonical: str, origin: str, generated: str) -> str:
+    """One page, including what a search result and a link preview will say about it.
+
+    The share card repeats this page's own title and description rather than a second set written
+    for sharing, which would be an unreviewed description of the project published where nobody
+    rereads it. The image is the one part it does not take from the page, because there is only
+    one: ``og-card.png``, written into the site root by :func:`build` and named here at an
+    absolute address off ``origin``, which is the only kind of address a crawler on another host
+    can resolve.
+    """
+
     # Every in-page link is relative, and it has to stay that way. This site is
     # served at a path under an origin five sibling projects also publish
     # under, and https://chelseakr.github.io/ is itself a 404, so an
@@ -1116,6 +1143,7 @@ def _shell(page: Page, *, canonical: str, generated: str) -> str:
     # nothing. `root` is why there is no root-relative href here, and
     # .github/scripts/check_site_origin.py refuses a build that grows one.
     root = "../" * page.path.count("/") + ("../" if page.path else "")
+    card = html.escape(f"{origin}/{OG_CARD_NAME}")
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1128,8 +1156,18 @@ def _shell(page: Page, *, canonical: str, generated: str) -> str:
 <meta property="og:description" content="{html.escape(page.description)}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="disclosed">
+<meta property="og:locale" content="en_US">
 <meta property="og:url" content="{html.escape(canonical)}">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="{card}">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="{OG_CARD_WIDTH}">
+<meta property="og:image:height" content="{OG_CARD_HEIGHT}">
+<meta property="og:image:alt" content="{html.escape(OG_CARD_ALT)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{html.escape(page.title)}">
+<meta name="twitter:description" content="{html.escape(page.description)}">
+<meta name="twitter:image" content="{card}">
+<meta name="twitter:image:alt" content="{html.escape(OG_CARD_ALT)}">
 <style>{_STYLE}</style>
 </head>
 <body>
@@ -1140,6 +1178,8 @@ def _shell(page: Page, *, canonical: str, generated: str) -> str:
 <footer>
 <p>Generated {html.escape(generated)} from public federal data. This grades disclosure, not
 quality, and says so on every page. <a href="{root}methodology/">Methodology</a>.</p>
+<p>Every rule behind these grades, the data they are computed from, and the code that applies
+them are public: <a href="{html.escape(SOURCE_URL)}">github.com/ChelseaKR/disclosed</a>.</p>
 </footer>
 </body>
 </html>
@@ -1246,8 +1286,15 @@ def build(
         target.mkdir(parents=True, exist_ok=True)
         canonical = f"{origin}/{page.path + '/' if page.path else ''}"
         (target / "index.html").write_text(
-            _shell(page, canonical=canonical, generated=generated), encoding="utf-8"
+            _shell(page, canonical=canonical, origin=origin, generated=generated),
+            encoding="utf-8",
         )
+
+    # The share card every page's og:image names. Written here, in the same pass that writes the
+    # pages that promise it, so the promise and the file cannot come apart: a link preview is
+    # fetched once, by a crawler on another host, and a 404 there is reported to nobody. It is a
+    # byte copy rather than a render, so a rebuild of the same report stays byte-identical.
+    (out_dir / OG_CARD_NAME).write_bytes(_OG_CARD_SOURCE.read_bytes())
 
     # robots.txt, written where this site lives rather than where robots.txt is
     # read. Worth being plain about, because the file looks like coverage it

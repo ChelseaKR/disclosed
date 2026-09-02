@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import html.parser
 import json
+import re
+import struct
 from pathlib import Path
 from typing import Any
 
@@ -316,6 +318,97 @@ class TestStructure:
         home = _text(tmp_path / "index.html")
         assert "does not say how much of the College Scorecard it holds" in home
         assert "nothing wider has been established" in home
+
+
+class TestTheShareCard:
+    """What a link preview says, and whether the image it names is a file that exists.
+
+    A card is the one thing this project publishes that nobody here ever sees rendered: it is
+    fetched once, by a crawler on another host, and a broken image or a wrong sentence comes back
+    to nobody. So both halves are asserted from the build rather than trusted.
+    """
+
+    def test_the_card_image_is_written_into_the_site(self, tmp_path: Path) -> None:
+        """The build writes the file its pages promise, not a URL somebody has to remember to add.
+
+        ``site/`` is a build artifact and is not in the repository, so a card committed under it
+        would exist on a laptop and nowhere the workflow renders. The bytes come from the package.
+        """
+        published = _build(tmp_path) / site.OG_CARD_NAME
+
+        assert published.is_file()
+        assert published.read_bytes() == site._OG_CARD_SOURCE.read_bytes()
+
+    def test_the_card_is_the_png_at_the_size_the_tags_promise(self, tmp_path: Path) -> None:
+        """``og:image:width`` is a published number, so the file has to actually have it."""
+        payload = (_build(tmp_path) / site.OG_CARD_NAME).read_bytes()
+
+        assert payload.startswith(b"\x89PNG\r\n\x1a\n")
+        assert payload[12:16] == b"IHDR"
+        width, height = struct.unpack(">II", payload[16:24])
+        assert (width, height) == (site.OG_CARD_WIDTH, site.OG_CARD_HEIGHT)
+
+    def test_every_page_promises_the_image_it_publishes(self, tmp_path: Path) -> None:
+        out = _build(tmp_path)
+        address = f"https://example.test/{site.OG_CARD_NAME}"
+
+        for page in sorted(out.rglob("index.html")):
+            text = _text(page)
+            assert f'<meta property="og:image" content="{address}">' in text, page
+            assert f'<meta name="twitter:image" content="{address}">' in text, page
+            assert '<meta name="twitter:card" content="summary_large_image">' in text, page
+            assert f'content="{site.OG_CARD_WIDTH}"' in text, page
+            assert f'content="{site.OG_CARD_HEIGHT}"' in text, page
+
+    def test_the_card_names_the_origin_the_site_was_built_for(self, tmp_path: Path) -> None:
+        """A relative og:image is unresolvable off-host, and a hardcoded one outlives a move.
+
+        ``DEFAULT_ORIGIN`` is not what the publish workflow passes; it passes whatever the Pages
+        API reports. An image address that ignored ``origin`` would keep naming the old host after
+        a move, which is issue #2 in the one place no reader can see it.
+        """
+        out = site.build(_REPORT, tmp_path / "s", origin="https://elsewhere.test/x", generated="g")
+        page = _text(tmp_path / "s" / "index.html")
+
+        assert out
+        assert '<meta property="og:image" content="https://elsewhere.test/x/og-card.png">' in page
+        assert site.DEFAULT_ORIGIN not in page
+
+    def test_the_card_repeats_the_page_rather_than_describing_it_again(
+        self, tmp_path: Path
+    ) -> None:
+        """A card that says something the page does not is a second, unreviewed description."""
+        for page in sorted(_build(tmp_path).rglob("index.html")):
+            text = _text(page)
+            title = re.search(r"<title>(.*?) \| disclosed</title>", text, re.S)
+            description = re.search(r'<meta name="description" content="([^"]*)"', text)
+            assert title is not None and description is not None, page
+            assert f'<meta property="og:title" content="{title.group(1)}">' in text, page
+            assert f'<meta name="twitter:title" content="{title.group(1)}">' in text, page
+            assert f'<meta name="twitter:description" content="{description.group(1)}">' in text, (
+                page
+            )
+
+    def test_the_alt_text_describes_the_card_for_a_reader_who_cannot_see_it(
+        self, tmp_path: Path
+    ) -> None:
+        home = _text(_build(tmp_path) / "index.html")
+
+        assert f'<meta property="og:image:alt" content="{site.OG_CARD_ALT}">' in home
+        assert f'<meta name="twitter:image:alt" content="{site.OG_CARD_ALT}">' in home
+
+
+class TestTheSourceBacklink:
+    def test_every_page_says_where_the_rules_can_be_read(self, tmp_path: Path) -> None:
+        """A site that grades disclosure has to disclose where its own rules live.
+
+        Every page, not the home page only: a reader arrives at one institution page from a search
+        result and never sees the front of the site.
+        """
+        for page in sorted(_build(tmp_path).rglob("index.html")):
+            text = _text(page)
+            assert f'<a href="{site.SOURCE_URL}">' in text, page
+            assert text.index(site.SOURCE_URL) > text.index("<footer>"), page
 
 
 class TestSiteCommand:
