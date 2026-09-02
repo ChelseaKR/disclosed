@@ -1,0 +1,74 @@
+{
+  "homepage_join": {
+    "hosts_in_ipeds": 5032,
+    "hosts_shared_by_more_than_one_institution": 283,
+    "ipeds_institutions_reached": 1026,
+    "ipeds_institutions_reached_beyond_the_identifier_join": 831,
+    "matched_more_than_one_institution": 255,
+    "matched_no_institution": 27228,
+    "matched_one_institution": 1514,
+    "note": "A weaker key than an identifier, reported separately and never added to the identifier join. A host that resolves to more than one IPEDS institution is counted as ambiguous and excluded rather than resolved to whichever row came first, and organizations the identifier join already matched are left out so this number answers only what the weaker key would add.",
+    "organizations_considered": 28997,
+    "share_of_ipeds_directory_reached_beyond_the_identifier_join": 0.13483693006652606
+  },
+  "identifier_join": {
+    "over_all_organizations": {
+      "distinct_ipeds_ids": 4800,
+      "ipeds_ids_not_readable_as_a_unit_id": 0,
+      "ipeds_institutions": 6163,
+      "ipeds_institutions_reached": 4794,
+      "matched_ipeds_directory": 4794,
+      "matched_scorecard_census": 4510,
+      "organizations_publishing_an_ipeds_id": 4818,
+      "scorecard_institutions": 6273,
+      "scorecard_institutions_reached": 4510,
+      "unmatched_ipeds_directory": 6,
+      "unmatched_scorecard_census": 290
+    },
+    "over_postsecondary_organizations": {
+      "distinct_ipeds_ids": 4688,
+      "ipeds_ids_not_readable_as_a_unit_id": 0,
+      "ipeds_institutions": 6163,
+      "ipeds_institutions_reached": 4685,
+      "matched_ipeds_directory": 4685,
+      "matched_scorecard_census": 4462,
+      "organizations_publishing_an_ipeds_id": 4690,
+      "scorecard_institutions": 6273,
+      "scorecard_institutions_reached": 4462,
+      "unmatched_ipeds_directory": 3,
+      "unmatched_scorecard_census": 226
+    },
+    "share_of_ipeds_directory_reached": 0.7778679214668182,
+    "share_of_organizations_publishing_an_ipeds_id": 0.1425064331982608,
+    "share_of_postsecondary_publishing_an_ipeds_id": 0.6898073246065598,
+    "share_of_scorecard_census_reached": 0.7189542483660131
+  },
+  "kind": "credential-registry-join",
+  "ope_id": {
+    "joined_to": null,
+    "note": "Neither committed corpus carries an OPE id, so this key is counted and not joined. Reporting it as unmatched would understate the registry and reporting it as matched would invent a join; the number here is how many organizations publish one, and nothing more.",
+    "organizations_publishing_one": 4969
+  },
+  "registry": {
+    "distinct_address_regions": 153,
+    "envelopes_unreadable": 0,
+    "network_calls": 340,
+    "organizations": 33809,
+    "pages": 340,
+    "postsecondary": 6799,
+    "publishing_a_homepage": 33809,
+    "publishing_an_ipeds_id": 4818,
+    "publishing_an_ope_id": 4969,
+    "repeated_ctids_dropped": 0,
+    "walked_at": "2026-08-27T19:21:43Z"
+  },
+  "scope": {
+    "coverage": 1.0,
+    "institutions": 33809,
+    "kind": "national",
+    "note": "Every organization the Credential Registry publishes under resource_type=organization, walked to the registry's own stated total on 2026-08-27T19:21:43Z. These are organizations of every kind, most of them training providers that were never in IPEDS, so the figures below carry two denominators and neither is the whole story on its own. The states figure is a count of distinct ceterms:addressRegion values, which the registry publishes as free text including regions outside the United States, so it counts regions rather than states.",
+    "source": "Credential Registry",
+    "states": 153,
+    "universe": 33809
+  }
+}

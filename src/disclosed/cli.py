@@ -26,14 +26,14 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Final
 
-from . import crosswalk, dataset, frame, national, site
+from . import crosswalk, dataset, frame, national, registry, registry_properties, site
 from .disclosure import CLASSIFICATIONS
 from .drift import Snapshot, compare
 from .fields import FIELDS, IPEDS_FIELDS
 from .grading import InstitutionGrade, grade_institution, summarize
 from .peers import peer_context
 from .scope import NATIONAL, SAMPLE, Scope, scope_from_payload
-from .sources import college_scorecard, ipeds
+from .sources import college_scorecard, credential_registry, ipeds
 
 __all__ = ["main"]
 
@@ -286,6 +286,156 @@ def _cmd_fetch(args: argparse.Namespace) -> int:
     print(f"  rate limit       {budget}")
     print(f"  key              {'DEMO_KEY' if capture.demo_key else 'DATA_GOV_API_KEY'}")
     print(f"  sha256           {summary['capture_sha256']}")
+    return 0
+
+
+def _cmd_registry_fetch(args: argparse.Namespace) -> int:
+    """Walk the Credential Registry and write a capture of what a join to the federal corpora needs.
+
+    Separate from ``fetch`` because it is a different source with a different contract: no key, no
+    quota, and a set the registry's publishers edit while the walk runs. The capture is committed
+    for the reason the Scorecard census capture is: rerunning it does not reproduce it, so the
+    file is the only durable record of what the registry held on the day the join was measured.
+    """
+    try:
+        cache_dir = Path(args.cache_dir) if args.cache_dir else None
+        capture = credential_registry.walk(limit=args.limit, cache_dir=cache_dir)
+    except credential_registry.RegistryError as exc:
+        print(f"registry fetch failed, nothing written: {exc}", file=sys.stderr)
+        return 1
+    if not capture.organizations:
+        print("no organizations returned; refusing to write an empty capture", file=sys.stderr)
+        return 1
+    out = Path(args.out)
+    credential_registry.write_capture(capture, out)
+    stated = "unstated" if capture.total_stated is None else f"{capture.total_stated:,}"
+    postsecondary = sum(1 for o in capture.organizations if o.is_postsecondary)
+    cached = sum(1 for page in capture.pages if page.from_cache)
+    fetched = len(capture.pages) - cached
+    print(f"captured {len(capture.organizations):,} organizations -> {out}")
+    print(f"  exhausted        {'yes' if capture.exhausted else 'no'}; registry stated {stated}")
+    print(f"  pages            {len(capture.pages)}, {cached} from cache, {fetched} fetched")
+    print(f"  postsecondary    {postsecondary:,}")
+    print(
+        f"  duplicates       {capture.duplicates:,} repeated ctids, {capture.unreduced} unreadable"
+    )
+    return 0
+
+
+def _cmd_registry_properties(args: argparse.Namespace) -> int:
+    """Walk the registry and capture which CTDL properties each organization publishes.
+
+    A second capture rather than two more columns in the join capture: written per organization
+    the property names add about 8.5 MB to a 7.9 MB file, and aggregated to distinct property
+    sets they are 245 KiB that answer every question about the population. ``docs/adr/0009``
+    records why the question needed asking, which is that ``docs/adr/0007`` measured the join and
+    then said in as many words that a join does not tell you what there is to grade.
+    """
+    try:
+        cache_dir = Path(args.cache_dir) if args.cache_dir else None
+        capture = credential_registry.walk(limit=args.limit, cache_dir=cache_dir)
+        payload = registry_properties.census(capture)
+    except (credential_registry.RegistryError, ValueError) as exc:
+        print(f"registry property census failed, nothing written: {exc}", file=sys.stderr)
+        return 1
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    cached = sum(1 for page in capture.pages if page.from_cache)
+    print(f"property census over {payload['organizations']:,} organizations -> {out}")
+    print(f"  publishing an ipedsID  {payload['publishing_an_ipeds_id']:,}")
+    print(f"  distinct property sets {len(payload['signatures']):,}")
+    print(f"  pages                  {len(capture.pages)}, {cached} from cache")
+    return 0
+
+
+def _cmd_registry_property_report(args: argparse.Namespace) -> int:
+    """Reduce the property census to the figures the README and the ADR are read from.
+
+    Offline and keyless, like ``registry-join``: the census is committed, so every rate replays
+    from the repository. Nothing here grades an organization; it counts property names.
+    """
+    raw = json.loads(Path(args.census).read_text(encoding="utf-8"))
+    try:
+        payload = registry_properties.report(raw)
+    except (KeyError, ValueError) as exc:
+        print(f"{args.census} is not a property census this can reduce: {exc}", file=sys.stderr)
+        return 1
+    Path(args.out).write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    largest = payload["largest_joined_property_set"]
+    print(f"property report over {payload['organizations']:,} organizations -> {args.out}")
+    print(f"  joined organizations    {payload['publishing_an_ipeds_id']:,}")
+    print(f"  distinct property names {payload['distinct_property_names']}")
+    print(f"  universal over joined   {len(payload['universal_over_joined'])} properties")
+    if largest is not None:
+        print(
+            f"  largest joined set      {largest['organizations']:,} organizations share the "
+            f"same {len(largest['properties'])} properties"
+        )
+    return 0
+
+
+def _cmd_registry_join(args: argparse.Namespace) -> int:
+    """Measure whether Credential Registry organizations join to the two federal corpora.
+
+    Offline and keyless: the registry capture, the IPEDS directory archive and the Scorecard
+    census capture are all committed, so the measurement replays from the repository rather than
+    from three live sources whose contents move. The output is a measurement and not a grade;
+    ``docs/ROADMAP.md`` names it as the thing that comes before an adapter, and ``docs/adr/0007``
+    records what the number licenses.
+    """
+    raw = json.loads(Path(args.capture).read_text(encoding="utf-8"))
+    try:
+        organizations, provenance = credential_registry.read_capture(raw)
+    except credential_registry.RegistryError as exc:
+        print(f"{args.capture} is {exc}", file=sys.stderr)
+        return 1
+    try:
+        directory = ipeds.parse_directory(Path(args.cache).read_bytes())
+    except (OSError, ipeds.IpedsError) as exc:
+        print(f"IPEDS directory unreadable: {exc}", file=sys.stderr)
+        return 1
+    source = json.loads(Path(args.source).read_text(encoding="utf-8"))
+    try:
+        records, _ = college_scorecard.read_capture(source)
+    except college_scorecard.ScorecardError as exc:
+        print(f"{args.source} is {exc}", file=sys.stderr)
+        return 1
+    try:
+        payload = registry.build(
+            organizations, provenance, ipeds_rows=directory, scorecard_records=records
+        )
+    except ValueError as exc:
+        print(f"{exc}", file=sys.stderr)
+        return 1
+    Path(args.out).write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+
+    reg = payload["registry"]
+    ident = payload["identifier_join"]
+    over_all = ident["over_all_organizations"]
+    over_post = ident["over_postsecondary_organizations"]
+    home = payload["homepage_join"]
+    print(f"registry join over {reg['organizations']:,} organizations -> {args.out}")
+    print(f"  postsecondary    {reg['postsecondary']:,}")
+    print(
+        f"  ipedsID          {over_all['organizations_publishing_an_ipeds_id']:,} publish one "
+        f"({over_post['organizations_publishing_an_ipeds_id']:,} of the postsecondary ones)"
+    )
+    print(
+        f"  identifier join  {over_all['matched_ipeds_directory']:,} of "
+        f"{over_all['ipeds_institutions']:,} IPEDS institutions reached, "
+        f"{over_all['matched_scorecard_census']:,} of "
+        f"{over_all['scorecard_institutions']:,} Scorecard census institutions"
+    )
+    print(
+        f"  homepage join    {home['matched_one_institution']:,} unique, "
+        f"{home['matched_more_than_one_institution']:,} ambiguous, "
+        f"{home['matched_no_institution']:,} unmatched (weaker key, reported separately)"
+    )
+    print(
+        f"  opeID            {payload['ope_id']['organizations_publishing_one']:,} publish one, "
+        "joined to nothing"
+    )
     return 0
 
 
@@ -696,6 +846,50 @@ def main(argv: list[str] | None = None) -> int:
         help="also write the committable provenance summary (calls, digests, rate limit) here",
     )
     p_fetch.set_defaults(func=_cmd_fetch)
+
+    p_reg_fetch = sub.add_parser(
+        "registry-fetch",
+        help="walk the Credential Registry and write a capture with provenance (no key needed)",
+    )
+    p_reg_fetch.add_argument("--limit", type=int, default=None, help="stop after N organizations")
+    p_reg_fetch.add_argument("--out", required=True, help="capture envelope to write")
+    p_reg_fetch.add_argument(
+        "--cache-dir",
+        default=None,
+        help="directory of per-page bodies; pages found there are served without the network",
+    )
+    p_reg_fetch.set_defaults(func=_cmd_registry_fetch)
+
+    p_reg_join = sub.add_parser(
+        "registry-join",
+        help="measure whether Credential Registry organizations join to the federal corpora",
+    )
+    p_reg_join.add_argument("--capture", required=True, help="Credential Registry capture")
+    p_reg_join.add_argument("--cache", required=True, help="IPEDS HD archive (zip)")
+    p_reg_join.add_argument("--source", required=True, help="College Scorecard census capture")
+    p_reg_join.add_argument("--out", required=True, help="join measurement to write")
+    p_reg_join.set_defaults(func=_cmd_registry_join)
+
+    p_reg_props = sub.add_parser(
+        "registry-properties",
+        help="capture which CTDL properties Credential Registry organizations publish",
+    )
+    p_reg_props.add_argument("--limit", type=int, default=None, help="stop after N organizations")
+    p_reg_props.add_argument("--out", required=True, help="property census to write")
+    p_reg_props.add_argument(
+        "--cache-dir",
+        default=None,
+        help="directory of per-page bodies; pages found there are served without the network",
+    )
+    p_reg_props.set_defaults(func=_cmd_registry_properties)
+
+    p_reg_prop_report = sub.add_parser(
+        "registry-property-report",
+        help="reduce a property census to the rates the published figures are read from",
+    )
+    p_reg_prop_report.add_argument("--census", required=True, help="property census to reduce")
+    p_reg_prop_report.add_argument("--out", required=True, help="property report to write")
+    p_reg_prop_report.set_defaults(func=_cmd_registry_property_report)
 
     p_grade = sub.add_parser("grade", help="fetch and grade institutions")
     p_grade.add_argument("--limit", type=int, default=None, help="stop after N institutions")

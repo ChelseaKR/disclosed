@@ -1,0 +1,78 @@
+# Does the scorecard a reader receives say what this repository says?
+#
+# publish-site renders the whole scorecard from the committed data on every push and
+# uploads it. The render is pure apart from the date it stamps. What has never been
+# checked is whether the pages a reader receives are that render. A pages run that
+# failed, never fired, or published an older commit would leave every gate green
+# while the published grade for a named institution differed from the one this
+# repository computes, and nothing here could tell.
+#
+# These pages grade real colleges by name, so a stale one misinforms somebody
+# choosing where to enrol. That is worth a daily check rather than a note.
+#
+# This is the check for the deployment: read the deploy's own generated-on date off
+# the live front page, rebuild all of it from the checkout stamped with that date,
+# and fail naming every byte-level difference.
+#
+# The date is the one thing a rebuild cannot reproduce, because the deploy stamps
+# the day it ran. It is read rather than guessed, and bounded rather than trusted:
+# it must parse, it must not be in the future, and it must not predate the commit
+# this run checked out, which is exactly the case where the deployment is older
+# than the code.
+#
+# It reads the network, deliberately, which the merge gate must never do. That is
+# why it is its own workflow, holds only `contents: read`, and is not a required
+# check: it grades the deployment, and a deployment that has not happened yet is
+# not a reason to block a merge.
+#
+# Runs daily and on demand (Actions > live integrity sentinel > Run workflow).
+name: live integrity sentinel
+
+on:
+  schedule:
+    - cron: "37 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Deduplicate reads without ever cancelling or queueing behind a deploy.
+  group: live-integrity
+  cancel-in-progress: false
+
+jobs:
+  verify-live:
+    name: the live surface is what this repository publishes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: master
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: python -m pip install -e .
+
+      - name: Compare the live surface with what this checkout publishes
+        run: |
+          set -uo pipefail
+          expected_sha="$(git rev-parse HEAD)"
+          python3 tools/verify_live_site.py
+          verify_rc="$?"
+          # A deploy for a newer commit may have landed while this ran, in which case
+          # the live surface differing from THIS commit is the deploy working. Only
+          # that exact case is excused, and only by re-reading the remote afterwards.
+          remote_sha="$(git ls-remote --exit-code origin refs/heads/master | cut -f1)"
+          if [ "$remote_sha" != "$expected_sha" ]; then
+            echo "::warning::master moved to ${remote_sha} while this ran; re-run once its deploy finishes"
+            exit 0
+          fi
+          exit "$verify_rc"

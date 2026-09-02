@@ -19,9 +19,13 @@ name: accessibility
 # The resource-count budget the README actually argues for -- no scripts, no external
 # stylesheets, no fonts, no images, no third-party requests, because a page about undisclosed
 # information should not be quietly shipping a tracker -- is enforced statically in
-# `make verify`, by tests/test_accessibility.py. The flag is left below because the budget file
-# is still the readable statement of intent and lighthouse may enforce it again one day; it is
-# not counted as a gate anywhere.
+# `make verify`, by tests/test_accessibility.py. As of docs/adr/0008 the resourceSizes lines are
+# enforced there too, read out of the budget file rather than restated, and every line of that
+# file is now either enforced by a named check or declared unenforceable with a written reason.
+# The three timing lines are the ones still enforced by nothing: they need this job's rendering
+# engine, and ADR 0008 says this runner's own numbers get measured before they become a gate. The
+# flag is left below because the budget file is still the readable statement of intent and
+# lighthouse may enforce it again one day; nothing in this job is counted as a gate on it.
 #
 # That paragraph used to say the budget was enforced "over every one of the 616 generated
 # pages" (the site's total at the time), and it was not. TestTheResourceBudget runs over a
