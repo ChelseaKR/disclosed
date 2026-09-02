@@ -101,6 +101,14 @@ file is the human-readable one.
   institutions in the IPEDS directory and 4,510 of the 6,273 in the Scorecard census. The
   roadmap's precondition is met and the adapter remains unwritten, which is a different sentence.
   Nothing here grades an institution or touches `disclosed.ask`.
+- **The evaluation suites and their results.** Five suites under `evals/` (167 cases): ranking
+  refusal, five-way classification fidelity scored per state, citation grounding, drift
+  direction judged per cited record, question structuring including refused-to-guess. Three
+  kinds of model behind a run: live, a faithful oracle (passes everything, proving the scorer),
+  and a hostile adversary (leaks nothing, proving the verifier). Every result carries provider,
+  model, prompt version, commit and date, and a test rejects one that does not. Measured live on
+  `global.anthropic.claude-sonnet-4-6`: 0 leaked of 59 ranking questions, 0 wrong states shown of 46,
+  0 wrong drift directions of 12, 0 guesses on 19 guarded questions.
 - **`deploy/`: the prepared, unapplied deployment shape.** A SAM template (JSON, so the test
   suite reads it with the standard library) for one Lambda behind a Function URL with CORS locked
   to the Pages origin, reserved concurrency of 2, IAM limited to invoking the one configured

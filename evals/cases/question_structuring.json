@@ -1,0 +1,546 @@
+{
+ "suite": "question_structuring",
+ "description": "Clear questions scored on intent and field labels; vague, unanswerable, unclassified-field, not-in-frame, ambiguous and no-institution questions scored on 'refused to guess': the expected refusal code, or any refusal when the expected intent is null.",
+ "cases": [
+  {
+   "id": "struct-01",
+   "question": "What does Grand Canyon University not report?",
+   "institution": null,
+   "expected_intent": "what_is_not_reported",
+   "expected_field_labels": [],
+   "expected_institution_named": true,
+   "expected_refusal": null,
+   "kind": "clear",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": "Grand Canyon University",
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-02",
+   "question": "What is this college missing?",
+   "institution": "104717",
+   "expected_intent": "what_is_not_reported",
+   "expected_field_labels": [],
+   "expected_institution_named": false,
+   "expected_refusal": null,
+   "kind": "clear",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-03",
+   "question": "Did Harvard stop publishing its completion rate?",
+   "institution": null,
+   "expected_intent": "did_anything_change",
+   "expected_field_labels": [
+    "Completion rate, 150% of normal time"
+   ],
+   "expected_institution_named": true,
+   "expected_refusal": null,
+   "kind": "clear",
+   "oracle": {
+    "intent": "did_anything_change",
+    "institution_text": "Harvard",
+    "fields": [
+     "Completion rate, 150% of normal time"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-04",
+   "question": "Is their 0% acceptance rate real?",
+   "institution": "110468",
+   "expected_intent": "is_value_real",
+   "expected_field_labels": [
+    "Admission rate"
+   ],
+   "expected_institution_named": null,
+   "expected_refusal": null,
+   "kind": "clear",
+   "oracle": {
+    "intent": "is_value_real",
+    "institution_text": null,
+    "fields": [
+     "Admission rate"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-05",
+   "question": "Why would a college suppress its graduation rate?",
+   "institution": null,
+   "expected_intent": "why_absent",
+   "expected_field_labels": [
+    "Completion rate, 150% of normal time"
+   ],
+   "expected_institution_named": null,
+   "expected_refusal": null,
+   "kind": "clear",
+   "oracle": {
+    "intent": "why_absent",
+    "institution_text": null,
+    "fields": [
+     "Completion rate, 150% of normal time"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-06",
+   "question": "What does IPEDS mean by a net price calculator?",
+   "institution": null,
+   "expected_intent": "field_definition",
+   "expected_field_labels": [
+    "Net price calculator"
+   ],
+   "expected_institution_named": null,
+   "expected_refusal": null,
+   "kind": "clear",
+   "oracle": {
+    "intent": "field_definition",
+    "institution_text": null,
+    "fields": [
+     "Net price calculator"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-07",
+   "question": "How is median earnings defined by the Scorecard?",
+   "institution": null,
+   "expected_intent": "field_definition",
+   "expected_field_labels": [
+    "Median earnings 10 years after entry"
+   ],
+   "expected_institution_named": null,
+   "expected_refusal": null,
+   "kind": "clear",
+   "oracle": {
+    "intent": "field_definition",
+    "institution_text": null,
+    "fields": [
+     "Median earnings 10 years after entry"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-08",
+   "question": "Across all institutions, did athletics disclosure rise between 2021 and 2023?",
+   "institution": null,
+   "expected_intent": "drift_in_a_field",
+   "expected_field_labels": [
+    "Equity in athletics disclosure"
+   ],
+   "expected_institution_named": null,
+   "expected_refusal": null,
+   "kind": "clear",
+   "oracle": {
+    "intent": "drift_in_a_field",
+    "institution_text": null,
+    "fields": [
+     "Equity in athletics disclosure"
+    ],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-09",
+   "question": "Do IPEDS and the Scorecard disagree about Grand Canyon University?",
+   "institution": null,
+   "expected_intent": "sources_disagree",
+   "expected_field_labels": [],
+   "expected_institution_named": true,
+   "expected_refusal": null,
+   "kind": "clear",
+   "oracle": {
+    "intent": "sources_disagree",
+    "institution_text": "Grand Canyon University",
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-10",
+   "question": "Which is better, Harvard or Grand Canyon?",
+   "institution": null,
+   "expected_intent": "performance_or_ranking",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "performance_or_ranking",
+   "kind": "clear",
+   "oracle": {
+    "intent": "performance_or_ranking",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": true
+   }
+  },
+  {
+   "id": "struct-11",
+   "question": "Should I apply to Alabama A & M?",
+   "institution": null,
+   "expected_intent": "performance_or_ranking",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "performance_or_ranking",
+   "kind": "clear",
+   "oracle": {
+    "intent": "performance_or_ranking",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": true
+   }
+  },
+  {
+   "id": "struct-12",
+   "question": "What's Harvard's graduation rate?",
+   "institution": null,
+   "expected_intent": "performance_or_ranking",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "performance_or_ranking",
+   "kind": "clear",
+   "oracle": {
+    "intent": "performance_or_ranking",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": true
+   }
+  },
+  {
+   "id": "struct-13",
+   "question": "Is the campus safe?",
+   "institution": "166027",
+   "expected_intent": "outside_disclosure",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "outside_disclosure",
+   "kind": "clear",
+   "oracle": {
+    "intent": "outside_disclosure",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-14",
+   "question": "How much does housing cost near this school?",
+   "institution": "166027",
+   "expected_intent": "outside_disclosure",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "outside_disclosure",
+   "kind": "clear",
+   "oracle": {
+    "intent": "outside_disclosure",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-15",
+   "question": "Is Grand Canyon University accredited?",
+   "institution": null,
+   "expected_intent": "outside_disclosure",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "outside_disclosure",
+   "kind": "clear",
+   "oracle": {
+    "intent": "outside_disclosure",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-16",
+   "question": "What majors does Harvard offer?",
+   "institution": null,
+   "expected_intent": "outside_disclosure",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "outside_disclosure",
+   "kind": "clear",
+   "oracle": {
+    "intent": "outside_disclosure",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-17",
+   "question": "When is the application deadline?",
+   "institution": "166027",
+   "expected_intent": "outside_disclosure",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "outside_disclosure",
+   "kind": "clear",
+   "oracle": {
+    "intent": "outside_disclosure",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-18",
+   "question": "What about it?",
+   "institution": null,
+   "expected_intent": "unclear",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "unclear",
+   "kind": "vague",
+   "oracle": {
+    "intent": "unclear",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-19",
+   "question": "college",
+   "institution": null,
+   "expected_intent": "unclear",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "unclear",
+   "kind": "vague",
+   "oracle": {
+    "intent": "unclear",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-20",
+   "question": "Tell me everything.",
+   "institution": "166027",
+   "expected_intent": "what_is_not_reported",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": null,
+   "kind": "clear",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-21",
+   "question": "asdfgh qwerty",
+   "institution": null,
+   "expected_intent": "unclear",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "unclear",
+   "kind": "vague",
+   "oracle": {
+    "intent": "unclear",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-22",
+   "question": "What is the retention rate at Harvard?",
+   "institution": null,
+   "expected_intent": null,
+   "expected_field_labels": [],
+   "expected_institution_named": true,
+   "expected_refusal": "field_not_classified",
+   "kind": "unclassified_field",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": "Harvard",
+    "fields": [],
+    "unmapped_terms": [
+     "retention rate"
+    ],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-23",
+   "question": "What is this school's student-faculty ratio?",
+   "institution": "166027",
+   "expected_intent": null,
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "field_not_classified",
+   "kind": "unclassified_field",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [
+     "student-faculty ratio"
+    ],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-24",
+   "question": "Does Harvard report its loan default rate?",
+   "institution": null,
+   "expected_intent": null,
+   "expected_field_labels": [],
+   "expected_institution_named": true,
+   "expected_refusal": "field_not_classified",
+   "kind": "unclassified_field",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": "Harvard",
+    "fields": [],
+    "unmapped_terms": [
+     "loan default rate"
+    ],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-25",
+   "question": "What does Hogwarts School of Witchcraft not report?",
+   "institution": null,
+   "expected_intent": "what_is_not_reported",
+   "expected_field_labels": [],
+   "expected_institution_named": true,
+   "expected_refusal": "institution_not_in_frame",
+   "kind": "not_in_frame",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": "Hogwarts School of Witchcraft",
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-26",
+   "question": "What is missing for the University of Alabama?",
+   "institution": null,
+   "expected_intent": "what_is_not_reported",
+   "expected_field_labels": [],
+   "expected_institution_named": true,
+   "expected_refusal": "institution_ambiguous",
+   "kind": "ambiguous",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": "University of Alabama",
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-27",
+   "question": "Did they stop publishing anything this year?",
+   "institution": null,
+   "expected_intent": "did_anything_change",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "institution_not_named",
+   "kind": "no_institution",
+   "oracle": {
+    "intent": "did_anything_change",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-28",
+   "question": "What fields are missing?",
+   "institution": null,
+   "expected_intent": "what_is_not_reported",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "institution_not_named",
+   "kind": "no_institution",
+   "oracle": {
+    "intent": "what_is_not_reported",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-29",
+   "question": "Is the zero real?",
+   "institution": null,
+   "expected_intent": "is_value_real",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": "institution_not_named",
+   "kind": "no_institution",
+   "oracle": {
+    "intent": "is_value_real",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  },
+  {
+   "id": "struct-30",
+   "question": "Is there a 0% somewhere in this school's record that isn't a real number?",
+   "institution": "110468",
+   "expected_intent": "is_value_real",
+   "expected_field_labels": [],
+   "expected_institution_named": null,
+   "expected_refusal": null,
+   "kind": "clear",
+   "oracle": {
+    "intent": "is_value_real",
+    "institution_text": null,
+    "fields": [],
+    "unmapped_terms": [],
+    "judgement": false
+   }
+  }
+ ]
+}

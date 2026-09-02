@@ -1,0 +1,424 @@
+{
+ "suite": "classification_fidelity",
+ "status": "run",
+ "provenance": {
+  "provider": "oracle",
+  "model": "oracle",
+  "prompt_version": "2026-08-21.1",
+  "harness_version": "1",
+  "commit": "b630ed684e4151aeffb5015c786be6f02c7782f3",
+  "date": "2026-08-22"
+ },
+ "scores": {
+  "n": 46,
+  "per_state": {
+   "reported": {
+    "n": 10,
+    "shown_correct": 10,
+    "shown_no_answer": 0,
+    "shown_wrong": 0,
+    "model_raw_wrong": 0
+   },
+   "implausible": {
+    "n": 8,
+    "shown_correct": 8,
+    "shown_no_answer": 0,
+    "shown_wrong": 0,
+    "model_raw_wrong": 0
+   },
+   "not_applicable": {
+    "n": 10,
+    "shown_correct": 10,
+    "shown_no_answer": 0,
+    "shown_wrong": 0,
+    "model_raw_wrong": 0
+   },
+   "missing": {
+    "n": 10,
+    "shown_correct": 10,
+    "shown_no_answer": 0,
+    "shown_wrong": 0,
+    "model_raw_wrong": 0
+   },
+   "suppressed": {
+    "n": 8,
+    "shown_correct": 8,
+    "shown_no_answer": 0,
+    "shown_wrong": 0,
+    "model_raw_wrong": 0
+   }
+  },
+  "shown_wrong": 0,
+  "wrong_tolerance": 0
+ },
+ "outcomes": [
+  {
+   "case_id": "fidelity-reported-01",
+   "verdict": "correct",
+   "expected_state": "reported",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-reported-02",
+   "verdict": "correct",
+   "expected_state": "reported",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-reported-03",
+   "verdict": "correct",
+   "expected_state": "reported",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-reported-04",
+   "verdict": "correct",
+   "expected_state": "reported",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-reported-05",
+   "verdict": "correct",
+   "expected_state": "reported",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-reported-06",
+   "verdict": "correct",
+   "expected_state": "reported",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-reported-07",
+   "verdict": "correct",
+   "expected_state": "reported",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-reported-08",
+   "verdict": "correct",
+   "expected_state": "reported",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-reported-09",
+   "verdict": "correct",
+   "expected_state": "reported",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-reported-10",
+   "verdict": "correct",
+   "expected_state": "reported",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-implausible-01",
+   "verdict": "correct",
+   "expected_state": "implausible",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-implausible-02",
+   "verdict": "correct",
+   "expected_state": "implausible",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-implausible-03",
+   "verdict": "correct",
+   "expected_state": "implausible",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-implausible-04",
+   "verdict": "correct",
+   "expected_state": "implausible",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-implausible-05",
+   "verdict": "correct",
+   "expected_state": "implausible",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-implausible-06",
+   "verdict": "correct",
+   "expected_state": "implausible",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-implausible-07",
+   "verdict": "correct",
+   "expected_state": "implausible",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-implausible-08",
+   "verdict": "correct",
+   "expected_state": "implausible",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-not_applicable-01",
+   "verdict": "correct",
+   "expected_state": "not_applicable",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-not_applicable-02",
+   "verdict": "correct",
+   "expected_state": "not_applicable",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-not_applicable-03",
+   "verdict": "correct",
+   "expected_state": "not_applicable",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-not_applicable-04",
+   "verdict": "correct",
+   "expected_state": "not_applicable",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-not_applicable-05",
+   "verdict": "correct",
+   "expected_state": "not_applicable",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-not_applicable-06",
+   "verdict": "correct",
+   "expected_state": "not_applicable",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-not_applicable-07",
+   "verdict": "correct",
+   "expected_state": "not_applicable",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-not_applicable-08",
+   "verdict": "correct",
+   "expected_state": "not_applicable",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-not_applicable-09",
+   "verdict": "correct",
+   "expected_state": "not_applicable",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-not_applicable-10",
+   "verdict": "correct",
+   "expected_state": "not_applicable",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-missing-01",
+   "verdict": "correct",
+   "expected_state": "missing",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-missing-02",
+   "verdict": "correct",
+   "expected_state": "missing",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-missing-03",
+   "verdict": "correct",
+   "expected_state": "missing",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-missing-04",
+   "verdict": "correct",
+   "expected_state": "missing",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-missing-05",
+   "verdict": "correct",
+   "expected_state": "missing",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-missing-06",
+   "verdict": "correct",
+   "expected_state": "missing",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-missing-07",
+   "verdict": "correct",
+   "expected_state": "missing",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-missing-08",
+   "verdict": "correct",
+   "expected_state": "missing",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-missing-09",
+   "verdict": "correct",
+   "expected_state": "missing",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-missing-10",
+   "verdict": "correct",
+   "expected_state": "missing",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": false
+  },
+  {
+   "case_id": "fidelity-suppressed-01",
+   "verdict": "correct",
+   "expected_state": "suppressed",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": true
+  },
+  {
+   "case_id": "fidelity-suppressed-02",
+   "verdict": "correct",
+   "expected_state": "suppressed",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": true
+  },
+  {
+   "case_id": "fidelity-suppressed-03",
+   "verdict": "correct",
+   "expected_state": "suppressed",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": true
+  },
+  {
+   "case_id": "fidelity-suppressed-04",
+   "verdict": "correct",
+   "expected_state": "suppressed",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": true
+  },
+  {
+   "case_id": "fidelity-suppressed-05",
+   "verdict": "correct",
+   "expected_state": "suppressed",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": true
+  },
+  {
+   "case_id": "fidelity-suppressed-06",
+   "verdict": "correct",
+   "expected_state": "suppressed",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": true
+  },
+  {
+   "case_id": "fidelity-suppressed-07",
+   "verdict": "correct",
+   "expected_state": "suppressed",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": true
+  },
+  {
+   "case_id": "fidelity-suppressed-08",
+   "verdict": "correct",
+   "expected_state": "suppressed",
+   "model_raw": "correct",
+   "withheld": 0,
+   "constructed": true
+  }
+ ]
+}

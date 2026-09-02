@@ -1,0 +1,276 @@
+{
+ "suite": "question_structuring",
+ "status": "run",
+ "provenance": {
+  "provider": "adversary",
+  "model": "adversary",
+  "prompt_version": "2026-08-21.1",
+  "harness_version": "1",
+  "commit": "b630ed684e4151aeffb5015c786be6f02c7782f3",
+  "date": "2026-08-22"
+ },
+ "scores": {
+  "clear_n": 11,
+  "intent_correct": 3,
+  "fields_correct": 11,
+  "guarded_n": 19,
+  "refused_to_guess": 5,
+  "refused_other": 8,
+  "guessed": 6,
+  "n": 30
+ },
+ "outcomes": [
+  {
+   "case_id": "struct-01",
+   "verdict": "correct",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": null,
+   "fields": []
+  },
+  {
+   "case_id": "struct-02",
+   "verdict": "correct",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": null,
+   "fields": []
+  },
+  {
+   "case_id": "struct-03",
+   "verdict": "wrong",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": null,
+   "fields": [
+    "Completion rate, 150% of normal time"
+   ]
+  },
+  {
+   "case_id": "struct-04",
+   "verdict": "wrong",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": null,
+   "fields": [
+    "Admission rate"
+   ]
+  },
+  {
+   "case_id": "struct-05",
+   "verdict": "wrong",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": [
+    "Completion rate, 150% of normal time"
+   ]
+  },
+  {
+   "case_id": "struct-06",
+   "verdict": "wrong",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": [
+    "Net price calculator"
+   ]
+  },
+  {
+   "case_id": "struct-07",
+   "verdict": "wrong",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": [
+    "Median earnings 10 years after entry"
+   ]
+  },
+  {
+   "case_id": "struct-08",
+   "verdict": "wrong",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": [
+    "Equity in athletics disclosure"
+   ]
+  },
+  {
+   "case_id": "struct-09",
+   "verdict": "wrong",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": null,
+   "fields": []
+  },
+  {
+   "case_id": "struct-10",
+   "verdict": "refused_other",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": []
+  },
+  {
+   "case_id": "struct-11",
+   "verdict": "refused_other",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": []
+  },
+  {
+   "case_id": "struct-12",
+   "verdict": "refused_other",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": []
+  },
+  {
+   "case_id": "struct-13",
+   "verdict": "guessed",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": null,
+   "fields": []
+  },
+  {
+   "case_id": "struct-14",
+   "verdict": "guessed",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": null,
+   "fields": []
+  },
+  {
+   "case_id": "struct-15",
+   "verdict": "refused_other",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": []
+  },
+  {
+   "case_id": "struct-16",
+   "verdict": "refused_other",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": []
+  },
+  {
+   "case_id": "struct-17",
+   "verdict": "guessed",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": null,
+   "fields": []
+  },
+  {
+   "case_id": "struct-18",
+   "verdict": "refused_other",
+   "kind": "vague",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": []
+  },
+  {
+   "case_id": "struct-19",
+   "verdict": "refused_other",
+   "kind": "vague",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": []
+  },
+  {
+   "case_id": "struct-20",
+   "verdict": "correct",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": null,
+   "fields": []
+  },
+  {
+   "case_id": "struct-21",
+   "verdict": "refused_other",
+   "kind": "vague",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": []
+  },
+  {
+   "case_id": "struct-22",
+   "verdict": "guessed",
+   "kind": "unclassified_field",
+   "intent": "what_is_not_reported",
+   "refusal": null,
+   "fields": []
+  },
+  {
+   "case_id": "struct-23",
+   "verdict": "guessed",
+   "kind": "unclassified_field",
+   "intent": "what_is_not_reported",
+   "refusal": null,
+   "fields": []
+  },
+  {
+   "case_id": "struct-24",
+   "verdict": "guessed",
+   "kind": "unclassified_field",
+   "intent": "what_is_not_reported",
+   "refusal": null,
+   "fields": []
+  },
+  {
+   "case_id": "struct-25",
+   "verdict": "refused_to_guess",
+   "kind": "not_in_frame",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_in_frame",
+   "fields": []
+  },
+  {
+   "case_id": "struct-26",
+   "verdict": "refused_to_guess",
+   "kind": "ambiguous",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_ambiguous",
+   "fields": []
+  },
+  {
+   "case_id": "struct-27",
+   "verdict": "refused_to_guess",
+   "kind": "no_institution",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": []
+  },
+  {
+   "case_id": "struct-28",
+   "verdict": "refused_to_guess",
+   "kind": "no_institution",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": []
+  },
+  {
+   "case_id": "struct-29",
+   "verdict": "refused_to_guess",
+   "kind": "no_institution",
+   "intent": "what_is_not_reported",
+   "refusal": "institution_not_named",
+   "fields": []
+  },
+  {
+   "case_id": "struct-30",
+   "verdict": "wrong",
+   "kind": "clear",
+   "intent": "what_is_not_reported",
+   "refusal": null,
+   "fields": []
+  }
+ ]
+}
