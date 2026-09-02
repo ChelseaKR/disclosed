@@ -26,7 +26,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Final
 
-from . import crosswalk, dataset, frame, national, registry, site
+from . import crosswalk, dataset, frame, national, registry, registry_properties, site
 from .disclosure import CLASSIFICATIONS
 from .drift import Snapshot, compare
 from .fields import FIELDS, IPEDS_FIELDS
@@ -319,6 +319,59 @@ def _cmd_registry_fetch(args: argparse.Namespace) -> int:
     print(
         f"  duplicates       {capture.duplicates:,} repeated ctids, {capture.unreduced} unreadable"
     )
+    return 0
+
+
+def _cmd_registry_properties(args: argparse.Namespace) -> int:
+    """Walk the registry and capture which CTDL properties each organization publishes.
+
+    A second capture rather than two more columns in the join capture: written per organization
+    the property names add about 8.5 MB to a 7.9 MB file, and aggregated to distinct property
+    sets they are 245 KiB that answer every question about the population. ``docs/adr/0009``
+    records why the question needed asking, which is that ``docs/adr/0007`` measured the join and
+    then said in as many words that a join does not tell you what there is to grade.
+    """
+    try:
+        cache_dir = Path(args.cache_dir) if args.cache_dir else None
+        capture = credential_registry.walk(limit=args.limit, cache_dir=cache_dir)
+        payload = registry_properties.census(capture)
+    except (credential_registry.RegistryError, ValueError) as exc:
+        print(f"registry property census failed, nothing written: {exc}", file=sys.stderr)
+        return 1
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    cached = sum(1 for page in capture.pages if page.from_cache)
+    print(f"property census over {payload['organizations']:,} organizations -> {out}")
+    print(f"  publishing an ipedsID  {payload['publishing_an_ipeds_id']:,}")
+    print(f"  distinct property sets {len(payload['signatures']):,}")
+    print(f"  pages                  {len(capture.pages)}, {cached} from cache")
+    return 0
+
+
+def _cmd_registry_property_report(args: argparse.Namespace) -> int:
+    """Reduce the property census to the figures the README and the ADR are read from.
+
+    Offline and keyless, like ``registry-join``: the census is committed, so every rate replays
+    from the repository. Nothing here grades an organization; it counts property names.
+    """
+    raw = json.loads(Path(args.census).read_text(encoding="utf-8"))
+    try:
+        payload = registry_properties.report(raw)
+    except (KeyError, ValueError) as exc:
+        print(f"{args.census} is not a property census this can reduce: {exc}", file=sys.stderr)
+        return 1
+    Path(args.out).write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    largest = payload["largest_joined_property_set"]
+    print(f"property report over {payload['organizations']:,} organizations -> {args.out}")
+    print(f"  joined organizations    {payload['publishing_an_ipeds_id']:,}")
+    print(f"  distinct property names {payload['distinct_property_names']}")
+    print(f"  universal over joined   {len(payload['universal_over_joined'])} properties")
+    if largest is not None:
+        print(
+            f"  largest joined set      {largest['organizations']:,} organizations share the "
+            f"same {len(largest['properties'])} properties"
+        )
     return 0
 
 
@@ -772,6 +825,27 @@ def main(argv: list[str] | None = None) -> int:
     p_reg_join.add_argument("--source", required=True, help="College Scorecard census capture")
     p_reg_join.add_argument("--out", required=True, help="join measurement to write")
     p_reg_join.set_defaults(func=_cmd_registry_join)
+
+    p_reg_props = sub.add_parser(
+        "registry-properties",
+        help="capture which CTDL properties Credential Registry organizations publish",
+    )
+    p_reg_props.add_argument("--limit", type=int, default=None, help="stop after N organizations")
+    p_reg_props.add_argument("--out", required=True, help="property census to write")
+    p_reg_props.add_argument(
+        "--cache-dir",
+        default=None,
+        help="directory of per-page bodies; pages found there are served without the network",
+    )
+    p_reg_props.set_defaults(func=_cmd_registry_properties)
+
+    p_reg_prop_report = sub.add_parser(
+        "registry-property-report",
+        help="reduce a property census to the rates the published figures are read from",
+    )
+    p_reg_prop_report.add_argument("--census", required=True, help="property census to reduce")
+    p_reg_prop_report.add_argument("--out", required=True, help="property report to write")
+    p_reg_prop_report.set_defaults(func=_cmd_registry_property_report)
 
     p_grade = sub.add_parser("grade", help="fetch and grade institutions")
     p_grade.add_argument("--limit", type=int, default=None, help="stop after N institutions")

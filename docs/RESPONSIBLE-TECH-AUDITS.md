@@ -280,11 +280,40 @@ recorded rather than smoothed over.
   inventory in section C and adds no runtime code. The measurement above ran locally against a
   site built from committed artifacts.
 
+## Addendum 2026-08-27: the third source is measured a second time, and declined
+
+Appended rather than edited. The addendum above records the Credential Registry being read and
+only measured. This records the second measurement and the decision it produced.
+
+- **A fifth and sixth item in the data inventory.** `data/registry/properties.json` (403 KB): for
+  each of the 33,809 organizations walked on 2026-08-27, which CTDL property *names* appear on its
+  node, aggregated to the 442 distinct property sets and their counts, split by whether the
+  organization publishes a typed `ceterms:ipedsID`. No value is captured, only names, and the
+  aggregation deliberately gives up the ability to say which organization carried which set.
+  `data/registry-properties.json` (17 KB) is the reduction the published figures are read from.
+  No personal data: these are property names from a vocabulary, counted over organizations.
+  Retention: committed, for the reason the other two captures are.
+- **A Ethics: the decision this produced is not to build.** Over the 4,818 organizations that
+  join to IPEDS, nine CTDL properties are on 100% of them and three more on over 97%, and every
+  one of the twelve is identity, location, a self-description or a federal id. 96.0% carry an
+  identical property set and 98.2% carry a free-text `IPEDS NCES Data Year`. `docs/adr/0009`
+  records that no adapter is written, and records why building one anyway would have been
+  grading institutions on a voluntary listing that is largely a bulk load of a corpus this
+  project already reads. Grading participation is not grading disclosure.
+- **D Transparency.** The report carries a `scope` block that says in words that it counts
+  property names and that no organization is graded, named or scored. The README section states
+  every figure and `tests/test_doc_counts.py` re-derives each one from the artifact, including
+  the two qualitative claims about the cliff and the identical property set.
+- **F Security.** No new secret, no new credential, no new network path at grading time. The
+  census walk uses the same read-only GET against the same fixed scheme and host as the existing
+  adapter, served entirely from the page cache the first walk wrote.
+
 ## Addendum 2026-08-28: the last unenforced budget line is gated
 
-Appended rather than edited. The addendum above records the transfer sizes becoming a gate and
-names the three timing lines as still enforced by nothing. That is no longer true, and the
-correction is here rather than in an edit to that paragraph.
+Appended rather than edited. "Addendum 2026-08-27: the budget file is read, and what still is
+not" records the transfer sizes becoming a gate and names the three timing lines as still
+enforced by nothing. That is no longer true, and the correction is here rather than in an edit to
+that paragraph.
 
 - **E Accessibility, budgets, completed.** `largest-contentful-paint`, `cumulative-layout-shift`
   and `total-blocking-time` are enforced by
