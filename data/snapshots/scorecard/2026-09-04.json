@@ -1,0 +1,29 @@
+{
+  "applicable": {
+    "Admission rate": 6273,
+    "Completion rate, 150% of normal time": 6273,
+    "Enrollment": 6273,
+    "In-state tuition": 6273,
+    "Median debt at completion": 6273,
+    "Median earnings 10 years after entry": 6273
+  },
+  "institutions": 6273,
+  "missing": {
+    "Admission rate": 4363,
+    "Completion rate, 150% of normal time": 4010,
+    "Enrollment": 795,
+    "In-state tuition": 2661,
+    "Median debt at completion": 1496,
+    "Median earnings 10 years after entry": 1146
+  },
+  "reported": {
+    "Admission rate": 1907,
+    "Completion rate, 150% of normal time": 2224,
+    "Enrollment": 5467,
+    "In-state tuition": 3609,
+    "Median debt at completion": 4777,
+    "Median earnings 10 years after entry": 5127
+  },
+  "source": "College Scorecard",
+  "taken": "2026-09-04"
+}
