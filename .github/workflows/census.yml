@@ -24,6 +24,7 @@ concurrency:
 jobs:
   walk:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: write # commits data/census/ to the dispatching branch
     steps:
@@ -31,6 +32,7 @@ jobs:
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
+          cache: 'pip'
           python-version: "3.12"
 
       - name: Install
