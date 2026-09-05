@@ -33,10 +33,17 @@ from .disclosure import Disclosure
 from .drift import SYSTEMIC_THRESHOLD
 from .fields import FIELDS, IPEDS_FIELDS, Field, field_by_label
 from .grading import BANDS, BELOW_EVERY_BAND
+from .messages import SOURCE_LOCALE, Catalog, load
 from .peers import MIN_PEERS
 from .scope import Scope, scope_from_payload
 
 __all__ = ["Page", "build", "slug"]
+
+#: The catalog every page function falls back to, so that calling one of them without saying
+#: which language you want renders the language this project's prose is written and reviewed in.
+#: Read once, at import, from a file inside the package: no clock, no network, no locale sniffed
+#: from the environment, the same discipline as ``generated`` being passed in rather than read.
+ENGLISH: Final[Catalog] = load(SOURCE_LOCALE)
 
 DEFAULT_ORIGIN: Final[str] = "https://chelseakr.github.io/disclosed"
 
@@ -52,45 +59,36 @@ _OG_CARD_SOURCE: Final[Path] = Path(__file__).resolve().parent / "assets" / "og-
 OG_CARD_NAME: Final[str] = "og-card.png"
 OG_CARD_WIDTH: Final[int] = 1200
 OG_CARD_HEIGHT: Final[int] = 630
-OG_CARD_ALT: Final[str] = (
-    "disclosed: what US colleges do not tell you. Grades US higher-education institutions on "
-    "what they disclose, not on how they perform."
-)
 
-# What each classification means to a reader, and whether the institution is answerable for it.
-# Written for a person who has just been told their college scored badly and wants to know why.
-_DISCLOSURE_COPY: Final[dict[Disclosure, tuple[str, str]]] = {
-    Disclosure.REPORTED: (
-        "Reported",
-        "A credible value was published.",
-    ),
-    Disclosure.IMPLAUSIBLE: (
-        "Implausible",
-        "A value was published but falls outside the credible range for this field. Counted as a "
-        "disclosure failure: a gap is visible to a reader, a wrong number is not.",
-    ),
-    Disclosure.SUPPRESSED: (
-        "Suppressed",
-        "Withheld deliberately, usually to protect a small cohort. Not held against the "
-        "institution and removed from the denominator entirely.",
-    ),
-    Disclosure.NOT_APPLICABLE: (
-        "Not applicable",
-        "The question does not apply to this institution. Removed from the denominator entirely.",
-    ),
-    Disclosure.MISSING: (
-        "Not reported",
-        "No value and no stated reason. This is the one that counts against a publisher.",
-    ),
-}
 
-_LETTER_COPY: Final[dict[str, str]] = {
-    "A": "published nearly everything it was in a position to publish",
-    "B": "published most of what it was in a position to publish",
-    "C": "left a reader with real gaps",
-    "D": "left more unpublished than published",
-    "F": "published almost nothing a reader could use",
-}
+#: Every letter a grade can be, read off the bands that decide them rather than typed here. The
+#: catalog carries one sentence per letter, and a band added without its sentence fails the
+#: catalog-coverage test rather than rendering a page with a blank where the summary goes.
+_LETTERS: Final[frozenset[str]] = frozenset(letter for _, letter in BANDS) | {BELOW_EVERY_BAND}
+
+
+def _classification_copy(disclosure: Disclosure, catalog: Catalog) -> tuple[str, str]:
+    """What one classification is called on a page, and what it means to a reader.
+
+    **This function is the only place the five classification tokens are ever turned into words,
+    and it is a rendering step.** ``Disclosure.MISSING`` travels through the grader, the report,
+    the CSV export and the Table Schema as ``missing``; it becomes "Not reported" here, on the way
+    into one page, and it becomes something else here in another language. Nothing downstream of
+    this function is data.
+
+    That boundary is the product. The five states are five different facts -- a value nobody
+    published, a value withheld to protect a small cohort, a question that does not apply, a
+    published number that cannot be a measurement, and a real one -- and a reader who downloads
+    the CSV has to be able to join on them. :mod:`disclosed.dataset` therefore does not import
+    this module at all, and ``tests/test_i18n.py`` fails if it starts to.
+
+    The copy is written for a person who has just been told their college scored badly and wants
+    to know why, which is why the meaning is a sentence rather than a definition.
+    """
+    return (
+        catalog.text(f"classification.{disclosure.value}.label"),
+        catalog.text(f"classification.{disclosure.value}.meaning"),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,17 +113,20 @@ def slug(text: str) -> str:
     return cleaned
 
 
-def _pct(value: float | None) -> str:
+def _pct(value: float | None, catalog: Catalog = ENGLISH) -> str:
     """Format a score, or say plainly that there is not one.
 
     An ungradeable institution has no score. It must never be rendered as 0%, which is the exact
     confusion this whole project exists to prevent, and rendering it as an em dash would be almost
     as bad because a reader would read the dash as "zero" anyway.
+
+    The percentage itself is still formatted with Python's ``%`` convention, which is an English
+    one. ``docs/I18N.md`` records that as unfinished rather than solved.
     """
-    return "not gradeable" if value is None else f"{value:.0%}"
+    return catalog.text("score.not_gradeable") if value is None else f"{value:.0%}"
 
 
-def _name_of(row: dict[str, Any]) -> str:
+def _name_of(row: dict[str, Any], catalog: Catalog = ENGLISH) -> str:
     """Display name for an institution the source may not have named.
 
     Never ``str(row["name"])``: that prints the word "None" as a name. An absent name is stated as
@@ -136,11 +137,11 @@ def _name_of(row: dict[str, Any]) -> str:
         return name
     unit_id = row.get("unit_id")
     if isinstance(unit_id, str) and unit_id.strip():
-        return f"Unnamed institution (unit id {unit_id})"
-    return "Unnamed institution (no unit id published)"
+        return catalog.text("institution.unnamed_with_unit_id", unit_id=unit_id)
+    return catalog.text("institution.unnamed_without_unit_id")
 
 
-def _grade_badge(letter: str | None) -> str:
+def _grade_badge(letter: str | None, catalog: Catalog = ENGLISH) -> str:
     """A grade, with its meaning available to a reader who cannot see the badge.
 
     The ungradeable badge used to carry its explanation in a ``title`` attribute, which is not
@@ -150,12 +151,12 @@ def _grade_badge(letter: str | None) -> str:
     """
     if letter is None:
         return (
-            '<span class="grade grade-none">n/a'
-            '<span class="visually-hidden">: not gradeable, no field applied</span></span>'
+            f'<span class="grade grade-none">{catalog.text("grade.none.badge")}'
+            f'<span class="visually-hidden">{catalog.text("grade.none.meaning")}</span></span>'
         )
     return (
         f'<span class="grade grade-{letter.lower()}">{html.escape(letter)}'
-        f'<span class="visually-hidden"> grade</span></span>'
+        f'<span class="visually-hidden">{catalog.text("grade.letter.suffix")}</span></span>'
     )
 
 
@@ -188,17 +189,18 @@ def institution_page(
     *,
     path: str,
     ask_endpoint: str | None = None,
+    catalog: Catalog = ENGLISH,
 ) -> Page:
     """One institution: its grade, every field's disclosure state, and any implausible values.
 
     With ``ask_endpoint`` the page also carries the opt-in question form and the one inline
     script behind it (see :func:`_ask_widget`); without it the page is exactly what it was.
     """
-    name = _name_of(row)
+    name = _name_of(row, catalog)
     letter = row.get("letter")
     score = row.get("score")
     state = row.get("state")
-    summary = _LETTER_COPY.get(letter or "", "could not be graded on any field")
+    summary = catalog.text(f"letter.{letter}.summary" if letter in _LETTERS else "letter.none")
 
     rows = []
     for label in sorted(row.get("fields", {})):
@@ -207,13 +209,16 @@ def institution_page(
             disclosure = Disclosure(raw_state)
         except ValueError:
             # A report written by a newer version than this renderer. Say so rather than guessing.
+            unrecognized = catalog.text(
+                "institution.unrecognized_classification",
+                classification=html.escape(str(raw_state)),
+            )
             rows.append(
                 f'<tr><th scope="row">{_rationale_link(label, label, depth=2)}</th>'
-                f'<td colspan="2">unrecognized classification '
-                f"{html.escape(str(raw_state))}</td></tr>"
+                f'<td colspan="2">{unrecognized}</td></tr>'
             )
             continue
-        title, meaning = _DISCLOSURE_COPY[disclosure]
+        title, meaning = _classification_copy(disclosure, catalog)
         rows.append(
             f'<tr><th scope="row">{_rationale_link(label, label, depth=2)}</th>'
             f'<td><span class="tag tag-{disclosure.value.replace("_", "-")}">'
@@ -226,57 +231,64 @@ def institution_page(
         items = []
         for finding in findings:
             peers = finding.get("peers")
-            verdict = (
-                f'<p class="peers">Peer check, '
-                f"{html.escape(str(peers.get('group', 'unknown group')))}: "
-                f"{html.escape(str(peers.get('verdict', '')))}</p>"
-                if isinstance(peers, dict)
-                else '<p class="peers">No peer group was available for this institution, so no '
-                "comparison is claimed.</p>"
-            )
+            if isinstance(peers, dict):
+                unknown = catalog.text("institution.finding.unknown_group")
+                said = catalog.text(
+                    "institution.finding.peer_check",
+                    group=html.escape(str(peers.get("group", unknown))),
+                    verdict=html.escape(str(peers.get("verdict", ""))),
+                )
+            else:
+                said = catalog.text("institution.finding.no_peer_group")
+            verdict = f'<p class="peers">{said}</p>'
             label = str(finding.get("field", ""))
+            published = catalog.text(
+                "institution.finding.published_as",
+                field=_rationale_link(label, label, depth=2),
+                value=html.escape(json.dumps(finding.get("value"))),
+            )
             items.append(
-                f"<li><strong>{_rationale_link(label, label, depth=2)}</strong> published as "
-                f"<code>{html.escape(json.dumps(finding.get('value')))}</code>."
-                f"{verdict}"
+                f"<li>{published}{verdict}"
                 f'<p class="why">{html.escape(str(finding.get("rationale", "")))}</p></li>'
             )
         findings_html = (
-            "<h2>Values that do not look like measurements</h2>"
-            "<p>These were published, so they are not gaps. They fall outside the credible range "
-            "for their field, which is a judgement this project made and states in full so it can "
-            "be argued with.</p>"
+            f"<h2>{catalog.text('institution.findings.heading')}</h2>"
+            f"<p>{catalog.text('institution.findings.intro')}</p>"
             f'<ul class="findings">{"".join(items)}</ul>'
         )
 
     state_link = (
         f'<a href="../../state/{html.escape(slug(state))}/">{html.escape(state)}</a>'
         if isinstance(state, str) and slug(state)
-        else "state not published"
+        else catalog.text("institution.state_not_published")
+    )
+    unit_id = (
+        html.escape(str(row.get("unit_id")))
+        if row.get("unit_id")
+        else catalog.text("institution.unit_id_not_published")
     )
     body = f"""
-<nav aria-label="Breadcrumb"><a href="../../">All institutions</a> / {state_link}</nav>
-<h1>{html.escape(name)} {_grade_badge(letter)}</h1>
-<p class="lede">On the fields this project checks, this institution {html.escape(summary)}.</p>
+<nav aria-label="Breadcrumb"><a href="../../">{catalog.text("nav.all_institutions")}</a> \
+/ {state_link}</nav>
+<h1>{html.escape(name)} {_grade_badge(letter, catalog)}</h1>
+<p class="lede">{catalog.text("institution.lede", summary=html.escape(summary))}</p>
 <dl class="facts">
-  <dt>Disclosure score</dt><dd>{html.escape(_pct(score))}</dd>
-  <dt>State</dt><dd>{state_link}</dd>
-  <dt>IPEDS unit id</dt>
-  <dd>{html.escape(str(row.get("unit_id")) if row.get("unit_id") else "not published")}</dd>
+  <dt>{catalog.text("institution.facts.score")}</dt><dd>{html.escape(_pct(score, catalog))}</dd>
+  <dt>{catalog.text("institution.facts.state")}</dt><dd>{state_link}</dd>
+  <dt>{catalog.text("institution.facts.unit_id")}</dt>
+  <dd>{unit_id}</dd>
 </dl>
-<h2>What was disclosed</h2>
+<h2>{catalog.text("institution.disclosed.heading")}</h2>
 <table>
-<caption>Every field this project checks, and how this institution disclosed it.</caption>
-<thead><tr><th scope="col">Field</th><th scope="col">Status</th>
-<th scope="col">What that means</th></tr></thead>
+<caption>{catalog.text("institution.table.caption")}</caption>
+<thead><tr><th scope="col">{catalog.text("institution.table.field")}</th>\
+<th scope="col">{catalog.text("institution.table.status")}</th>
+<th scope="col">{catalog.text("institution.table.meaning")}</th></tr></thead>
 <tbody>{"".join(rows)}</tbody>
 </table>
 {findings_html}
-<p class="caveat">This is a measure of disclosure, not of quality. An institution that reports
-everything and performs badly scores higher here than a good school that reports nothing, and
-that is intended. If you believe a field is marked wrongly, the
-<a href="../../methodology/">methodology</a> states every rule and the reasoning behind it.</p>
-{_ask_widget(str(row.get("unit_id")), ask_endpoint) if ask_endpoint else ""}
+<p class="caveat">{catalog.text("institution.caveat", methodology="../../methodology/")}</p>
+{_ask_widget(str(row.get("unit_id")), ask_endpoint, catalog) if ask_endpoint else ""}
 """
     # The name alone does not identify an institution, and this project of all
     # projects should not pretend otherwise. Two institutions in the committed
@@ -292,13 +304,14 @@ that is intended. If you believe a field is marked wrongly, the
     # stops the head saying less than the body. Where the report publishes no
     # state, the qualifier is left off rather than filled in: an absence is not
     # a value here either.
-    qualified = f"{name} ({state})" if state else name
+    qualified = (
+        catalog.text("institution.qualified_name", name=name, state=state) if state else name
+    )
     return Page(
         path=path,
-        title=f"{qualified}: disclosure grade",
-        description=(
-            f"What {qualified} publishes and what it does not, graded on disclosure rather "
-            f"than on performance. Disclosure score {_pct(score)}."
+        title=catalog.text("institution.title", name=qualified),
+        description=catalog.text(
+            "institution.description", name=qualified, score=_pct(score, catalog)
         ),
         body=body,
     )
@@ -385,26 +398,29 @@ _ASK_SCRIPT: Final[str] = """(function () {
 })();"""
 
 
-def _ask_widget(unit_id: str, endpoint: str) -> str:
+def _ask_widget(unit_id: str, endpoint: str, catalog: Catalog = ENGLISH) -> str:
     """The opt-in question form for one institution, and the script behind it.
 
     Rendered only when the site is built with ``--ask-endpoint``. The section says what it is
     before the reader types anything: optional, nothing sent until Ask is pressed, answers
     AI-generated and unofficial, about disclosure and never about quality.
+
+    The form's own words come from the catalog. The sentences inside :data:`_ASK_SCRIPT` do not,
+    and neither does anything ``disclosed.ask`` replies with: the service answers in English
+    because its prompts, its verifier and the federal definitions it quotes verbatim are English.
+    Wiring the script's strings to the catalog would make the frame of an English answer look
+    translated, which is worse than leaving both in one language. ``docs/I18N.md`` records it.
     """
     return f"""
 <section class="ask" aria-labelledby="ask-heading">
-<h2 id="ask-heading">Ask about this institution's disclosure</h2>
-<p>Optional. Nothing is sent anywhere until you press Ask. Answers are AI-generated and
-unofficial: they describe what this institution disclosed to federal sources and why an absence
-might be there, never how it performs, and every statement shown was checked against this
-project's own records. Questions about quality, rankings or whether to attend are refused.</p>
+<h2 id="ask-heading">{catalog.text("ask.heading")}</h2>
+<p>{catalog.text("ask.notice")}</p>
 <form class="ask-form" data-endpoint="{html.escape(endpoint)}"
       data-unit-id="{html.escape(unit_id)}">
-<label for="ask-question">Your question</label>
+<label for="ask-question">{catalog.text("ask.label")}</label>
 <input id="ask-question" name="question" type="text" maxlength="600" required
-       placeholder="What does this college not report?">
-<button type="submit">Ask</button>
+       placeholder="{catalog.text("ask.placeholder")}">
+<button type="submit">{catalog.text("ask.submit")}</button>
 </form>
 <div id="ask-answer" class="ask-answer" aria-live="polite"></div>
 </section>
@@ -412,97 +428,105 @@ project's own records. Questions about quality, rankings or whether to attend ar
 """
 
 
-def state_page(summary: dict[str, Any], rows: list[dict[str, Any]]) -> Page:
+def state_page(
+    summary: dict[str, Any], rows: list[dict[str, Any]], *, catalog: Catalog = ENGLISH
+) -> Page:
     """One state: how its institutions disclose, and which fields go unreported most often."""
     code = str(summary.get("label", ""))
-    graded = summary.get("graded", 0)
-    ungradeable = summary.get("ungradeable", 0)
+    graded = int(summary.get("graded", 0))
+    ungradeable = int(summary.get("ungradeable", 0))
     mean = summary.get("mean_score")
 
     listed = []
-    for row in sorted(rows, key=lambda r: (_name_of(r).casefold(), str(r.get("unit_id")))):
+    for row in sorted(rows, key=lambda r: (_name_of(r, catalog).casefold(), str(r.get("unit_id")))):
         path = _institution_path(row)
-        name = html.escape(_name_of(row))
+        name = html.escape(_name_of(row, catalog))
         linked = f'<a href="../../{path}/">{name}</a>' if path else name
         listed.append(
-            f'<tr><th scope="row">{linked}</th><td>{_grade_badge(row.get("letter"))}</td>'
-            f"<td>{html.escape(_pct(row.get('score')))}</td></tr>"
+            f'<tr><th scope="row">{linked}</th>'
+            f"<td>{_grade_badge(row.get('letter'), catalog)}</td>"
+            f"<td>{html.escape(_pct(row.get('score'), catalog))}</td></tr>"
         )
 
     worst = "".join(
-        f"<li>{_rationale_link(str(label), str(label), depth=2)}: {int(count)} institutions</li>"
+        "<li>{}</li>".format(
+            catalog.count(
+                "state.worst.item",
+                int(count),
+                field=_rationale_link(str(label), str(label), depth=2),
+            )
+        )
         for label, count in summary.get("worst_fields", [])
     )
     ungradeable_note = (
-        f"<p>{ungradeable} of these could not be graded at all, because every field this project "
-        "checks was either suppressed or inapplicable. They are counted here but excluded from "
-        "the mean, so a state where most records are unreadable cannot pass as a state that "
-        "scored well.</p>"
-        if ungradeable
-        else ""
+        f"<p>{catalog.count('state.ungradeable_note', ungradeable)}</p>" if ungradeable else ""
     )
+    lede = catalog.count("state.lede", graded, mean=html.escape(_pct(mean, catalog)))
     body = f"""
-<nav aria-label="Breadcrumb"><a href="../../">All institutions</a></nav>
-<h1>{html.escape(code)}: what institutions disclose</h1>
-<p class="lede">{graded} graded institutions, mean disclosure {html.escape(_pct(mean))}.</p>
+<nav aria-label="Breadcrumb"><a href="../../">{catalog.text("nav.all_institutions")}</a></nav>
+<h1>{catalog.text("state.heading", state=html.escape(code))}</h1>
+<p class="lede">{lede}</p>
 {ungradeable_note}
-<h2>Least-reported fields in {html.escape(code)}</h2>
+<h2>{catalog.text("state.worst.heading", state=html.escape(code))}</h2>
 <ul class="worst">{worst}</ul>
-<h2>Institutions</h2>
+<h2>{catalog.text("state.institutions.heading")}</h2>
 <table>
-<caption>Every institution graded in this state, with its disclosure score. An institution with
-no gradeable field shows as not gradeable rather than as a zero.</caption>
-<thead><tr><th scope="col">Institution</th><th scope="col">Grade</th>
-<th scope="col">Disclosure</th></tr></thead>
+<caption>{catalog.text("state.table.caption")}</caption>
+<thead><tr><th scope="col">{catalog.text("state.table.institution")}</th>\
+<th scope="col">{catalog.text("state.table.grade")}</th>
+<th scope="col">{catalog.text("state.table.disclosure")}</th></tr></thead>
 <tbody>{"".join(listed)}</tbody>
 </table>
-<p class="caveat">Grades measure disclosure, not quality. See the
-<a href="../../methodology/">methodology</a>.</p>
+<p class="caveat">{catalog.text("state.caveat", methodology="../../methodology/")}</p>
 """
     return Page(
         path=f"state/{slug(code)}",
-        title=f"{code}: college disclosure grades",
-        description=(
-            f"{graded} institutions in {code} graded on what they report to the College "
-            f"Scorecard. Mean disclosure {_pct(mean)}."
+        title=catalog.text("state.title", state=code),
+        description=catalog.count(
+            "state.description", graded, state=code, mean=_pct(mean, catalog)
         ),
         body=body,
     )
 
 
-def methodology_page() -> Page:
+def methodology_page(*, catalog: Catalog = ENGLISH) -> Page:
     """Every rule, every bound, and the reasoning behind each, at a stable anchor.
 
     This is the page every finding links to. It exists so that a graded institution arguing with a
     grade is arguing with a stated rule rather than guessing at one, which is the difference
     between a scorecard and an accusation.
+
+    Each field's own label and rationale come from :mod:`disclosed.fields`, not from the catalog.
+    They are the wording the grader applies and the wording the CSV's Table Schema publishes, and
+    a rationale that read one way on the page and another in the schema would be two rules.
     """
 
     def render(field: Field) -> str:
         if field.text_is_a_value:
             # A URL column has no credible range to state; what it has is a rule about who the
             # field applies to at all, and that is what a reader needs in its place.
-            terms = (
-                "Graded on whether an address was published, not on what is behind it; no page "
-                "is ever fetched."
-            )
+            terms = catalog.text("methodology.field.address_only")
             if field.applies_when is not None:
-                terms += (
-                    " Institutions the requirement does not reach leave the denominator entirely "
-                    "rather than being marked down."
-                )
+                terms += catalog.text("methodology.field.applies_when")
         else:
-            zero = "a credible measurement" if field.zero_is_credible else "treated as an artifact"
-            terms = (
-                f"Credible range: {_bound(field.credible_min, upper=False)} to "
-                f"{_bound(field.credible_max, upper=True)}. An exact zero is {zero}."
+            zero = catalog.text(
+                "methodology.field.zero_credible"
+                if field.zero_is_credible
+                else "methodology.field.zero_artifact"
             )
+            terms = catalog.text(
+                "methodology.field.credible_range",
+                minimum=_bound(field.credible_min, upper=False, catalog=catalog),
+                maximum=_bound(field.credible_max, upper=True, catalog=catalog),
+                zero=zero,
+            )
+        weight = catalog.text("methodology.field.weight", weight=f"{field.weight:g}")
         return (
             f'<section id="{field.anchor}">'
             f"<h3>{html.escape(field.label)}</h3>"
             f"<p><code>{html.escape(field.key)}</code></p>"
             f"<p>{html.escape(field.rationale)}</p>"
-            f'<p class="bounds">{terms} Weight {field.weight:g}.</p>'
+            f'<p class="bounds">{terms} {weight}</p>'
             f"</section>"
         )
 
@@ -512,9 +536,16 @@ def methodology_page() -> Page:
     # grader applies another is the failure this whole page exists to make impossible.
     first_threshold, first_letter = BANDS[0]
     bands = " ".join(
-        [f"{first_letter}, {first_threshold:.0%} and above."]
-        + [f"{letter}, {threshold:.0%}." for threshold, letter in BANDS[1:]]
-        + [f"{BELOW_EVERY_BAND} below that."]
+        [
+            catalog.text(
+                "methodology.band.top", letter=first_letter, threshold=f"{first_threshold:.0%}"
+            )
+        ]
+        + [
+            catalog.text("methodology.band.next", letter=letter, threshold=f"{threshold:.0%}")
+            for threshold, letter in BANDS[1:]
+        ]
+        + [catalog.text("methodology.band.bottom", letter=BELOW_EVERY_BAND)]
     )
     systemic = f"{SYSTEMIC_THRESHOLD * 100:g}"
 
@@ -523,139 +554,78 @@ def methodology_page() -> Page:
     # is not on the page is worse than no link, because it looks answered.
     scorecard_sections = "".join(render(f) for f in FIELDS)
     ipeds_sections = "".join(render(f) for f in IPEDS_FIELDS)
-    classifications = "".join(
-        f'<tr><th scope="row"><span class="tag tag-{d.value.replace("_", "-")}">'
-        f"{html.escape(_DISCLOSURE_COPY[d][0])}</span></th>"
-        f"<td>{html.escape(_DISCLOSURE_COPY[d][1])}</td>"
-        f"<td>{'yes' if d.counts_against_publisher else 'no'}</td></tr>"
-        for d in Disclosure
-    )
+    classification_rows = []
+    for d in Disclosure:
+        label, meaning = _classification_copy(d, catalog)
+        answer = catalog.text(
+            "methodology.counts_against.yes"
+            if d.counts_against_publisher
+            else "methodology.counts_against.no"
+        )
+        classification_rows.append(
+            f'<tr><th scope="row"><span class="tag tag-{d.value.replace("_", "-")}">'
+            f"{html.escape(label)}</span></th>"
+            f"<td>{html.escape(meaning)}</td>"
+            f"<td>{answer}</td></tr>"
+        )
+    classifications = "".join(classification_rows)
     body = f"""
-<nav aria-label="Breadcrumb"><a href="../">All institutions</a></nav>
-<h1>How we grade</h1>
-<p class="lede">Every credible range here is a judgement call, so every one carries a written
-rationale. A scorecard that cannot be disputed line by line is not a scorecard, it is an
-accusation.</p>
+<nav aria-label="Breadcrumb"><a href="../">{catalog.text("nav.all_institutions")}</a></nav>
+<h1>{catalog.text("methodology.heading")}</h1>
+<p class="lede">{catalog.text("methodology.lede")}</p>
 
-<h2>What is being measured</h2>
-<p>Not quality. The grade answers one question: of the things this institution was in a position
-to tell the public, how much did it actually tell them? A well-funded university with poor
-outcomes that reports every field completely scores higher here than a good school that reports
-nothing. Outcomes are graded elsewhere, by other people, using the very data this project is
-checking the existence of.</p>
+<h2>{catalog.text("methodology.measured.heading")}</h2>
+<p>{catalog.text("methodology.measured.body")}</p>
 
-<h2>How an absent value is classified</h2>
-<p>A field an institution did not report, a field suppressed to protect a small cohort, and a
-field whose true value is zero are three different facts. Rendered carelessly they all become
-<code>0</code> on a page, and a reader cannot tell a college that admits nobody from a college
-that declined to say. Every value is classified before anything else touches it.</p>
+<h2>{catalog.text("methodology.absent.heading")}</h2>
+<p>{catalog.text("methodology.absent.body")}</p>
 <table>
-<caption>The five ways a value can be absent or present, and which of them an institution is
-answerable for.</caption>
-<thead><tr><th scope="col">Classification</th><th scope="col">Meaning</th>
-<th scope="col">Counts against the institution?</th></tr></thead>
+<caption>{catalog.text("methodology.absent.caption")}</caption>
+<thead><tr><th scope="col">{catalog.text("methodology.absent.column.classification")}</th>\
+<th scope="col">{catalog.text("methodology.absent.column.meaning")}</th>
+<th scope="col">{catalog.text("methodology.absent.column.counts")}</th></tr></thead>
 <tbody>{classifications}</tbody>
 </table>
-<p>Suppression is a policy decision made for good reasons and is never held against anyone.
-Penalising an institution for protecting a twelve-person cohort would push publishers toward
-disclosing things they should not, which is the opposite of the point. Suppressed and
-not-applicable fields leave the denominator rather than scoring zero, and an institution with an
-empty denominator gets <strong>no grade at all</strong>, not a zero.</p>
+<p>{catalog.text("methodology.absent.suppression")}</p>
 
-<h2>Why a published value can still be a failure</h2>
-<p>A value being present is not sufficient; it also has to be credible for the field it sits in.
-A published zero survives in federal data because zero is a legal number, not because anyone
-measured it. A wrong number published as fact is worse than a gap, because the gap is visible to
-a reader and the wrong number is not.</p>
+<h2>{catalog.text("methodology.published_failure.heading")}</h2>
+<p>{catalog.text("methodology.published_failure.body")}</p>
 
-<h2>Peer comparison</h2>
-<p>A fixed credible range is a blunt instrument and an institution can reasonably object to one.
-So every implausible finding carries its peer group: sector, level, and state, with the
-institution excluded from its own comparison. A reader who thinks a grade is unfair can see what
-comparable institutions published and attack the peer definition, the sample, or the conclusion.
-All three are better arguments to be having than one about where a constant was set.</p>
-<p>Where the peers turn out to publish the same value, the verdict says so and the finding
-argues against itself. That is intended and is not suppressed.</p>
-<p>A peer claim is only made where at least {MIN_PEERS} comparable institutions exist
-<em>and</em> at least {MIN_PEERS} of them published the field. Both counts, because the second is
-what the comparison is made out of: a group of fifty in which six published a number supports a
-claim about six, and the finding says so instead of borrowing the confidence of the fifty. Below
-either bar the finding is still reported and still links here; it simply arrives without a peer
-comparison attached, because an unsupported comparison is worse than none.</p>
+<h2>{catalog.text("methodology.peers.heading")}</h2>
+<p>{catalog.text("methodology.peers.rule")}</p>
+<p>{catalog.text("methodology.peers.against_itself")}</p>
+<p>{catalog.text("methodology.peers.both_counts", min_peers=MIN_PEERS)}</p>
 
-<h2>Letter bands</h2>
-<p>{bands} Fixed rather than curved, because
-grading on a curve would hide a field-wide collapse in reporting: if everyone stopped publishing
-graduation rates tomorrow, a curve would report that as normal.</p>
+<h2>{catalog.text("methodology.bands.heading")}</h2>
+<p>{catalog.text("methodology.bands.body", bands=bands)}</p>
 
-<h2>Drift</h2>
-<p>A single snapshot cannot distinguish a field that was never collected from one that was
-collected until recently and then stopped. The first is a gap in the data model; the second is a
-change in what the public is allowed to know. Only the comparison between runs can tell them
-apart, so per-field counts are committed to version control on every run.</p>
-<p><strong>Drift is a change in rate, not a change in count.</strong> Every comparison divides by
-the institutions the field applied to in that run, and the reason is a mistake this project made
-and published to itself. Measured on counts, three IPEDS collection years produced three confident
-systemic findings and all three were false: between 2021 and 2023 the directory shrank from 6,289
-institutions to 6,163, so 130 fewer published a web address, and that was reported as a systemic
-2.1% collapse. The share publishing one had gone <em>up</em>, from 99.93% to 99.95%. Colleges
-closed; they did not stop reporting. The one real movement in the period, the athletics disclosure
-rising from 57.1% to 59.4%, ranked fourth and was never flagged, because 52 is a small number next
-to 130.</p>
-<p>A change is called systemic when that rate moves by at least {systemic} percentage points. The
-threshold is a judgement call, stated here so a reader can disagree with it, and set low because a
-coordinated stop-reporting event is newsworthy well before it touches a majority of institutions.
-Three real collection years say it is roughly right: every year-on-year movement in these six
-disclosures sits under one point except the athletics disclosure, which rose 1.75 points in a year
-and 2.26 across two. At {systemic}% the bar flags that and nothing else. At 1% it would report
-ordinary annual churn as policy; at 5% it would have found nothing in three years of federal data,
-which is not a measurement but a way of never having to say anything.</p>
-<p>Drift is reported in both directions: fields that <em>started</em> being reported are as real a
-finding as fields that stopped, and reporting only the losses would make this an argument rather
-than a measurement. A field whose rate cannot be computed in either run is reported as unmeasured
-and is never called systemic, because an unknown is not a large movement.</p>
+<h2>{catalog.text("methodology.drift.heading")}</h2>
+<p>{catalog.text("methodology.drift.why_two_runs")}</p>
+<p>{catalog.text("methodology.drift.rate_not_count")}</p>
+<p>{catalog.text("methodology.drift.threshold", systemic=systemic)}</p>
+<p>{catalog.text("methodology.drift.both_directions")}</p>
 
-<h2>The fields: College Scorecard</h2>
+<h2>{catalog.text("methodology.fields.scorecard.heading")}</h2>
 {scorecard_sections}
 
-<h2>The fields: IPEDS</h2>
-<p>IPEDS records public disclosures the Scorecard does not carry, and states absence three
-different ways, all of them negative integers: -1 not reported, -2 not applicable, -3 not
-available. They are not interchangeable, and only the first counts against an institution.</p>
-<p>The athletics disclosure below was ungraded until a second IPEDS file arrived, and the reason is
-worth stating. It is blank for 4,469 of 6,163 directory rows, and almost every one of those is a
-college with no athletics programme, so grading the column against the directory alone would have
-produced four thousand confident and entirely fabricated violations. The institutional
-characteristics file carries each institution's own answer about whether it competes, and that
-answer moves the denominator from 6,163 to 1,998. The finding did not need a better threshold. It
-needed to know who the rule applied to.</p>
-<p>One candidate is still deliberately not graded. The veterans information page is blank for 2,377
-institutions, and the same characteristics file would now supply an applicability rule for it. It
-stays ungraded because applicability was never the obstacle here: no universal requirement obliges
-an institution to publish a veterans page, so a rule about who it applied to would be a rule about
-a duty that does not exist. Knowing who would owe a disclosure is not the same as there being one
-to owe.</p>
+<h2>{catalog.text("methodology.fields.ipeds.heading")}</h2>
+<p>{catalog.text("methodology.fields.ipeds.three_absences")}</p>
+<p>{catalog.text("methodology.fields.ipeds.athletics")}</p>
+<p>{catalog.text("methodology.fields.ipeds.veterans")}</p>
 {ipeds_sections}
 
-<h2>If this is wrong about your institution</h2>
-<p>The rules above are the whole of it; there is no model anywhere in the grading path and no
-judgement that is not written down on this page. If a field is marked wrongly, the disagreement
-will be with a stated bound, a stated peer group, or the underlying federal record, and all three
-can be checked.</p>
+<h2>{catalog.text("methodology.wrong.heading")}</h2>
+<p>{catalog.text("methodology.wrong.body")}</p>
 """
     return Page(
         path="methodology",
-        title="How the disclosure grades are calculated",
-        description=(
-            "Every credible range, the reasoning behind it, how suppressed and not-applicable "
-            "fields leave the denominator, and why an ungradeable institution gets no grade "
-            "rather than a zero."
-        ),
+        title=catalog.text("methodology.title"),
+        description=catalog.text("methodology.description"),
         body=body,
     )
 
 
-def _bound(value: float | None, *, upper: bool) -> str:
+def _bound(value: float | None, *, upper: bool, catalog: Catalog = ENGLISH) -> str:
     """Render one end of a credible range, in a notation a prospective student will read.
 
     Never ``g``. Past four significant digits it switches to exponent form and the thousands
@@ -671,22 +641,29 @@ def _bound(value: float | None, *, upper: bool) -> str:
     which is a rule misstated on the page that states the rules.
     """
     if value is None:
-        return "no upper bound" if upper else "no lower bound"
+        return catalog.text("bound.none.upper" if upper else "bound.none.lower")
     return html.escape(f"{value:,.4f}".rstrip("0").rstrip("."))
 
 
-def _share(numerator: int, denominator: int) -> str:
+def _reported_share(field: dict[str, Any], catalog: Catalog) -> str:
+    """The published share for one row of the national and census tables."""
+    return html.escape(
+        _share(int(field.get("reported", 0)), int(field.get("applicable", 0)), catalog)
+    )
+
+
+def _share(numerator: int, denominator: int, catalog: Catalog = ENGLISH) -> str:
     """A percentage, or words when there is nothing to divide by.
 
     ``0%`` is a real answer to "what share reported this" and must not also be the answer to
     "there was nobody to ask". A denominator of zero returns the sentence rather than the number.
     """
     if denominator <= 0:
-        return "no applicable institutions"
+        return catalog.text("share.no_applicable_institutions")
     return f"{numerator / denominator:.0%}"
 
 
-def national_page(payload: dict[str, Any]) -> Page:
+def national_page(payload: dict[str, Any], *, catalog: Catalog = ENGLISH) -> Page:
     """The one page whose percentages describe the country rather than a slice of it.
 
     Kept as its own page rather than merged into the home page, because the two rest on different
@@ -694,6 +671,9 @@ def national_page(payload: dict[str, Any]) -> Page:
     figure back up to a sample one or the other way round. The scope sentence is printed from the
     artifact, not from this template, so a page rendered from a different run says what that run
     covered rather than what this paragraph was written believing.
+
+    The scope sentence and the statute names are the artifact's own words and stay in whatever
+    language the run recorded them in. Translating a citation of a statute would be inventing one.
     """
     scope = scope_from_payload(payload)
     fields: list[dict[str, Any]] = list(payload.get("fields", []))
@@ -704,11 +684,13 @@ def national_page(payload: dict[str, Any]) -> Page:
         f"{_rationale_link(str(f.get('label', '')), str(f.get('label', '')), depth=1)}</th>"
         f"<td>{int(f.get('applicable', 0)):,}</td>"
         f"<td>{int(f.get('missing', 0)):,}</td>"
-        f"<td>{html.escape(_share(int(f.get('reported', 0)), int(f.get('applicable', 0))))}</td>"
-        f"<td>{html.escape(str(f.get('statute')) or 'no statute')}</td></tr>"
+        f"<td>{_reported_share(f, catalog)}</td>"
+        f"<td>{html.escape(str(f.get('statute')) or catalog.text('national.no_statute'))}</td></tr>"
         for f in fields
     )
 
+    unnamed = catalog.text("institution.unnamed")
+    no_unit_id = catalog.text("national.gap.no_unit_id")
     sections = []
     for field in fields:
         label = str(field.get("label", ""))
@@ -716,23 +698,23 @@ def national_page(payload: dict[str, Any]) -> Page:
         if not isinstance(listed, list) or not listed:
             continue
         items = "".join(
-            f"<li>{html.escape(str(row.get('name') or 'Unnamed institution'))}"
+            f"<li>{html.escape(str(row.get('name') or unnamed))}"
             f"{html.escape(' (' + str(row.get('state')) + ')') if row.get('state') else ''}"
-            f"{'' if row.get('unit_id') else ' <span class="tag">no unit id published</span>'}"
+            f"{'' if row.get('unit_id') else f' <span class="tag">{no_unit_id}</span>'}"
             "</li>"
             for row in listed
             if isinstance(row, dict)
         )
-        sections.append(
-            f"<h3>{_rationale_link(label, label, depth=1)}: "
-            f"{len(listed):,} of {int(field.get('applicable', 0)):,} institutions</h3>"
-            f"<p>Required by {html.escape(str(field.get('statute', '')))}. These are the "
-            "institutions the requirement reaches for which the federal record carries no "
-            "address. Named rather than counted because there is a published rule behind this "
-            "one; the fields with no statute behind them are counted above and their institutions "
-            "are not listed.</p>"
-            f'<ul class="gaps">{items}</ul>'
+        heading = catalog.text(
+            "national.gap.heading",
+            field=_rationale_link(label, label, depth=1),
+            count=f"{len(listed):,}",
+            applicable=f"{int(field.get('applicable', 0)):,}",
         )
+        body_text = catalog.text(
+            "national.gap.body", statute=html.escape(str(field.get("statute", "")))
+        )
+        sections.append(f'<h3>{heading}</h3><p>{body_text}</p><ul class="gaps">{items}</ul>')
 
     # Read off the table rather than written into the sentence. The paragraph below explains the
     # applicable column by naming the narrowest and widest disclosure in it, and those two numbers
@@ -740,67 +722,60 @@ def national_page(payload: dict[str, Any]) -> Page:
     # underneath a table showing another year's, which is the failure this page exists to describe.
     reach = sorted(int(f.get("applicable", 0)) for f in fields)
     spread = (
-        f"A disclosure that reaches {reach[0]:,} institutions and a disclosure that reaches "
-        f"{reach[-1]:,} produce"
+        catalog.text(
+            "national.middle_column.with_reach",
+            narrowest=f"{reach[0]:,}",
+            widest=f"{reach[-1]:,}",
+        )
         if len(reach) >= 2 and reach[0] != reach[-1]
-        else "Two disclosures that reach different numbers of institutions produce"
+        else catalog.text("national.middle_column.without_reach")
     )
 
-    lede = html.escape(scope.sentence) if scope else "This run did not state its coverage."
+    lede = html.escape(scope.sentence) if scope else catalog.text("scope.not_stated")
     ungradeable = int(payload.get("ungradeable", 0))
     ungradeable_note = (
-        f"<p>{ungradeable:,} directory rows get no grade at all rather than a zero, because every "
-        "field checked was either suppressed or outside the reach of the rule. Most are system "
-        "offices and closed institutions. They are counted here and excluded from every mean.</p>"
+        f"<p>{catalog.count('national.ungradeable_note', ungradeable, rows=f'{ungradeable:,}')}</p>"
         if ungradeable
         else ""
     )
+    named = "".join(sections) or f"<p>{catalog.text('national.no_named_findings')}</p>"
     body = f"""
-<nav aria-label="Breadcrumb"><a href="../">All institutions</a></nav>
-<h1>The national picture</h1>
+<nav aria-label="Breadcrumb"><a href="../">{catalog.text("nav.all_institutions")}</a></nav>
+<h1>{catalog.text("national.heading")}</h1>
 <p class="lede">{lede}</p>
-<p>Everything else on this site is graded from a sample of the College Scorecard and says so. This
-page is different: IPEDS publishes its directory as a file rather than as a paged API, so grading
-it grades every institution there is, and the percentages below describe the country.</p>
+<p>{catalog.text("national.why_this_page_differs")}</p>
 
-<h2>What the country discloses</h2>
+<h2>{catalog.text("national.discloses.heading")}</h2>
 <table>
-<caption>Per-field national counts. Suppressed and inapplicable institutions are outside the
-applicable column, never scored as failures.</caption>
-<thead><tr><th scope="col">Disclosure</th><th scope="col">Institutions it reaches</th>
-<th scope="col">Record carries none</th><th scope="col">Published</th>
-<th scope="col">Requirement</th></tr></thead>
+<caption>{catalog.text("national.table.caption")}</caption>
+<thead><tr><th scope="col">{catalog.text("national.table.disclosure")}</th>\
+<th scope="col">{catalog.text("national.table.reaches")}</th>
+<th scope="col">{catalog.text("national.table.record_carries_none")}</th>\
+<th scope="col">{catalog.text("national.table.published")}</th>
+<th scope="col">{catalog.text("national.table.requirement")}</th></tr></thead>
 <tbody>{rows}</tbody>
 </table>
-<p>The middle column is the whole argument. {spread} very different-looking failure counts from the
-same underlying behaviour, and a table that showed only the failures would rank them wrongly.</p>
+<p>{spread}</p>
 {ungradeable_note}
 
-<h2>Named findings</h2>
-{"".join(sections) or "<p>No statute-backed disclosure is absent anywhere in this run.</p>"}
+<h2>{catalog.text("national.named_findings.heading")}</h2>
+{named}
 
-<p class="caveat">An absent address means the federal record carries none. It is not proof the
-institution has nothing: it may have published the thing and not reported where. Which of those
-two is true is not something a blank cell can settle, and this page does not pretend otherwise.
-The <a href="../methodology/">methodology</a> states the rule behind every row.</p>
+<p class="caveat">{catalog.text("national.caveat", methodology="../methodology/")}</p>
 """
     return Page(
         path="national",
-        title="What US colleges disclose, nationally",
-        description=(
-            "Per-field disclosure counts across every institution in the IPEDS directory, with "
-            "the applicability rule behind each and the institutions named where a statute "
-            "requires the disclosure."
-        ),
+        title=catalog.text("national.title"),
+        description=catalog.text("national.description"),
         body=body,
     )
 
 
-def _share_of(count: int, total: int) -> str:
-    return f"{count / total:.1%}" if total else "no institutions"
+def _share_of(count: int, total: int, catalog: Catalog = ENGLISH) -> str:
+    return f"{count / total:.1%}" if total else catalog.text("share.no_institutions")
 
 
-def scorecard_census_page(payload: dict[str, Any]) -> Page:
+def scorecard_census_page(payload: dict[str, Any], *, catalog: Catalog = ENGLISH) -> Page:
     """The full College Scorecard walk, beside the 600-institution sample it does not replace.
 
     #17 was opened over one fact: every published Scorecard figure came from 600 institutions in
@@ -823,8 +798,7 @@ def scorecard_census_page(payload: dict[str, Any]) -> Page:
         f"{_rationale_link(str(f.get('label', '')), str(f.get('label', '')), depth=1)}</th>"
         f"<td>{int(f.get('applicable', 0)):,}</td>"
         f"<td>{int(f.get('missing', 0)):,}</td>"
-        f"<td>{html.escape(_share(int(f.get('reported', 0)), int(f.get('applicable', 0))))}</td>"
-        "</tr>"
+        f"<td>{_reported_share(f, catalog)}</td></tr>"
         for f in fields
     )
 
@@ -836,82 +810,86 @@ def scorecard_census_page(payload: dict[str, Any]) -> Page:
     sector_rows = "".join(
         f'<tr><th scope="row">{html.escape(str(label))}</th>'
         f"<td>{sample_sectors.get(label, 0):,}</td>"
-        f"<td>{html.escape(_share_of(sample_sectors.get(label, 0), sample_total))}</td>"
+        f"<td>{html.escape(_share_of(sample_sectors.get(label, 0), sample_total, catalog))}</td>"
         f"<td>{census_sectors.get(label, 0):,}</td>"
-        f"<td>{html.escape(_share_of(census_sectors.get(label, 0), comp_total))}</td></tr>"
+        f"<td>{html.escape(_share_of(census_sectors.get(label, 0), comp_total, catalog))}</td></tr>"
         for label in sector_labels
     )
 
-    state_count_sample = len(sample_comp.get("states", {}))
-    state_count_census = len(comp.get("states", {}))
     ca_sample = int(sample_comp.get("states", {}).get("CA", 0))
     ca_census = int(comp.get("states", {}).get("CA", 0))
-    ca_sample_share = _share_of(ca_sample, sample_total)
-    ca_census_share = _share_of(ca_census, comp_total)
+    composition = catalog.text(
+        "census.composition.body",
+        ca_sample=f"{ca_sample:,}",
+        sample_total=f"{sample_total:,}",
+        ca_sample_share=_share_of(ca_sample, sample_total, catalog),
+        sample_states=len(sample_comp.get("states", {})),
+        census_total=f"{comp_total:,}",
+        census_states=len(comp.get("states", {})),
+        ca_census_share=_share_of(ca_census, comp_total, catalog),
+    )
 
     admission = next((f for f in fields if f.get("label") == "Admission rate"), None)
     headline = ""
     if admission is not None and admission.get("applicable"):
         missing = int(admission["missing"])
         applicable = int(admission["applicable"])
-        headline = (
-            f"<p>In the full census, <strong>{missing:,} of {applicable:,}, or "
-            f"{missing / applicable:.1%}, publish no admission rate at all</strong> -- the same "
-            "question the home page asks of the 600-institution sample, asked here of every "
-            "institution the Scorecard publishes.</p>"
+        headline = "<p>{}</p>".format(
+            catalog.text(
+                "census.headline",
+                missing=f"{missing:,}",
+                applicable=f"{applicable:,}",
+                share=f"{missing / applicable:.1%}",
+            )
         )
 
-    lede = html.escape(scope.sentence) if scope else "This run did not state its coverage."
+    lede = html.escape(scope.sentence) if scope else catalog.text("scope.not_stated")
     body = f"""
-<nav aria-label="Breadcrumb"><a href="../">All institutions</a></nav>
-<h1>The College Scorecard census</h1>
+<nav aria-label="Breadcrumb"><a href="../">{catalog.text("nav.all_institutions")}</a></nav>
+<h1>{catalog.text("census.heading")}</h1>
 <p class="lede">{lede}</p>
-<p>The home page's figures are graded from a 600-institution sample and say so. This page grades
-every institution the College Scorecard publishes -- the API paged to exhaustion, proven from the
-walk's own counts rather than assumed from how large the result looks -- and does not replace the
-sample figures, because the sample is a real, separately-interesting slice and silently swapping
-one number for another is the failure this project exists to name in other people's data.</p>
+<p>{catalog.text("census.why_this_page_differs")}</p>
 
 {headline}
 
-<h2>Composition: how skewed was the sample</h2>
-<p>{ca_sample:,} of the sample's {sample_total:,} institutions ({ca_sample_share}) are
-Californian, across {state_count_sample} states. The census, {comp_total:,} institutions across
-{state_count_census} states, puts California at {ca_census_share}.</p>
+<h2>{catalog.text("census.composition.heading")}</h2>
+<p>{composition}</p>
 <table>
-<caption>Institutions by sector, sample against census.</caption>
-<thead><tr><th scope="col">Sector</th><th scope="col">Sample</th><th scope="col">Sample share</th>
-<th scope="col">Census</th><th scope="col">Census share</th></tr></thead>
+<caption>{catalog.text("census.sector_table.caption")}</caption>
+<thead><tr><th scope="col">{catalog.text("census.sector_table.sector")}</th>\
+<th scope="col">{catalog.text("census.sector_table.sample")}</th>\
+<th scope="col">{catalog.text("census.sector_table.sample_share")}</th>
+<th scope="col">{catalog.text("census.sector_table.census")}</th>\
+<th scope="col">{catalog.text("census.sector_table.census_share")}</th></tr></thead>
 <tbody>{sector_rows}</tbody>
 </table>
 
-<h2>What the census discloses</h2>
+<h2>{catalog.text("census.discloses.heading")}</h2>
 <table>
-<caption>Per-field counts across every institution the Scorecard publishes. Suppressed and
-inapplicable institutions are outside the applicable column, never scored as failures.</caption>
-<thead><tr><th scope="col">Disclosure</th><th scope="col">Institutions it reaches</th>
-<th scope="col">Record carries none</th><th scope="col">Published</th></tr></thead>
+<caption>{catalog.text("census.table.caption")}</caption>
+<thead><tr><th scope="col">{catalog.text("national.table.disclosure")}</th>\
+<th scope="col">{catalog.text("national.table.reaches")}</th>
+<th scope="col">{catalog.text("national.table.record_carries_none")}</th>\
+<th scope="col">{catalog.text("national.table.published")}</th></tr></thead>
 <tbody>{rows}</tbody>
 </table>
 
-<p class="caveat">A field with no statute behind it is this project's opinion about what a college
-ought to publish, not a legal requirement; the <a href="../methodology/">methodology</a> states
-the rationale behind every row. Institutions are counted here and not named, the same rule the
-sample figures on the home page follow.</p>
+<p class="caveat">{catalog.text("census.caveat", methodology="../methodology/")}</p>
 """
     return Page(
         path="census",
-        title="The College Scorecard census, in full",
-        description=(
-            "Every institution the College Scorecard publishes, graded the same way as the "
-            "600-institution sample, with both frames' composition stated side by side."
-        ),
+        title=catalog.text("census.title"),
+        description=catalog.text("census.description"),
         body=body,
     )
 
 
 def home_page(
-    report: dict[str, Any], *, has_national: bool = False, has_scorecard_census: bool = False
+    report: dict[str, Any],
+    *,
+    has_national: bool = False,
+    has_scorecard_census: bool = False,
+    catalog: Catalog = ENGLISH,
 ) -> Page:
     """The landing page: the thesis, what this run found, and where the numbers stop applying."""
     overall = report.get("overall", {})
@@ -931,29 +909,27 @@ def home_page(
     states = "".join(
         f'<li><a href="state/{html.escape(slug(str(s.get("label", ""))))}/">'
         f"{html.escape(str(s.get('label', '')))}</a> "
-        f"({int(s.get('graded', 0))}, {html.escape(_pct(s.get('mean_score')))})</li>"
+        f"({int(s.get('graded', 0))}, {html.escape(_pct(s.get('mean_score'), catalog))})</li>"
         for s in sorted(by_state, key=lambda s: str(s.get("label", "")))
     )
     artifacts = "".join(
-        f'<li><a href="{html.escape(_institution_path(f) or "")}/">'
-        f"{html.escape(_name_of(f))}</a> publishes "
-        f"{_rationale_link(str(f.get('field', '')), str(f.get('field', '')), depth=1)} as "
-        f"<code>{html.escape(json.dumps(f.get('value')))}</code></li>"
-        if _institution_path(f)
-        else (
-            f"<li>{html.escape(_name_of(f))} publishes "
-            f"{_rationale_link(str(f.get('field', '')), str(f.get('field', '')), depth=1)} as "
-            f"<code>{html.escape(json.dumps(f.get('value')))}</code></li>"
+        "<li>{}</li>".format(
+            catalog.text(
+                "home.artifact",
+                institution=(
+                    f'<a href="{html.escape(_institution_path(f) or "")}/">'
+                    f"{html.escape(_name_of(f, catalog))}</a>"
+                    if _institution_path(f)
+                    else html.escape(_name_of(f, catalog))
+                ),
+                field=_rationale_link(str(f.get("field", "")), str(f.get("field", "")), depth=1),
+                value=html.escape(json.dumps(f.get("value"))),
+            )
         )
         for f in implausible
     )
     ungradeable_note = (
-        f"<p>{ungradeable} institutions could not be graded at all, because every field checked "
-        "was suppressed or inapplicable. They get no grade rather than a zero, and they are "
-        "counted separately from the mean so they cannot pass as institutions that scored well."
-        "</p>"
-        if ungradeable
-        else ""
+        f"<p>{catalog.count('home.ungradeable_note', ungradeable)}</p>" if ungradeable else ""
     )
     # Printed from the scope the run recorded, never from a constant in this template. A caveat
     # written into a template stays true only until somebody renders a different report through
@@ -962,72 +938,59 @@ def home_page(
     scope: Scope | None = scope_from_payload(report)
     if scope is None:
         coverage = (
-            '<p class="caveat"><strong>What this run covers.</strong> This report predates the '
-            "coverage record and does not say how much of the College Scorecard it holds. Treat "
-            "every percentage on this page as describing the institutions listed here and nothing "
-            "wider, because nothing wider has been established.</p>"
+            f'<p class="caveat"><strong>{catalog.text("home.coverage.label")}</strong> '
+            f"{catalog.text('home.coverage.no_scope')}</p>"
         )
     else:
         national_pointer = (
-            ' The <a href="national/">national page</a> carries the figures that do describe the '
-            "country, drawn from a source published as a whole file rather than as a paged API."
+            " " + catalog.text("home.coverage.national_pointer", national="national/")
             if has_national and not scope.is_national
             else ""
         )
         census_pointer = (
-            ' The <a href="census/">Scorecard census page</a> asks the same questions of every '
-            "institution the College Scorecard publishes, not this sample, and states both "
-            "frames' composition side by side."
+            " " + catalog.text("home.coverage.census_pointer", census="census/")
             if has_scorecard_census and not scope.is_national
             else ""
         )
         coverage = (
-            f'<p class="caveat"><strong>What this run covers.</strong> '
-            f"{html.escape(scope.sentence)} {html.escape(scope.note)} A project about undisclosed "
-            "information should not be coy about the limits of its own sample."
+            f'<p class="caveat"><strong>{catalog.text("home.coverage.label")}</strong> '
+            f"{html.escape(scope.sentence)} {html.escape(scope.note)} "
+            f"{catalog.text('home.coverage.not_coy')}"
             f"{national_pointer}{census_pointer}</p>"
         )
     body = f"""
 <h1>disclosed</h1>
-<p class="lede">Grades US higher-education institutions on what they disclose, not on how they
-perform.</p>
-<p>Plenty of tools will tell you a college's graduation rate. None will tell you how many
-colleges never reported one, or which fields quietly stopped being published this year. That is
-what this grades.</p>
-<p>The distinction matters because the two failures look identical on a page. A college with a 0%
-admission rate and a college that never reported an admission rate both render as a blank or a
-zero in most tools, and a reader cannot tell them apart.</p>
+<p class="lede">{catalog.text("home.lede")}</p>
+<p>{catalog.text("home.what_this_grades")}</p>
+<p>{catalog.text("home.why_it_matters")}</p>
 
-<h2>What this run found</h2>
+<h2>{catalog.text("home.found.heading")}</h2>
 <dl class="facts">
-  <dt>Institutions graded</dt><dd>{total}</dd>
-  <dt>Mean disclosure</dt><dd>{html.escape(_pct(mean))}</dd>
-  <dt>Not gradeable</dt><dd>{ungradeable}</dd>
-  <dt>Published values that are not measurements</dt><dd>{len(implausible)}</dd>
+  <dt>{catalog.text("home.found.graded")}</dt><dd>{total}</dd>
+  <dt>{catalog.text("home.found.mean")}</dt><dd>{html.escape(_pct(mean, catalog))}</dd>
+  <dt>{catalog.text("home.found.not_gradeable")}</dt><dd>{ungradeable}</dd>
+  <dt>{catalog.text("home.found.not_measurements")}</dt><dd>{len(implausible)}</dd>
 </dl>
 {ungradeable_note}
 
-<h2>Least-reported fields</h2>
+<h2>{catalog.text("home.worst.heading")}</h2>
 <table>
-<caption>Fields most often absent across the institutions in this run. Shares are of this run,
-not of the country.</caption>
-<thead><tr><th scope="col">Field</th><th scope="col">Institutions not reporting it</th>
-<th scope="col">Share</th></tr></thead>
+<caption>{catalog.text("home.worst.caption")}</caption>
+<thead><tr><th scope="col">{catalog.text("home.worst.field")}</th>\
+<th scope="col">{catalog.text("home.worst.not_reporting")}</th>
+<th scope="col">{catalog.text("home.worst.share")}</th></tr></thead>
 <tbody>{worst}</tbody>
 </table>
 
-<h2>Published zeros that are not zeros</h2>
-<p>These institutions published a value rather than leaving a gap, and the value is not a
-plausible measurement of the thing it claims to measure. Each carries the peer group that
-supports or undermines the finding.</p>
+<h2>{catalog.text("home.zeros.heading")}</h2>
+<p>{catalog.text("home.zeros.body")}</p>
 <ul class="findings">{artifacts}</ul>
 
-<h2>By state</h2>
+<h2>{catalog.text("home.by_state.heading")}</h2>
 <ul class="states">{states}</ul>
 
-<h2>How this works</h2>
-<p>Read the <a href="methodology/">methodology</a>: every credible range, the reasoning behind
-it, and why a suppressed field is never held against an institution.</p>
+<h2>{catalog.text("home.how.heading")}</h2>
+<p>{catalog.text("home.how.body", methodology="methodology/")}</p>
 {coverage}
 """
     return Page(
@@ -1037,12 +1000,8 @@ it, and why a suppressed field is never held against an institution.</p>
         # what US colleges do not tell you | disclosed" -- the site's name
         # twice in fifty-four characters, on the one page most likely to be
         # seen in a result list.
-        title="What US colleges do not tell you",
-        description=(
-            "Grades US higher-education institutions on what they disclose rather than on how "
-            "they perform. Which fields go unreported, which published values are not "
-            "measurements, and what stopped being published."
-        ),
+        title=catalog.text("home.title"),
+        description=catalog.text("home.description"),
         body=body,
     )
 
@@ -1124,7 +1083,9 @@ footer { margin-top: 3rem; font-size: .9rem; color: #555; }
 """
 
 
-def _shell(page: Page, *, canonical: str, origin: str, generated: str) -> str:
+def _shell(
+    page: Page, *, canonical: str, origin: str, generated: str, catalog: Catalog = ENGLISH
+) -> str:
     """One page, including what a search result and a link preview will say about it.
 
     The share card repeats this page's own title and description rather than a second set written
@@ -1133,6 +1094,11 @@ def _shell(page: Page, *, canonical: str, origin: str, generated: str) -> str:
     one: ``og-card.png``, written into the site root by :func:`build` and named here at an
     absolute address off ``origin``, which is the only kind of address a crawler on another host
     can resolve.
+
+    ``lang`` and ``og:locale`` are read off the catalog rather than written here. A page whose
+    prose came from the Spanish catalog and whose ``<html lang>`` still said ``en`` would be
+    telling a screen reader to pronounce Spanish with English rules, and telling a crawler the
+    page is something it is not -- an absence of translation rendered as a claim of one.
     """
 
     # Every in-page link is relative, and it has to stay that way. This site is
@@ -1144,42 +1110,46 @@ def _shell(page: Page, *, canonical: str, origin: str, generated: str) -> str:
     # .github/scripts/check_site_origin.py refuses a build that grows one.
     root = "../" * page.path.count("/") + ("../" if page.path else "")
     card = html.escape(f"{origin}/{OG_CARD_NAME}")
+    alt = html.escape(catalog.text("share.card.alt"))
+    footer_generated = catalog.text(
+        "shell.footer.generated",
+        generated=html.escape(generated),
+        methodology=f"{root}methodology/",
+    )
     return f"""<!DOCTYPE html>
-<html lang="en">
+<html lang="{catalog.html_lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{html.escape(page.title)} | disclosed</title>
+<title>{catalog.text("shell.title", title=html.escape(page.title))}</title>
 <meta name="description" content="{html.escape(page.description)}">
 <link rel="canonical" href="{html.escape(canonical)}">
 <meta property="og:title" content="{html.escape(page.title)}">
 <meta property="og:description" content="{html.escape(page.description)}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="disclosed">
-<meta property="og:locale" content="en_US">
+<meta property="og:locale" content="{catalog.og_locale}">
 <meta property="og:url" content="{html.escape(canonical)}">
 <meta property="og:image" content="{card}">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="{OG_CARD_WIDTH}">
 <meta property="og:image:height" content="{OG_CARD_HEIGHT}">
-<meta property="og:image:alt" content="{html.escape(OG_CARD_ALT)}">
+<meta property="og:image:alt" content="{alt}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{html.escape(page.title)}">
 <meta name="twitter:description" content="{html.escape(page.description)}">
 <meta name="twitter:image" content="{card}">
-<meta name="twitter:image:alt" content="{html.escape(OG_CARD_ALT)}">
+<meta name="twitter:image:alt" content="{alt}">
 <style>{_STYLE}</style>
 </head>
 <body>
-<a class="skip" href="#content">Skip to content</a>
+<a class="skip" href="#content">{catalog.text("shell.skip_link")}</a>
 <main id="content">
 {page.body}
 </main>
 <footer>
-<p>Generated {html.escape(generated)} from public federal data. This grades disclosure, not
-quality, and says so on every page. <a href="{root}methodology/">Methodology</a>.</p>
-<p>Every rule behind these grades, the data they are computed from, and the code that applies
-them are public: <a href="{html.escape(SOURCE_URL)}">github.com/ChelseaKR/disclosed</a>.</p>
+<p>{footer_generated}</p>
+<p>{catalog.text("shell.footer.source", source=html.escape(SOURCE_URL))}</p>
 </footer>
 </body>
 </html>
@@ -1191,6 +1161,7 @@ def _corpus_pages(
     *,
     national: dict[str, Any] | None,
     scorecard_census: dict[str, Any] | None,
+    catalog: Catalog,
 ) -> list[Page]:
     """The pages that describe a corpus as a whole, rather than one institution or state.
 
@@ -1203,13 +1174,14 @@ def _corpus_pages(
             report,
             has_national=national is not None,
             has_scorecard_census=scorecard_census is not None,
+            catalog=catalog,
         ),
-        methodology_page(),
+        methodology_page(catalog=catalog),
     ]
     if scorecard_census is not None:
-        pages.append(scorecard_census_page(scorecard_census))
+        pages.append(scorecard_census_page(scorecard_census, catalog=catalog))
     if national is not None:
-        pages.append(national_page(national))
+        pages.append(national_page(national, catalog=catalog))
     return pages
 
 
@@ -1222,6 +1194,7 @@ def build(
     national: dict[str, Any] | None = None,
     scorecard_census: dict[str, Any] | None = None,
     ask_endpoint: str | None = None,
+    locale: str = SOURCE_LOCALE,
 ) -> list[Page]:
     """Render the whole site from a graded report.
 
@@ -1243,11 +1216,19 @@ def build(
         ask_endpoint: The URL of a running ``disclosed.ask`` service, or ``None``. With it,
             every institution page carries the opt-in question form and one inline script;
             without it the build is byte-for-byte what it was, with no script anywhere.
+        locale: Which message catalog the pages are rendered from. Only catalogs that exist and
+            are complete can be named; :func:`disclosed.messages.load` refuses the rest rather
+            than filling the gaps with English, so a locale either renders a whole site or none
+            of one. Today ``en`` is the only catalog in the repository.
 
     Returns:
         Every page written, in the order written. Callers use it to assert page counts without
         walking the filesystem.
+
+    Raises:
+        CatalogError: If ``locale`` names no catalog, or one that is incomplete.
     """
+    catalog = load(locale)
     grades: list[dict[str, Any]] = list(report.get("grades", []))
     findings_by_id: dict[str, list[dict[str, Any]]] = {}
     for finding in report.get("implausible", []):
@@ -1255,7 +1236,9 @@ def build(
         if isinstance(unit_id, str) and unit_id:
             findings_by_id.setdefault(unit_id, []).append(finding)
 
-    pages: list[Page] = _corpus_pages(report, national=national, scorecard_census=scorecard_census)
+    pages: list[Page] = _corpus_pages(
+        report, national=national, scorecard_census=scorecard_census, catalog=catalog
+    )
 
     by_state: dict[str, list[dict[str, Any]]] = {}
     for row in grades:
@@ -1267,7 +1250,7 @@ def build(
         code = str(summary.get("label", ""))
         if not slug(code):
             continue
-        pages.append(state_page(summary, by_state.get(code, [])))
+        pages.append(state_page(summary, by_state.get(code, []), catalog=catalog))
 
     for row in sorted(grades, key=lambda r: str(r.get("unit_id"))):
         path = _institution_path(row)
@@ -1277,7 +1260,11 @@ def build(
         unit_id = str(row.get("unit_id"))
         pages.append(
             institution_page(
-                row, findings_by_id.get(unit_id, []), path=path, ask_endpoint=ask_endpoint
+                row,
+                findings_by_id.get(unit_id, []),
+                path=path,
+                ask_endpoint=ask_endpoint,
+                catalog=catalog,
             )
         )
 
@@ -1286,7 +1273,13 @@ def build(
         target.mkdir(parents=True, exist_ok=True)
         canonical = f"{origin}/{page.path + '/' if page.path else ''}"
         (target / "index.html").write_text(
-            _shell(page, canonical=canonical, origin=origin, generated=generated),
+            _shell(
+                page,
+                canonical=canonical,
+                origin=origin,
+                generated=generated,
+                catalog=catalog,
+            ),
             encoding="utf-8",
         )
 

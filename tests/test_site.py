@@ -393,9 +393,10 @@ class TestTheShareCard:
         self, tmp_path: Path
     ) -> None:
         home = _text(_build(tmp_path) / "index.html")
+        alt = site.ENGLISH.text("share.card.alt")
 
-        assert f'<meta property="og:image:alt" content="{site.OG_CARD_ALT}">' in home
-        assert f'<meta name="twitter:image:alt" content="{site.OG_CARD_ALT}">' in home
+        assert f'<meta property="og:image:alt" content="{alt}">' in home
+        assert f'<meta name="twitter:image:alt" content="{alt}">' in home
 
 
 class TestTheSourceBacklink:

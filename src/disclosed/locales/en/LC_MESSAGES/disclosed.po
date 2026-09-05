@@ -1,0 +1,813 @@
+# The site's user-facing prose, in the language it is written and reviewed in.
+#
+# This is the source catalog: every other locale is checked against it, key for key and
+# placeholder for placeholder, and one that does not match is refused rather than part-rendered.
+# See src/disclosed/messages.py for the rules and docs/I18N.md for what is still unfinished.
+#
+# Two things are deliberately NOT here.
+#
+# The five classification tokens -- reported, implausible, suppressed, not_applicable, missing --
+# appear below only as the keys classification.<token>.label and .meaning. The tokens themselves
+# are data: they are what the grader writes, what the report carries, and what the CSV export and
+# its Table Schema publish, and they stay in that one form in every language. Translating them in
+# the export would give every downstream reader a file that no longer joins.
+#
+# Field labels, rationales and statute names are not here either. They come from
+# src/disclosed/fields.py and from the artifacts, because they are the wording the grader applies
+# and the wording the schema publishes; a rationale that read one way on the page and another in
+# the schema would be two different rules.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: disclosed\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-OG-Locale: en_US\n"
+
+#. The five classifications, as a reader meets them. The label is what the badge says; the
+#. meaning is written for a person who has just been told their college scored badly.
+msgid "classification.reported.label"
+msgstr "Reported"
+
+msgid "classification.reported.meaning"
+msgstr "A credible value was published."
+
+msgid "classification.implausible.label"
+msgstr "Implausible"
+
+msgid "classification.implausible.meaning"
+msgstr ""
+"A value was published but falls outside the credible range for this field. Counted as a "
+"disclosure failure: a gap is visible to a reader, a wrong number is not."
+
+msgid "classification.suppressed.label"
+msgstr "Suppressed"
+
+msgid "classification.suppressed.meaning"
+msgstr ""
+"Withheld deliberately, usually to protect a small cohort. Not held against the institution "
+"and removed from the denominator entirely."
+
+msgid "classification.not_applicable.label"
+msgstr "Not applicable"
+
+msgid "classification.not_applicable.meaning"
+msgstr ""
+"The question does not apply to this institution. Removed from the denominator entirely."
+
+msgid "classification.missing.label"
+msgstr "Not reported"
+
+msgid "classification.missing.meaning"
+msgstr "No value and no stated reason. This is the one that counts against a publisher."
+
+#. One sentence per letter band, completing "this institution ...". letter.none is for an
+#. institution that could not be graded at all, which is never an F and never a zero.
+msgid "letter.A.summary"
+msgstr "published nearly everything it was in a position to publish"
+
+msgid "letter.B.summary"
+msgstr "published most of what it was in a position to publish"
+
+msgid "letter.C.summary"
+msgstr "left a reader with real gaps"
+
+msgid "letter.D.summary"
+msgstr "left more unpublished than published"
+
+msgid "letter.F.summary"
+msgstr "published almost nothing a reader could use"
+
+msgid "letter.none"
+msgstr "could not be graded on any field"
+
+msgid "grade.none.badge"
+msgstr "n/a"
+
+#. Read aloud after the badge by a screen reader, and by nothing else. It has to carry the
+#. meaning the colour and the abbreviation carry visually.
+msgid "grade.none.meaning"
+msgstr ": not gradeable, no field applied"
+
+msgid "grade.letter.suffix"
+msgstr " grade"
+
+#. Never "0%". An institution with nothing to score is a different fact from one that scored
+#. nothing, and this is the sentence that keeps them apart.
+msgid "score.not_gradeable"
+msgstr "not gradeable"
+
+msgid "share.no_applicable_institutions"
+msgstr "no applicable institutions"
+
+msgid "share.no_institutions"
+msgstr "no institutions"
+
+msgid "bound.none.upper"
+msgstr "no upper bound"
+
+msgid "bound.none.lower"
+msgstr "no lower bound"
+
+msgid "scope.not_stated"
+msgstr "This run did not state its coverage."
+
+msgid "nav.all_institutions"
+msgstr "All institutions"
+
+msgid "share.card.alt"
+msgstr ""
+"disclosed: what US colleges do not tell you. Grades US higher-education institutions on what "
+"they disclose, not on how they perform."
+
+msgid "shell.title"
+msgstr "{title} | disclosed"
+
+msgid "shell.skip_link"
+msgstr "Skip to content"
+
+msgid "shell.footer.generated"
+msgstr ""
+"Generated {generated} from public federal data. This grades disclosure, not quality, and says "
+"so on every page. <a href=\"{methodology}\">Methodology</a>."
+
+msgid "shell.footer.source"
+msgstr ""
+"Every rule behind these grades, the data they are computed from, and the code that applies "
+"them are public: <a href=\"{source}\">github.com/ChelseaKR/disclosed</a>."
+
+#. An institution the federal source did not name. Never the word "None": that is a
+#. four-character institution name in every downstream reader.
+msgid "institution.unnamed_with_unit_id"
+msgstr "Unnamed institution (unit id {unit_id})"
+
+msgid "institution.unnamed_without_unit_id"
+msgstr "Unnamed institution (no unit id published)"
+
+msgid "institution.unnamed"
+msgstr "Unnamed institution"
+
+msgid "institution.qualified_name"
+msgstr "{name} ({state})"
+
+msgid "institution.title"
+msgstr "{name}: disclosure grade"
+
+msgid "institution.description"
+msgstr ""
+"What {name} publishes and what it does not, graded on disclosure rather than on performance. "
+"Disclosure score {score}."
+
+msgid "institution.lede"
+msgstr "On the fields this project checks, this institution {summary}."
+
+msgid "institution.facts.score"
+msgstr "Disclosure score"
+
+msgid "institution.facts.state"
+msgstr "State"
+
+msgid "institution.facts.unit_id"
+msgstr "IPEDS unit id"
+
+msgid "institution.unit_id_not_published"
+msgstr "not published"
+
+msgid "institution.state_not_published"
+msgstr "state not published"
+
+msgid "institution.disclosed.heading"
+msgstr "What was disclosed"
+
+msgid "institution.table.caption"
+msgstr "Every field this project checks, and how this institution disclosed it."
+
+msgid "institution.table.field"
+msgstr "Field"
+
+msgid "institution.table.status"
+msgstr "Status"
+
+msgid "institution.table.meaning"
+msgstr "What that means"
+
+#. A report written by a newer version of the grader than this renderer knows about. The
+#. classification is shown as it arrived rather than mapped onto the nearest familiar one.
+msgid "institution.unrecognized_classification"
+msgstr "unrecognized classification {classification}"
+
+msgid "institution.findings.heading"
+msgstr "Values that do not look like measurements"
+
+msgid "institution.findings.intro"
+msgstr ""
+"These were published, so they are not gaps. They fall outside the credible range for their "
+"field, which is a judgement this project made and states in full so it can be argued with."
+
+msgid "institution.finding.published_as"
+msgstr "<strong>{field}</strong> published as <code>{value}</code>."
+
+msgid "institution.finding.peer_check"
+msgstr "Peer check, {group}: {verdict}"
+
+msgid "institution.finding.unknown_group"
+msgstr "unknown group"
+
+msgid "institution.finding.no_peer_group"
+msgstr ""
+"No peer group was available for this institution, so no comparison is claimed."
+
+msgid "institution.caveat"
+msgstr ""
+"This is a measure of disclosure, not of quality. An institution that reports everything and "
+"performs badly scores higher here than a good school that reports nothing, and that is "
+"intended. If you believe a field is marked wrongly, the <a href=\"{methodology}\">methodology"
+"</a> states every rule and the reasoning behind it."
+
+#. The opt-in question form, rendered only when the site is built with --ask-endpoint. The
+#. sentences the script itself shows, and everything disclosed.ask replies with, are English
+#. whatever this catalog says: see docs/I18N.md.
+msgid "ask.heading"
+msgstr "Ask about this institution's disclosure"
+
+msgid "ask.notice"
+msgstr ""
+"Optional. Nothing is sent anywhere until you press Ask. Answers are AI-generated and "
+"unofficial: they describe what this institution disclosed to federal sources and why an "
+"absence might be there, never how it performs, and every statement shown was checked against "
+"this project's own records. Questions about quality, rankings or whether to attend are "
+"refused."
+
+msgid "ask.label"
+msgstr "Your question"
+
+msgid "ask.placeholder"
+msgstr "What does this college not report?"
+
+msgid "ask.submit"
+msgstr "Ask"
+
+msgid "state.heading"
+msgstr "{state}: what institutions disclose"
+
+msgid "state.title"
+msgstr "{state}: college disclosure grades"
+
+msgid "state.lede"
+msgid_plural "state.lede"
+msgstr[0] "{count} graded institution, mean disclosure {mean}."
+msgstr[1] "{count} graded institutions, mean disclosure {mean}."
+
+msgid "state.description"
+msgid_plural "state.description"
+msgstr[0] ""
+"{count} institution in {state} graded on what it reports to the College Scorecard. Mean "
+"disclosure {mean}."
+msgstr[1] ""
+"{count} institutions in {state} graded on what they report to the College Scorecard. Mean "
+"disclosure {mean}."
+
+msgid "state.ungradeable_note"
+msgid_plural "state.ungradeable_note"
+msgstr[0] ""
+"{count} of these could not be graded at all, because every field this project checks was "
+"either suppressed or inapplicable. It is counted here but excluded from the mean, so a state "
+"where most records are unreadable cannot pass as a state that scored well."
+msgstr[1] ""
+"{count} of these could not be graded at all, because every field this project checks was "
+"either suppressed or inapplicable. They are counted here but excluded from the mean, so a "
+"state where most records are unreadable cannot pass as a state that scored well."
+
+msgid "state.worst.heading"
+msgstr "Least-reported fields in {state}"
+
+msgid "state.worst.item"
+msgid_plural "state.worst.item"
+msgstr[0] "{field}: {count} institution"
+msgstr[1] "{field}: {count} institutions"
+
+msgid "state.institutions.heading"
+msgstr "Institutions"
+
+msgid "state.table.caption"
+msgstr ""
+"Every institution graded in this state, with its disclosure score. An institution with no "
+"gradeable field shows as not gradeable rather than as a zero."
+
+msgid "state.table.institution"
+msgstr "Institution"
+
+msgid "state.table.grade"
+msgstr "Grade"
+
+msgid "state.table.disclosure"
+msgstr "Disclosure"
+
+msgid "state.caveat"
+msgstr ""
+"Grades measure disclosure, not quality. See the <a href=\"{methodology}\">methodology</a>."
+
+msgid "methodology.heading"
+msgstr "How we grade"
+
+msgid "methodology.title"
+msgstr "How the disclosure grades are calculated"
+
+msgid "methodology.description"
+msgstr ""
+"Every credible range, the reasoning behind it, how suppressed and not-applicable fields leave "
+"the denominator, and why an ungradeable institution gets no grade rather than a zero."
+
+msgid "methodology.lede"
+msgstr ""
+"Every credible range here is a judgement call, so every one carries a written rationale. A "
+"scorecard that cannot be disputed line by line is not a scorecard, it is an accusation."
+
+msgid "methodology.measured.heading"
+msgstr "What is being measured"
+
+msgid "methodology.measured.body"
+msgstr ""
+"Not quality. The grade answers one question: of the things this institution was in a position "
+"to tell the public, how much did it actually tell them? A well-funded university with poor "
+"outcomes that reports every field completely scores higher here than a good school that "
+"reports nothing. Outcomes are graded elsewhere, by other people, using the very data this "
+"project is checking the existence of."
+
+msgid "methodology.absent.heading"
+msgstr "How an absent value is classified"
+
+msgid "methodology.absent.body"
+msgstr ""
+"A field an institution did not report, a field suppressed to protect a small cohort, and a "
+"field whose true value is zero are three different facts. Rendered carelessly they all become "
+"<code>0</code> on a page, and a reader cannot tell a college that admits nobody from a college "
+"that declined to say. Every value is classified before anything else touches it."
+
+msgid "methodology.absent.caption"
+msgstr ""
+"The five ways a value can be absent or present, and which of them an institution is answerable "
+"for."
+
+msgid "methodology.absent.column.classification"
+msgstr "Classification"
+
+msgid "methodology.absent.column.meaning"
+msgstr "Meaning"
+
+msgid "methodology.absent.column.counts"
+msgstr "Counts against the institution?"
+
+msgid "methodology.counts_against.yes"
+msgstr "yes"
+
+msgid "methodology.counts_against.no"
+msgstr "no"
+
+msgid "methodology.absent.suppression"
+msgstr ""
+"Suppression is a policy decision made for good reasons and is never held against anyone. "
+"Penalising an institution for protecting a twelve-person cohort would push publishers toward "
+"disclosing things they should not, which is the opposite of the point. Suppressed and "
+"not-applicable fields leave the denominator rather than scoring zero, and an institution with "
+"an empty denominator gets <strong>no grade at all</strong>, not a zero."
+
+msgid "methodology.published_failure.heading"
+msgstr "Why a published value can still be a failure"
+
+msgid "methodology.published_failure.body"
+msgstr ""
+"A value being present is not sufficient; it also has to be credible for the field it sits in. "
+"A published zero survives in federal data because zero is a legal number, not because anyone "
+"measured it. A wrong number published as fact is worse than a gap, because the gap is visible "
+"to a reader and the wrong number is not."
+
+msgid "methodology.peers.heading"
+msgstr "Peer comparison"
+
+msgid "methodology.peers.rule"
+msgstr ""
+"A fixed credible range is a blunt instrument and an institution can reasonably object to one. "
+"So every implausible finding carries its peer group: sector, level, and state, with the "
+"institution excluded from its own comparison. A reader who thinks a grade is unfair can see "
+"what comparable institutions published and attack the peer definition, the sample, or the "
+"conclusion. All three are better arguments to be having than one about where a constant was "
+"set."
+
+msgid "methodology.peers.against_itself"
+msgstr ""
+"Where the peers turn out to publish the same value, the verdict says so and the finding argues "
+"against itself. That is intended and is not suppressed."
+
+msgid "methodology.peers.both_counts"
+msgstr ""
+"A peer claim is only made where at least {min_peers} comparable institutions exist <em>and</em> "
+"at least {min_peers} of them published the field. Both counts, because the second is what the "
+"comparison is made out of: a group of fifty in which six published a number supports a claim "
+"about six, and the finding says so instead of borrowing the confidence of the fifty. Below "
+"either bar the finding is still reported and still links here; it simply arrives without a "
+"peer comparison attached, because an unsupported comparison is worse than none."
+
+msgid "methodology.bands.heading"
+msgstr "Letter bands"
+
+msgid "methodology.band.top"
+msgstr "{letter}, {threshold} and above."
+
+msgid "methodology.band.next"
+msgstr "{letter}, {threshold}."
+
+msgid "methodology.band.bottom"
+msgstr "{letter} below that."
+
+msgid "methodology.bands.body"
+msgstr ""
+"{bands} Fixed rather than curved, because grading on a curve would hide a field-wide collapse "
+"in reporting: if everyone stopped publishing graduation rates tomorrow, a curve would report "
+"that as normal."
+
+msgid "methodology.drift.heading"
+msgstr "Drift"
+
+msgid "methodology.drift.why_two_runs"
+msgstr ""
+"A single snapshot cannot distinguish a field that was never collected from one that was "
+"collected until recently and then stopped. The first is a gap in the data model; the second is "
+"a change in what the public is allowed to know. Only the comparison between runs can tell them "
+"apart, so per-field counts are committed to version control on every run."
+
+msgid "methodology.drift.rate_not_count"
+msgstr ""
+"<strong>Drift is a change in rate, not a change in count.</strong> Every comparison divides by "
+"the institutions the field applied to in that run, and the reason is a mistake this project "
+"made and published to itself. Measured on counts, three IPEDS collection years produced three "
+"confident systemic findings and all three were false: between 2021 and 2023 the directory "
+"shrank from 6,289 institutions to 6,163, so 130 fewer published a web address, and that was "
+"reported as a systemic 2.1% collapse. The share publishing one had gone <em>up</em>, from "
+"99.93% to 99.95%. Colleges closed; they did not stop reporting. The one real movement in the "
+"period, the athletics disclosure rising from 57.1% to 59.4%, ranked fourth and was never "
+"flagged, because 52 is a small number next to 130."
+
+msgid "methodology.drift.threshold"
+msgstr ""
+"A change is called systemic when that rate moves by at least {systemic} percentage points. The "
+"threshold is a judgement call, stated here so a reader can disagree with it, and set low "
+"because a coordinated stop-reporting event is newsworthy well before it touches a majority of "
+"institutions. Three real collection years say it is roughly right: every year-on-year movement "
+"in these six disclosures sits under one point except the athletics disclosure, which rose 1.75 "
+"points in a year and 2.26 across two. At {systemic}% the bar flags that and nothing else. At "
+"1% it would report ordinary annual churn as policy; at 5% it would have found nothing in three "
+"years of federal data, which is not a measurement but a way of never having to say anything."
+
+msgid "methodology.drift.both_directions"
+msgstr ""
+"Drift is reported in both directions: fields that <em>started</em> being reported are as real "
+"a finding as fields that stopped, and reporting only the losses would make this an argument "
+"rather than a measurement. A field whose rate cannot be computed in either run is reported as "
+"unmeasured and is never called systemic, because an unknown is not a large movement."
+
+msgid "methodology.field.address_only"
+msgstr ""
+"Graded on whether an address was published, not on what is behind it; no page is ever fetched."
+
+msgid "methodology.field.applies_when"
+msgstr ""
+" Institutions the requirement does not reach leave the denominator entirely rather than being "
+"marked down."
+
+msgid "methodology.field.credible_range"
+msgstr "Credible range: {minimum} to {maximum}. An exact zero is {zero}."
+
+msgid "methodology.field.zero_credible"
+msgstr "a credible measurement"
+
+msgid "methodology.field.zero_artifact"
+msgstr "treated as an artifact"
+
+msgid "methodology.field.weight"
+msgstr "Weight {weight}."
+
+msgid "methodology.fields.scorecard.heading"
+msgstr "The fields: College Scorecard"
+
+msgid "methodology.fields.ipeds.heading"
+msgstr "The fields: IPEDS"
+
+msgid "methodology.fields.ipeds.three_absences"
+msgstr ""
+"IPEDS records public disclosures the Scorecard does not carry, and states absence three "
+"different ways, all of them negative integers: -1 not reported, -2 not applicable, -3 not "
+"available. They are not interchangeable, and only the first counts against an institution."
+
+msgid "methodology.fields.ipeds.athletics"
+msgstr ""
+"The athletics disclosure below was ungraded until a second IPEDS file arrived, and the reason "
+"is worth stating. It is blank for 4,469 of 6,163 directory rows, and almost every one of those "
+"is a college with no athletics programme, so grading the column against the directory alone "
+"would have produced four thousand confident and entirely fabricated violations. The "
+"institutional characteristics file carries each institution's own answer about whether it "
+"competes, and that answer moves the denominator from 6,163 to 1,998. The finding did not need "
+"a better threshold. It needed to know who the rule applied to."
+
+msgid "methodology.fields.ipeds.veterans"
+msgstr ""
+"One candidate is still deliberately not graded. The veterans information page is blank for "
+"2,377 institutions, and the same characteristics file would now supply an applicability rule "
+"for it. It stays ungraded because applicability was never the obstacle here: no universal "
+"requirement obliges an institution to publish a veterans page, so a rule about who it applied "
+"to would be a rule about a duty that does not exist. Knowing who would owe a disclosure is not "
+"the same as there being one to owe."
+
+msgid "methodology.wrong.heading"
+msgstr "If this is wrong about your institution"
+
+msgid "methodology.wrong.body"
+msgstr ""
+"The rules above are the whole of it; there is no model anywhere in the grading path and no "
+"judgement that is not written down on this page. If a field is marked wrongly, the "
+"disagreement will be with a stated bound, a stated peer group, or the underlying federal "
+"record, and all three can be checked."
+
+msgid "national.heading"
+msgstr "The national picture"
+
+msgid "national.title"
+msgstr "What US colleges disclose, nationally"
+
+msgid "national.description"
+msgstr ""
+"Per-field disclosure counts across every institution in the IPEDS directory, with the "
+"applicability rule behind each and the institutions named where a statute requires the "
+"disclosure."
+
+msgid "national.why_this_page_differs"
+msgstr ""
+"Everything else on this site is graded from a sample of the College Scorecard and says so. "
+"This page is different: IPEDS publishes its directory as a file rather than as a paged API, so "
+"grading it grades every institution there is, and the percentages below describe the country."
+
+msgid "national.discloses.heading"
+msgstr "What the country discloses"
+
+msgid "national.table.caption"
+msgstr ""
+"Per-field national counts. Suppressed and inapplicable institutions are outside the applicable "
+"column, never scored as failures."
+
+msgid "national.table.disclosure"
+msgstr "Disclosure"
+
+msgid "national.table.reaches"
+msgstr "Institutions it reaches"
+
+msgid "national.table.record_carries_none"
+msgstr "Record carries none"
+
+msgid "national.table.published"
+msgstr "Published"
+
+msgid "national.table.requirement"
+msgstr "Requirement"
+
+msgid "national.no_statute"
+msgstr "no statute"
+
+#. Both halves of one sentence that begins "The middle column is the whole argument." The
+#. reaches are read off the table rather than typed into the prose, because they move every
+#. collection year.
+msgid "national.middle_column.with_reach"
+msgstr ""
+"The middle column is the whole argument. A disclosure that reaches {narrowest} institutions "
+"and a disclosure that reaches {widest} produce very different-looking failure counts from the "
+"same underlying behaviour, and a table that showed only the failures would rank them wrongly."
+
+msgid "national.middle_column.without_reach"
+msgstr ""
+"The middle column is the whole argument. Two disclosures that reach different numbers of "
+"institutions produce very different-looking failure counts from the same underlying behaviour, "
+"and a table that showed only the failures would rank them wrongly."
+
+msgid "national.ungradeable_note"
+msgid_plural "national.ungradeable_note"
+msgstr[0] ""
+"{rows} directory row gets no grade at all rather than a zero, because every field checked was "
+"either suppressed or outside the reach of the rule. Most are system offices and closed "
+"institutions. They are counted here and excluded from every mean."
+msgstr[1] ""
+"{rows} directory rows get no grade at all rather than a zero, because every field checked was "
+"either suppressed or outside the reach of the rule. Most are system offices and closed "
+"institutions. They are counted here and excluded from every mean."
+
+msgid "national.named_findings.heading"
+msgstr "Named findings"
+
+msgid "national.no_named_findings"
+msgstr "No statute-backed disclosure is absent anywhere in this run."
+
+msgid "national.gap.heading"
+msgstr "{field}: {count} of {applicable} institutions"
+
+msgid "national.gap.body"
+msgstr ""
+"Required by {statute}. These are the institutions the requirement reaches for which the "
+"federal record carries no address. Named rather than counted because there is a published rule "
+"behind this one; the fields with no statute behind them are counted above and their "
+"institutions are not listed."
+
+msgid "national.gap.no_unit_id"
+msgstr "no unit id published"
+
+msgid "national.caveat"
+msgstr ""
+"An absent address means the federal record carries none. It is not proof the institution has "
+"nothing: it may have published the thing and not reported where. Which of those two is true is "
+"not something a blank cell can settle, and this page does not pretend otherwise. The "
+"<a href=\"{methodology}\">methodology</a> states the rule behind every row."
+
+msgid "census.heading"
+msgstr "The College Scorecard census"
+
+msgid "census.title"
+msgstr "The College Scorecard census, in full"
+
+msgid "census.description"
+msgstr ""
+"Every institution the College Scorecard publishes, graded the same way as the "
+"600-institution sample, with both frames' composition stated side by side."
+
+msgid "census.why_this_page_differs"
+msgstr ""
+"The home page's figures are graded from a 600-institution sample and say so. This page grades "
+"every institution the College Scorecard publishes -- the API paged to exhaustion, proven from "
+"the walk's own counts rather than assumed from how large the result looks -- and does not "
+"replace the sample figures, because the sample is a real, separately-interesting slice and "
+"silently swapping one number for another is the failure this project exists to name in other "
+"people's data."
+
+msgid "census.headline"
+msgstr ""
+"In the full census, <strong>{missing} of {applicable}, or {share}, publish no admission rate "
+"at all</strong> -- the same question the home page asks of the 600-institution sample, asked "
+"here of every institution the Scorecard publishes."
+
+msgid "census.composition.heading"
+msgstr "Composition: how skewed was the sample"
+
+msgid "census.composition.body"
+msgstr ""
+"{ca_sample} of the sample's {sample_total} institutions ({ca_sample_share}) are Californian, "
+"across {sample_states} states. The census, {census_total} institutions across {census_states} "
+"states, puts California at {ca_census_share}."
+
+msgid "census.sector_table.caption"
+msgstr "Institutions by sector, sample against census."
+
+msgid "census.sector_table.sector"
+msgstr "Sector"
+
+msgid "census.sector_table.sample"
+msgstr "Sample"
+
+msgid "census.sector_table.sample_share"
+msgstr "Sample share"
+
+msgid "census.sector_table.census"
+msgstr "Census"
+
+msgid "census.sector_table.census_share"
+msgstr "Census share"
+
+msgid "census.discloses.heading"
+msgstr "What the census discloses"
+
+msgid "census.table.caption"
+msgstr ""
+"Per-field counts across every institution the Scorecard publishes. Suppressed and inapplicable "
+"institutions are outside the applicable column, never scored as failures."
+
+msgid "census.caveat"
+msgstr ""
+"A field with no statute behind it is this project's opinion about what a college ought to "
+"publish, not a legal requirement; the <a href=\"{methodology}\">methodology</a> states the "
+"rationale behind every row. Institutions are counted here and not named, the same rule the "
+"sample figures on the home page follow."
+
+#. The home page title deliberately omits the site's name: shell.title appends it, and
+#. "disclosed: what US colleges do not tell you | disclosed" says it twice.
+msgid "home.title"
+msgstr "What US colleges do not tell you"
+
+msgid "home.description"
+msgstr ""
+"Grades US higher-education institutions on what they disclose rather than on how they perform. "
+"Which fields go unreported, which published values are not measurements, and what stopped "
+"being published."
+
+msgid "home.lede"
+msgstr ""
+"Grades US higher-education institutions on what they disclose, not on how they perform."
+
+msgid "home.what_this_grades"
+msgstr ""
+"Plenty of tools will tell you a college's graduation rate. None will tell you how many "
+"colleges never reported one, or which fields quietly stopped being published this year. That "
+"is what this grades."
+
+msgid "home.why_it_matters"
+msgstr ""
+"The distinction matters because the two failures look identical on a page. A college with a 0% "
+"admission rate and a college that never reported an admission rate both render as a blank or a "
+"zero in most tools, and a reader cannot tell them apart."
+
+msgid "home.found.heading"
+msgstr "What this run found"
+
+msgid "home.found.graded"
+msgstr "Institutions graded"
+
+msgid "home.found.mean"
+msgstr "Mean disclosure"
+
+msgid "home.found.not_gradeable"
+msgstr "Not gradeable"
+
+msgid "home.found.not_measurements"
+msgstr "Published values that are not measurements"
+
+msgid "home.ungradeable_note"
+msgid_plural "home.ungradeable_note"
+msgstr[0] ""
+"{count} institution could not be graded at all, because every field checked was suppressed or "
+"inapplicable. It gets no grade rather than a zero, and it is counted separately from the mean "
+"so it cannot pass as an institution that scored well."
+msgstr[1] ""
+"{count} institutions could not be graded at all, because every field checked was suppressed or "
+"inapplicable. They get no grade rather than a zero, and they are counted separately from the "
+"mean so they cannot pass as institutions that scored well."
+
+msgid "home.worst.heading"
+msgstr "Least-reported fields"
+
+msgid "home.worst.caption"
+msgstr ""
+"Fields most often absent across the institutions in this run. Shares are of this run, not of "
+"the country."
+
+msgid "home.worst.field"
+msgstr "Field"
+
+msgid "home.worst.not_reporting"
+msgstr "Institutions not reporting it"
+
+msgid "home.worst.share"
+msgstr "Share"
+
+msgid "home.zeros.heading"
+msgstr "Published zeros that are not zeros"
+
+msgid "home.zeros.body"
+msgstr ""
+"These institutions published a value rather than leaving a gap, and the value is not a "
+"plausible measurement of the thing it claims to measure. Each carries the peer group that "
+"supports or undermines the finding."
+
+msgid "home.artifact"
+msgstr "{institution} publishes {field} as <code>{value}</code>"
+
+msgid "home.by_state.heading"
+msgstr "By state"
+
+msgid "home.how.heading"
+msgstr "How this works"
+
+msgid "home.how.body"
+msgstr ""
+"Read the <a href=\"{methodology}\">methodology</a>: every credible range, the reasoning behind "
+"it, and why a suppressed field is never held against an institution."
+
+msgid "home.coverage.label"
+msgstr "What this run covers."
+
+msgid "home.coverage.no_scope"
+msgstr ""
+"This report predates the coverage record and does not say how much of the College Scorecard it "
+"holds. Treat every percentage on this page as describing the institutions listed here and "
+"nothing wider, because nothing wider has been established."
+
+msgid "home.coverage.not_coy"
+msgstr ""
+"A project about undisclosed information should not be coy about the limits of its own sample."
+
+msgid "home.coverage.national_pointer"
+msgstr ""
+"The <a href=\"{national}\">national page</a> carries the figures that do describe the country, "
+"drawn from a source published as a whole file rather than as a paged API."
+
+msgid "home.coverage.census_pointer"
+msgstr ""
+"The <a href=\"{census}\">Scorecard census page</a> asks the same questions of every institution "
+"the College Scorecard publishes, not this sample, and states both frames' composition side by "
+"side."
