@@ -10,6 +10,14 @@ file is the human-readable one.
 
 ### Fixed
 
+- **Six published state pages said "1 institutions".** The page templates had no way to express a
+  plural, so a state with one graded institution, or one institution missing a field, printed the
+  plural noun against the number 1. The message catalog carries plural forms and the loader
+  refuses a language whose plural rule it does not know rather than applying the English one; AK,
+  AR, AZ, MN, NM and NY now read correctly. It is the only prose change the catalog conversion
+  made: the other 611 pages differ from their previous bytes only where a sentence that used to
+  be wrapped across source lines is now one line.
+
 - **Two different colleges were one page in every result list.** Unit 104708,
   Glendale Community College in Arizona, graded B, and unit 115001, Glendale
   Community College in California, graded D, rendered the identical
@@ -26,6 +34,31 @@ file is the human-readable one.
   you".
 
 ### Added
+
+- **Every page string is in a message catalog, and the five classifications are not in it as
+  data.** `src/disclosed/site.py` held the site's whole vocabulary as literals in f-strings.
+  It now renders from a GNU gettext catalog
+  (`src/disclosed/locales/en/LC_MESSAGES/disclosed.po`) read by `disclosed.messages`, and
+  `disclosed site --locale` names which catalog to use. No dependency was added and no
+  subresource: the parser is text, in the repository, and the `.po` stays uncompiled so a
+  translation is reviewable in a diff rather than committed as a binary.
+
+  The constraint that made this worth recording in `docs/I18N.md` is enforced rather than
+  intended. `reported`, `implausible`, `suppressed`, `not_applicable` and `missing` are what the
+  CSV export and its Table Schema publish and what a consumer joins on, so they are translated in
+  exactly one function, on the way into one page. `disclosed.dataset` does not import the catalog,
+  and `tests/test_i18n.py` fails if it starts to: the suite builds a pseudolocale that translates
+  all five, asserts the rendered page really did change, and then asserts the export did not.
+
+  A catalog that is incomplete, carries a message the site no longer renders, loses a
+  placeholder, or declares a plural rule this project does not know is refused at load. Nothing
+  falls back to English, because a page served as `lang="es"` with English paragraphs in it is an
+  absence rendered as a value. `<html lang>` and `og:locale` come off the catalog for the same
+  reason.
+
+  **This is a seam, not a translation.** There is one catalog and it is English. Locale-aware
+  number formatting, a reviewed second locale, and the `disclosed.ask` layer's own English are
+  listed as open in `docs/I18N.md`.
 
 - **The timing budget is a gate, and it was calibrated on the runner rather than on a laptop
   ([ADR 0010](docs/adr/0010-the-timing-budget-becomes-a-gate-after-the-runner-was-measured.md)).**

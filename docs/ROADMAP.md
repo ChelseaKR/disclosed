@@ -144,10 +144,15 @@ and the parts are listed here so that "blocked" names something specific:
   decision and the dev dependency that emits it, which is an owner call about this repository's
   dependency surface rather than an implementation detail. Neither is written here, and neither is
   stubbed.
-- **Internationalization.** `docs/I18N.md` defers it *to* the first release and records the entry
-  point: the page templates' strings into a message catalog, with the five classification tokens
-  kept as machine keys in the CSV export and translated only at the presentation layer. That is a
-  recorded decision with a reason, so it is not started early.
+- **Internationalization.** The seam is built: the page templates' strings are in a gettext
+  catalog (`src/disclosed/locales/`), rendered through `disclosed.messages`, with the five
+  classification tokens kept as machine keys in the CSV export and translated only at the
+  presentation layer. What is *not* done is the part that needs a person: there is one catalog and
+  it is English, so the project is not internationalised, and `docs/I18N.md` lists what remains -
+  a reviewed second locale, locale-aware number formatting, and the `disclosed.ask` layer, which
+  answers in English because its prompts, its verifier and the definitions it quotes are English.
+  Shipping a machine translation as though it had been reviewed would be the same defect this
+  project names in other people's data, so the second locale is still gated on a reviewer.
 - **The CHANGELOG's first tagged section.** Mechanical, and it is the cut.
 
 **Owner-gated, and therefore not scheduled here.**

@@ -26,7 +26,16 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Final
 
-from . import crosswalk, dataset, frame, national, registry, registry_properties, site
+from . import (
+    crosswalk,
+    dataset,
+    frame,
+    messages,
+    national,
+    registry,
+    registry_properties,
+    site,
+)
 from .disclosure import CLASSIFICATIONS
 from .drift import Snapshot, compare
 from .fields import FIELDS, IPEDS_FIELDS
@@ -710,6 +719,7 @@ def _cmd_site(args: argparse.Namespace) -> int:
         national=national_payload,
         scorecard_census=census_payload,
         ask_endpoint=args.ask_endpoint,
+        locale=args.locale,
     )
     print(f"built {len(pages)} pages -> {out}")
     return 0
@@ -988,6 +998,17 @@ def main(argv: list[str] | None = None) -> int:
         help=(
             "URL of a running disclosed.ask service. With it, institution pages carry the opt-in "
             "question form and one inline script; without it the site has no script at all"
+        ),
+    )
+    p_site.add_argument(
+        "--locale",
+        default=messages.SOURCE_LOCALE,
+        choices=messages.available(),
+        help=(
+            "which message catalog to render the pages from. A locale is offered here only once "
+            "its catalog covers every message the site renders; an incomplete one is refused "
+            "rather than filled in with English, because a page that claims to be in a language "
+            "it is only half in is an absence published as a fact"
         ),
     )
     p_site.add_argument("--out", default="site")
