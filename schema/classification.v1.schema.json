@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chelseakr.github.io/disclosed/schema/classification.v1.schema.json",
+  "title": "disclosed classification rules",
+  "description": "How a value is absent, which is not the same as what the value is. Five states: a credible reported value, a disclosed value outside its credible range, a value withheld on purpose, a question that does not apply, and a gap with no stated reason. Rendered naively the last four all become 0, and a reader cannot tell a college that admits nobody from a college that declined to say.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "rules"
+  ],
+  "properties": {
+    "version": {
+      "description": "Version of this rule-file format, not of the disclosed package.",
+      "const": 1
+    },
+    "rules": {
+      "description": "One entry per column to classify.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/rule"
+      }
+    }
+  },
+  "$defs": {
+    "disclosure": {
+      "title": "disclosure state",
+      "description": "The five states. There is no sixth.",
+      "type": "string",
+      "enum": [
+        "implausible",
+        "missing",
+        "not_applicable",
+        "reported",
+        "suppressed"
+      ]
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "column"
+      ],
+      "properties": {
+        "column": {
+          "description": "Column header in the CSV being classified.",
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "description": "Plain-language name for the column.",
+          "type": "string"
+        },
+        "credible_min": {
+          "description": "Inclusive lower bound of the credible range; null disables it.",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "credible_max": {
+          "description": "Inclusive upper bound of the credible range; null disables it.",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "zero_is_credible": {
+          "description": "Whether an exact zero is a believable measurement here. False for rates and prices, where zero is nearly always a reporting artifact.",
+          "type": "boolean",
+          "default": true
+        },
+        "sentinels": {
+          "description": "The source's own missing-data codes, mapped to what each one means. IPEDS encodes three different absences as -1, -2 and -3; without this they are graded as measurements of minus one, two and three.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/disclosure"
+          }
+        },
+        "text_is_a_value": {
+          "description": "Whether a non-numeric string is the measurement rather than noise. True for URL columns.",
+          "type": "boolean",
+          "default": false
+        },
+        "applies_when": {
+          "description": "Name of an applicability predicate implemented by the reader, or null for a column that applies to every row. A name the reader does not implement is refused, never treated as 'applies to everyone'.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "has_an_intercollegiate_athletic_program",
+            "is_an_institution",
+            "owes_a_net_price_calculator",
+            null
+          ]
+        }
+      }
+    }
+  }
+}
