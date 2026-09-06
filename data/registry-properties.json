@@ -621,9 +621,9 @@
     "coverage": 1.0,
     "institutions": 33809,
     "kind": "national",
-    "note": "Which CTDL property names appear on each of the 33809 organizations the Credential Registry publishes under resource_type=organization, walked to the registry's own stated total on 2026-08-28T00:36:37Z. Names only: no value is read, and no organization is graded, named or scored. Rates are given over two denominators that are never added together, the whole walk and the 4818 organizations that publish a typed ceterms:ipedsID, because the second is the only population this project could grade and the first is mostly training providers that were never in IPEDS.",
+    "note": "Which CTDL property names appear on each of the 33809 organizations the Credential Registry publishes under resource_type=organization, walked to the registry's own stated total on 2026-08-27T19:38:02Z. Names only: no value is read, and no organization is graded, named or scored. Rates are given over two denominators that are never added together, the whole walk and the 4818 organizations that publish a typed ceterms:ipedsID, because the second is the only population this project could grade and the first is mostly training providers that were never in IPEDS. The states figure is a count of distinct ceterms:addressRegion values, which the registry publishes as free text including regions outside the United States, so it counts regions rather than states.",
     "source": "Credential Registry",
-    "states": 0,
+    "states": 153,
     "universe": 33809
   },
   "universal_over_joined": [

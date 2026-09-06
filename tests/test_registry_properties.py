@@ -19,6 +19,7 @@ from typing import Any
 import pytest
 
 from disclosed import registry_properties
+from disclosed.scope import scope_from_payload
 from disclosed.sources import credential_registry
 from disclosed.sources.credential_registry import Capture, Organization, PageRecord
 
@@ -31,6 +32,7 @@ def _organization(
     ipeds_id: str | None = None,
     properties: tuple[str, ...] = (),
     identifier_type_names: tuple[str, ...] = (),
+    state: str | None = None,
 ) -> Organization:
     return Organization(
         ctid=ctid,
@@ -38,7 +40,7 @@ def _organization(
         ipeds_id=ipeds_id,
         ope_id=None,
         org_types=(),
-        state=None,
+        state=state,
         homepage_host=None,
         properties=properties,
         identifier_type_names=identifier_type_names,
@@ -180,6 +182,20 @@ class TestTheCensus:
         assert payload["publishing_an_ipeds_id"] == 1
         assert sorted(row["joined"] for row in payload["signatures"]) == [False, True]
 
+    def test_the_address_regions_are_counted_rather_than_discarded(self) -> None:
+        """The count ``report`` needs has to survive the reduction, or it can only guess at it."""
+        capture = _capture(
+            [
+                _organization("ce-1", state="CA"),
+                _organization("ce-2", state="CA"),
+                _organization("ce-3", state="Ontario"),
+                _organization("ce-4", state=None),
+            ]
+        )
+        payload = registry_properties.census(capture)
+        assert payload["distinct_address_regions"] == 2
+        assert payload["organizations_without_an_address_region"] == 1
+
     def test_the_provenance_of_every_page_travels_with_the_census(self) -> None:
         payload = registry_properties.census(_capture([_organization("ce-1")]))
         assert payload["provenance"]["exhausted"] is True
@@ -198,6 +214,32 @@ class TestTheReport:
                 ]
             )
         )
+
+    def test_the_scope_states_the_measured_region_count(self) -> None:
+        census = registry_properties.census(
+            _capture(
+                [
+                    _organization("ce-1", properties=("a",), state="CA"),
+                    _organization("ce-2", properties=("a",), state="NY"),
+                ]
+            )
+        )
+        report = registry_properties.report(census)
+        assert report["scope"]["states"] == 2
+        assert "counts regions rather than states" in report["scope"]["note"]
+
+    def test_a_census_that_never_counted_the_regions_reports_null_and_not_zero(self) -> None:
+        """The defect this field was changed to make unsayable.
+
+        A census written before the count existed did not measure the regions. Publishing that as
+        ``0`` tells a reader the registry's organizations sit in no states at all, which is a
+        measurement nobody took -- the same error as an unmeasured rate published as zero.
+        """
+        census = self._census()
+        del census["distinct_address_regions"]
+        report = registry_properties.report(census)
+        assert report["scope"]["states"] is None
+        assert "null rather than zero" in report["scope"]["note"]
 
     def test_a_payload_that_is_not_a_census_is_refused(self) -> None:
         with pytest.raises(ValueError, match="property-census"):
@@ -280,6 +322,37 @@ class TestTheCommittedPropertyCensus:
         assert census["organizations"] == join["provenance"]["organizations"]
         assert census["provenance"]["total_stated"] == join["provenance"]["total_stated"]
         assert census["provenance"]["pages_walked"] == join["provenance"]["pages_walked"]
+
+    def test_both_committed_registry_artifacts_state_the_same_region_count(self) -> None:
+        """One walk, so one region count, and neither of them zero.
+
+        These two artifacts describe the same 33,809-organization walk -- the test above asserts
+        that -- and both carry a ``scope`` block whose ``sentence`` is documented as safe to print
+        next to any figure from the run. For a while the property report's said "across 0 states
+        and territories" while the join's said 153, because nothing carried the address through
+        the property reduction and ``Scope.states`` had no way to say so. Read them the way the
+        site reads them and require that they agree.
+        """
+        properties = json.loads(
+            (ROOT / "data/registry-properties.json").read_text(encoding="utf-8")
+        )
+        join = json.loads((ROOT / "data/registry-join.json").read_text(encoding="utf-8"))
+        from_properties = scope_from_payload(properties)
+        from_join = scope_from_payload(join)
+        assert from_properties is not None and from_join is not None
+        assert from_properties.states == from_join.states
+        # Not zero, and not the absence of a measurement either: this walk really was counted.
+        assert from_properties.states is not None and from_properties.states > 0
+        assert from_properties.sentence == from_join.sentence
+
+    def test_the_note_names_the_day_the_pages_were_fetched_not_the_day_it_was_reduced(
+        self,
+    ) -> None:
+        """The capture serves from a page cache, so re-reducing it must not restamp the walk."""
+        census = self._census()
+        report = registry_properties.report(census)
+        latest_page = max(str(page["fetched_at"]) for page in census["provenance"]["pages"])
+        assert latest_page in report["scope"]["note"]
 
     def test_the_signature_counts_add_up_to_the_organizations_walked(self) -> None:
         """The one arithmetic error that would let every published rate be wrong together."""
