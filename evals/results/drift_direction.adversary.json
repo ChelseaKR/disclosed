@@ -6,8 +6,8 @@
   "model": "adversary",
   "prompt_version": "2026-08-21.1",
   "harness_version": "1",
-  "commit": "b630ed684e4151aeffb5015c786be6f02c7782f3",
-  "date": "2026-08-22"
+  "commit": "2bdd1392b5c18100ee9e1b1f944f395774f5183c",
+  "date": "2026-09-06"
  },
  "scores": {
   "refused": 10,

@@ -26,6 +26,18 @@ fails:
 Quotes are checked verbatim against the corpus passage they name, and only passages in the pack
 count. The reader sees the surviving claims and quotes, the count of each that was withheld, and
 why, so that silence is never mistaken for completeness.
+
+**The ``could_not_answer`` note is a third channel and is screened too.** The narration prompt
+invites free prose into it -- "if the pack holds nothing that answers the question, leave claims
+empty and say why in could_not_answer" -- and the service prints it to the reader as a paragraph.
+It used to be copied out of the model's reply verbatim, so every screen above could be bypassed
+by moving text one JSON field over: a ranking judgement and two invented numbers reached the
+reader with a withheld count of zero, under a label promising everything shown had been checked
+(issue #68). It now goes through :func:`_check_note`, which applies the judgement, collapse,
+classification and stray-number screens against the whole pack, because a note cites nothing and
+so has no cited records to be checked against. A note that fails is replaced with
+:data:`NOTE_WITHHELD` -- fixed text this project wrote -- and counted in ``reasons`` alongside
+the claims and quotes, so the label's promise holds for all three channels rather than two.
 """
 
 from __future__ import annotations
@@ -40,7 +52,19 @@ from .evidence import ClassificationRecord, ContradictionRecord, DriftRecord
 from .lookup import Pack
 from .narrate import Claim, Narration, Quote
 
-__all__ = ["JUDGEMENT", "STATE_WORDS", "Verified", "verify"]
+__all__ = ["JUDGEMENT", "NOTE_WITHHELD", "STATE_WORDS", "Verified", "verify"]
+
+NOTE_WITHHELD: Final[str] = (
+    "The model's explanation of why it could not answer did not pass the checks every other "
+    "statement here goes through, so it is not shown."
+)
+"""What a reader is given instead of a note that failed its screen.
+
+Fixed text this project wrote, the same shape of answer ``service._render`` already gives for a
+malformed narration. The note is not softened or truncated: a sentence that fails the screen is
+replaced outright and counted, because the alternative is publishing unverified prose under a
+label promising everything shown was checked.
+"""
 
 STATE_WORDS: Final[dict[str, str]] = {
     "reported": "reported",
@@ -92,6 +116,11 @@ class Verified:
     withheld_claims: tuple[Withheld, ...]
     withheld_quotes: tuple[Withheld, ...]
     could_not_answer: str
+    """The model's note, screened. Never the model's text unless it passed :func:`_check_note`."""
+
+    withheld_note: int = 0
+    """1 when the model's note failed its screen and was replaced with :data:`NOTE_WITHHELD`."""
+
     malformed: str = ""
     reasons: dict[str, int] = field(default_factory=dict)
 
@@ -235,6 +264,42 @@ def _check_claim(claim: Claim, pack: Pack) -> str | None:
     return None
 
 
+def _check_note(text: str, pack: Pack) -> str | None:
+    """The first reason to withhold the model's ``could_not_answer`` note, or ``None``.
+
+    This field used to be copied out of the model's reply verbatim, straight past every screen
+    above it, and printed to the reader as a paragraph. A ranking judgement and two invented
+    numbers reached the response body that way with a withheld count of zero, because moving text
+    one JSON field over was enough to bypass the claim path entirely (issue #68).
+
+    The note cites nothing -- it exists to say the pack answered nothing -- so there is no set of
+    cited records to check it against and the whole pack is used instead. That makes the screens
+    here strictly tighter than the claim ones, which is the right way round: a claim at least
+    names the evidence it rests on, and a note by construction rests on none.
+    """
+    if not text.strip():
+        return None
+    if JUDGEMENT.search(text):
+        return "note contains a judgement of quality or a recommendation"
+    if _COLLAPSE.search(text):
+        return "note renders an absence as a non-state"
+    if _STATE_PATTERN.search(text):
+        # Uncited by construction, so there is nothing to check the word against. This is the
+        # same rule ``_classification_reason`` applies to a claim that names a state and cites no
+        # classification record, and "suppressed" over a ``missing`` record is the defect this
+        # project exists to name.
+        return "note names a classification without citing a classification record"
+    allowed = (
+        _allowed_numbers(pack.records, pack.drift, pack.contradictions)
+        | _countable(pack, list(pack.records))
+        | {n for note in pack.notes for n in _numbers_in(note)}
+    )
+    stray = _numbers_in(text) - allowed
+    if stray:
+        return f"note contains a number not in the pack: {sorted(stray)[0]:g}"
+    return None
+
+
 def _check_quote(quote: Quote, pack: Pack, corpus: Corpus) -> str | None:
     if quote.passage_id not in {q.passage.id for q in pack.quotables}:
         return "quotes a passage not in the pack"
@@ -265,12 +330,24 @@ def verify(narration: Narration, pack: Pack, corpus: Corpus) -> Verified:
         else:
             withheld_quotes.append(Withheld(text=quote.quote, reason=reason))
             reasons[reason] = reasons.get(reason, 0) + 1
+    # The note goes through a screen like everything else, and what it loses is counted, so the
+    # label's "statements that could not be checked were withheld and are counted below" stays
+    # true of every channel the reader is shown rather than of two of the three.
+    note = narration.could_not_answer
+    note_reason = _check_note(note, pack)
+    withheld_note = 0
+    if note_reason is not None:
+        note = NOTE_WITHHELD
+        withheld_note = 1
+        key = note_reason.split(":")[0]
+        reasons[key] = reasons.get(key, 0) + 1
     return Verified(
         claims=tuple(kept),
         quotes=tuple(kept_quotes),
         withheld_claims=tuple(withheld),
         withheld_quotes=tuple(withheld_quotes),
-        could_not_answer=narration.could_not_answer,
+        withheld_note=withheld_note,
+        could_not_answer=note,
         malformed=narration.malformed,
         reasons=reasons,
     )

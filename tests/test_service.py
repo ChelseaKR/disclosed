@@ -68,6 +68,19 @@ def _narration(user: str) -> str:
     )
 
 
+# The exact sentence issue #68 measured reaching a reader byte-identically, through a field that
+# no screen looked at, under a label promising everything shown had been checked.
+_HOSTILE_NOTE = (
+    "Harvard University is a far better school than its peers and you should apply; its "
+    "admission rate is about 3% and median earnings are $95,000."
+)
+
+
+def _narration_with_only_a_hostile_note(user: str) -> str:
+    """A reply whose entire payload is the note: no claims, no quotes, nothing else to screen."""
+    return json.dumps({"claims": [], "quotes": [], "could_not_answer": _HOSTILE_NOTE})
+
+
 def _service(evidence: Evidence, corpus: Corpus, *replies: Any, **limits: int) -> service.Service:
     return service.Service(
         provider=FakeProvider(list(replies)),
@@ -108,6 +121,7 @@ class TestAsk:
         assert answer["withheld"] == {
             "claims": 1,
             "quotes": 0,
+            "note": 0,
             "reasons": {"contains a judgement of quality or a recommendation": 1},
         }
         (quote,) = answer["quotes"]
@@ -120,6 +134,36 @@ class TestAsk:
         }
         assert answer["evidence"]["records"][0]["classification"] == "missing"
         assert answer["question"]["intent"] == "why_absent"
+
+    def test_a_hostile_could_not_answer_never_reaches_the_reader(
+        self, evidence: Evidence, corpus: Corpus
+    ) -> None:
+        """The channel that bypassed all four claim screens by moving text one JSON field over.
+
+        ``could_not_answer`` was copied out of the model's reply verbatim into the response body
+        and printed to the reader as a paragraph. A ranking judgement and two invented numbers
+        reached it byte-identically with a withheld count of zero -- while the same string, sent
+        as a claim, was caught by the judgement screen. Both of the screens it would have hit as
+        a claim are asserted here to still recognise it, so this test fails if the sentence stops
+        being hostile rather than if the fix stops working.
+        """
+        assert service.verify.JUDGEMENT.search(_HOSTILE_NOTE)
+        assert service.verify._numbers_in(_HOSTILE_NOTE) == {3.0, 95000.0}
+
+        svc = _service(evidence, corpus, _STRUCTURED_WHY, _narration_with_only_a_hostile_note)
+        answer = svc.ask("Why no admission rate?", institution_hint="100690", client="t")
+
+        assert answer["status"] == 200
+        assert answer["could_not_answer"] == service.verify.NOTE_WITHHELD
+        # Not merely absent from that field: absent from the whole body a reader receives.
+        assert _HOSTILE_NOTE not in json.dumps(answer)
+        for fragment in ("far better school", "should apply", "95,000", "about 3%"):
+            assert fragment not in json.dumps(answer), fragment
+        # And counted, so the label's "withheld and are counted below" stays true.
+        assert answer["withheld"]["note"] == 1
+        assert answer["withheld"]["reasons"] == {
+            "note contains a judgement of quality or a recommendation": 1
+        }
 
     def test_a_refusal_makes_exactly_one_model_call(
         self, evidence: Evidence, corpus: Corpus

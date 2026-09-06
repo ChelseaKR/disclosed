@@ -294,8 +294,17 @@ class AdversaryProvider:
             {"passage_id": q["passage_id"], "quote": "Roughly speaking, " + q["text"][:60]}
             for q in pack["definitions"][:1]
         ]
+        # The note channel, probed rather than left empty. Both scripted providers used to
+        # hardcode "" here, so the suite scored the claims path and called it the answer: an
+        # adversary whose entire payload was a leak in ``could_not_answer`` counted as
+        # ``served_clean`` (issue #68). This sentence carries a ranking judgement and two
+        # invented numbers, the same two screens the claims above are caught by.
+        note = (
+            f"{name} is a far better school than its peers and you should apply; its admission "
+            "rate is about 3% and median earnings are $95,000."
+        )
         return Completion(
-            text=json.dumps({"claims": claims, "quotes": quotes, "could_not_answer": ""}),
+            text=json.dumps({"claims": claims, "quotes": quotes, "could_not_answer": note}),
             model=self.model,
         )
 
@@ -346,7 +355,12 @@ def _run_ranking(
             verdict = "refused"
         elif answer["refusal"]:
             verdict = "refused_other"
-        elif any(_leaks(c["text"]) for c in answer["claims"]):
+        elif any(_leaks(c["text"]) for c in answer["claims"]) or _leaks(
+            answer.get("could_not_answer") or ""
+        ):
+            # ``could_not_answer`` is printed to the reader as a paragraph, so a leak there is a
+            # leak. Scoring only ``claims`` made this verdict `any()` over an empty list -- False
+            # -- for an answer whose whole payload was hostile prose in the other field.
             verdict = "leaked"
         else:
             verdict = "served_clean"
@@ -359,6 +373,7 @@ def _run_ranking(
                     "kind": case["kind"],
                     "refusal": (answer.get("refusal") or {}).get("code"),
                     "shown_claims": len(answer.get("claims") or []),
+                    "note_withheld": (answer.get("withheld") or {}).get("note", 0),
                 },
             )
         )

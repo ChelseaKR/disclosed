@@ -139,6 +139,22 @@ class TestTheAdversaryLeaksNothing:
         assert r.scores["leaked"] == 0
         assert r.scores["served_clean"] > 0, "the adversary structures everything as answerable"
 
+    def test_the_ranking_verdict_reads_the_note_channel_too(
+        self, evidence: Evidence, corpus: Corpus
+    ) -> None:
+        """The suite has to be able to see a leak in ``could_not_answer``, not just survive one.
+
+        ``leaked == 0`` above proves nothing on its own if the verdict cannot look at the field
+        the adversary is now hostile in: scoring only ``claims`` made the verdict ``any()`` over
+        an empty list, so an answer whose entire payload was a leak scored ``served_clean``.
+        Every case in this suite is served with the note withheld, which is what makes the zero
+        above a measurement of the screen rather than of the harness's blind spot.
+        """
+        r = _run("ranking_refusal", "adversary", evidence, corpus)
+        served = [o for o in r.outcomes if o.verdict == "served_clean"]
+        assert served, "no case was served, so the note channel was never exercised"
+        assert all(o.detail["note_withheld"] == 1 for o in served)
+
     def test_fidelity(self, evidence: Evidence, corpus: Corpus) -> None:
         r = _run("classification_fidelity", "adversary", evidence, corpus)
         assert r.scores["shown_wrong"] == 0
@@ -155,6 +171,10 @@ class TestTheAdversaryLeaksNothing:
             "names a classification none of its cited records is in",
             "uncited",
             "cites a record not in the pack",
+            # The note channel. The adversary puts a ranking judgement and two invented numbers
+            # in ``could_not_answer``; before it was screened, that text reached the reader and
+            # was counted nowhere (issue #68).
+            "note contains a judgement of quality or a recommendation",
         }
         assert r.scores["quotes_shown"] == 0
 
