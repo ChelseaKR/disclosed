@@ -8,6 +8,32 @@ file is the human-readable one.
 
 ## [Unreleased]
 
+### Added
+
+- **The daily snapshot now tells somebody when federal disclosure moves.** It has computed drift
+  since it was written and printed it into the job summary of a run that is green because the
+  fetch worked. A policy change in federal disclosure is the event this project exists to notice,
+  and a job summary on a green run is the most reassuring possible way of saying nothing at all.
+  `disclosed drift --json` emits the comparison in a shape something other than a terminal can
+  read, and `.github/scripts/drift_issue.py` turns it into an issue: one per field whose reporting
+  rate moved by at least `SYSTEMIC_THRESHOLD`, naming the field, the movement in points of the
+  population it applies to, both snapshot dates and the applicability move that explains most
+  alarming-looking counts.
+  A field whose rate **could not be computed** in one of the two runs gets its own issue saying
+  so, and is deliberately not folded in with the systemic ones. `FieldDrift.is_systemic` already
+  refuses to call an unmeasured field systemic, which is correct and which also means the
+  unmeasured case was the one thing that could never produce a signal. An unknown is not a small
+  change; a pair the tool could not measure is a gap in the record of what the public is allowed
+  to know, and silence about it looks exactly like a quiet day.
+  Nothing is closed automatically. A drift that stops appearing means the two most recent
+  snapshots agree, which is what the first day of a new steady state looks like, and closing on
+  that would erase the finding at the moment it became permanent. Deduplication is by field and
+  direction, carried in a marker in the issue body rather than inferred from the title, so
+  re-wording a title cannot orphan an issue and open a second one beside it. A missing token
+  fails the step rather than exiting quietly, because "nobody was told" must not be able to look
+  like "there was nothing to tell". The job's token gains `issues: write` and nothing else; the
+  test that pins the grant is still an equality, so widening it stays a reviewed diff.
+
 ### Fixed
 
 - **Six published state pages said "1 institutions".** The page templates had no way to express a

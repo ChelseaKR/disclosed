@@ -47,9 +47,19 @@ on:
 permissions:
   contents: read
 
-# CI-CD-STANDARD.md 11c: cancel superseded runs on the same ref.
+# CI-CD-STANDARD.md 11c: cancel superseded runs on the same ref -- but only where
+# "superseded" is true. A concurrency group holds one running run and one pending run.
+# Keyed on `github.ref` alone, every push to the default branch joins the SAME group as
+# the push before it, so a merge cancels its predecessor's run part-way through
+# (`cancel-in-progress: true`) or evicts it from the queue before a single job dispatches.
+# Either way that commit carries no verdict, and nothing reports a failure -- the run just
+# reads `cancelled`, which is not a signal.
+#
+# A second push to a pull request genuinely does supersede the first, so pull requests keep
+# the shared key and keep cancelling. Pushes to a branch get the commit SHA instead, which
+# gives every merge its own group and lets consecutive merges run to completion.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'pull_request' && 'pr' || github.sha }}
   cancel-in-progress: true
 jobs:
   lighthouse:
