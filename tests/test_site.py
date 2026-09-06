@@ -152,9 +152,50 @@ class TestAbsenceIsNeverRenderedAsAValue:
 
 class TestFindingsLinkToTheirReasoning:
     def test_every_field_row_links_to_a_rationale_anchor(self, tmp_path: Path) -> None:
+        """The whole href, not a substring of it.
+
+        ``f"methodology/#{anchor}" in page`` is satisfied by ``../methodology/#anchor`` and by
+        ``../../../methodology/#anchor`` equally, so it cannot see a wrong prefix -- which is how
+        the home page shipped five rationale links that 404 on the deployed site (issue #69)
+        while this assertion passed. An institution page sits two directories down, so there is
+        exactly one prefix that is right.
+        """
         page = _text(_build(tmp_path) / "institution" / "1" / "index.html")
         for field in FIELDS:
-            assert f"methodology/#{field.anchor}" in page
+            assert f'href="../../methodology/#{field.anchor}"' in page
+
+    def test_the_home_pages_rationale_links_are_written_for_a_page_at_the_site_root(
+        self, tmp_path: Path
+    ) -> None:
+        """``home_page`` returns ``Page(path="")``, so its correct depth is zero.
+
+        Every rationale link it emitted carried two directories' worth of ``../``, which resolved
+        above the site root and 404ed on GitHub Pages.
+        """
+        page = _text(_build(tmp_path) / "index.html")
+        links = re.findall(r'href="([^"]*methodology/#[^"]*)"', page)
+        assert links, "the home page emits no rationale links, so this proves nothing"
+        for link in links:
+            assert not link.startswith(".."), link
+            assert link.startswith("methodology/#"), link
+
+    def test_no_rationale_link_on_any_page_resolves_outside_the_site(self, tmp_path: Path) -> None:
+        """Resolve every one of them the way a browser would, from the page's real directory.
+
+        The per-page assertions above each know their own depth. This one knows none of them,
+        which is what makes it survive a page moving.
+        """
+        out = _build(tmp_path)
+        methodology = (out / "methodology").resolve()
+        assert (methodology / "index.html").exists()
+        checked = 0
+        for page in out.rglob("index.html"):
+            for link in re.findall(r'href="([^"]*methodology/#[^"]*)"', _text(page)):
+                # Resolve the way a browser does: against the directory the page is served from.
+                target = (page.parent / link.split("#", 1)[0]).resolve()
+                assert target == methodology, f"{page}: {link} resolves to {target}"
+                checked += 1
+        assert checked, "no rationale links were found anywhere, so this proves nothing"
 
     def test_every_anchor_linked_to_actually_exists_on_the_methodology_page(
         self, tmp_path: Path

@@ -177,6 +177,38 @@ class TestEachCheckCanFail:
         )
         assert _run(built) == 1
 
+    def test_a_relative_reference_that_escapes_the_site_root_is_refused(self, built: Path) -> None:
+        """The same escape as above, written without a leading slash.
+
+        ``href="../methodology/"`` on the page at the site root resolves one directory above it
+        and lands in exactly the place ``href="/methodology/"`` does. Promise 3 named this failure
+        in its own docstring -- "the same failure as issue #2 pointed one level down" -- while
+        matching only the rooted form, so the home page shipped five rationale links that 404 on
+        the deployed site (issue #69) and this check passed the build.
+        """
+        page = built / "index.html"
+        page.write_text(
+            page.read_text(encoding="utf-8").replace(
+                '<a href="methodology/', '<a href="../methodology/'
+            ),
+            encoding="utf-8",
+        )
+        assert _run(built) == 1
+
+    def test_the_same_relative_prefix_is_accepted_where_the_page_really_is_that_deep(
+        self, built: Path
+    ) -> None:
+        """The depth is judged against the page, not against the string.
+
+        ``../methodology/`` is wrong at the site root and right one directory down, so a check
+        that simply banned ``../`` would fail every correct page on the site.
+        """
+        nested = built / "institution" / "1" / "index.html"
+        assert nested.exists()
+        # This page really is two directories down, and really does say "../../methodology/".
+        assert '"../../methodology/#' in nested.read_text(encoding="utf-8")
+        assert _run(built) == 0
+
     def test_two_pages_sharing_a_description_are_refused(self, built: Path) -> None:
         """617 pages describing themselves identically is 617 pages a result list cannot tell
         apart, and it is the state the sibling documentation site was actually found in."""

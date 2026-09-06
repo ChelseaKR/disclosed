@@ -900,7 +900,7 @@ def home_page(
     mean = overall.get("mean_score")
 
     worst = "".join(
-        f'<tr><th scope="row">{_rationale_link(str(label), str(label), depth=1)}</th>'
+        f'<tr><th scope="row">{_rationale_link(str(label), str(label), depth=0)}</th>'
         f"<td>{int(count)}</td>"
         f"<td>{int(count) / total:.0%}</td></tr>"
         for label, count in overall.get("worst_fields", [])
@@ -922,7 +922,7 @@ def home_page(
                     if _institution_path(f)
                     else html.escape(_name_of(f, catalog))
                 ),
-                field=_rationale_link(str(f.get("field", "")), str(f.get("field", "")), depth=1),
+                field=_rationale_link(str(f.get("field", "")), str(f.get("field", "")), depth=0),
                 value=html.escape(json.dumps(f.get("value"))),
             )
         )
