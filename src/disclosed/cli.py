@@ -37,7 +37,7 @@ from . import (
     site,
 )
 from .disclosure import CLASSIFICATIONS
-from .drift import Snapshot, compare
+from .drift import Snapshot, as_payload, compare
 from .fields import FIELDS, IPEDS_FIELDS
 from .grading import InstitutionGrade, grade_institution, summarize
 from .peers import peer_context
@@ -501,10 +501,16 @@ def _cmd_drift(args: argparse.Namespace) -> int:
         return Snapshot(**raw)
 
     try:
-        drifts = compare(load(args.earlier), load(args.later))
+        earlier, later = load(args.earlier), load(args.later)
+        drifts = compare(earlier, later)
     except ValueError as exc:
         print(f"{exc}", file=sys.stderr)
         return 1
+    if args.json:
+        # Sorted keys and a fixed indent, so two runs over the same pair are byte-identical and
+        # a diff of the output is a diff of the finding.
+        print(json.dumps(as_payload(earlier, later, drifts), indent=2, sort_keys=True))
+        return 0
     if not drifts:
         print("no change in per-field disclosure between the two snapshots")
         return 0
@@ -920,6 +926,11 @@ def main(argv: list[str] | None = None) -> int:
     p_drift = sub.add_parser("drift", help="compare two snapshots")
     p_drift.add_argument("earlier")
     p_drift.add_argument("later")
+    p_drift.add_argument(
+        "--json",
+        action="store_true",
+        help="print the comparison as JSON, for a consumer that is not a terminal",
+    )
     p_drift.set_defaults(func=_cmd_drift)
 
     p_data = sub.add_parser("dataset", help="export a report as CSV plus a Table Schema")
