@@ -44,7 +44,15 @@ class Scope:
     """The publisher these records came from, named as a reader would name it."""
 
     institutions: int
-    states: int
+
+    states: int | None
+    """How many states or regions the institutions sit in, or ``None`` when nobody counted.
+
+    ``None`` and not ``0``, for the same reason :attr:`universe` is. A run that did not carry an
+    address through to this field has not established that its institutions sit in no states, and
+    a reader who saw ``0`` here would reasonably conclude the source covers nowhere. Zero is a
+    measurement; this field's absence is not one, and the two must not print the same.
+    """
 
     universe: int | None
     """How many institutions exist in this source, or ``None`` when that is not known.
@@ -77,15 +85,24 @@ class Scope:
     def sentence(self) -> str:
         """One line stating the coverage, safe to put next to any figure from this run."""
         if self.is_national:
+            across = (
+                "across a number of states and territories this run did not measure"
+                if self.states is None
+                else f"across {self.states} states and territories"
+            )
             return (
-                f"Every institution in the {self.source}: {self.institutions:,} across "
-                f"{self.states} states and territories. Figures on this page are national."
+                f"Every institution in the {self.source}: {self.institutions:,} {across}. "
+                f"Figures on this page are national."
             )
         of_universe = f" of roughly {self.universe:,}" if self.universe is not None else ""
+        across = (
+            "across a number of states this run did not measure"
+            if self.states is None
+            else f"across {self.states} states"
+        )
         return (
-            f"{self.institutions:,} institutions{of_universe} in the {self.source}, across "
-            f"{self.states} states. Figures on this page describe these institutions and are not "
-            f"national."
+            f"{self.institutions:,} institutions{of_universe} in the {self.source}, {across}. "
+            f"Figures on this page describe these institutions and are not national."
         )
 
     def as_dict(self) -> dict[str, Any]:
@@ -120,11 +137,15 @@ def scope_from_payload(payload: dict[str, Any]) -> Scope | None:
     if kind not in (SAMPLE, NATIONAL) or not isinstance(source, str):
         return None
     universe = raw.get("universe")
+    # ``states`` is read the way ``universe`` is: an absent or null field is carried through as
+    # ``None``. Coercing it to 0 here would manufacture the same false measurement the field's
+    # own docstring forbids, one layer further from where anybody could see it.
+    states = raw.get("states")
     return Scope(
         kind=kind,
         source=source,
         institutions=int(raw.get("institutions", 0)),
-        states=int(raw.get("states", 0)),
+        states=int(states) if isinstance(states, int) else None,
         universe=int(universe) if isinstance(universe, int) else None,
         note=str(raw.get("note", "")),
     )
