@@ -34,11 +34,12 @@ from . import (
     national,
     registry,
     registry_properties,
+    rules,
     site,
 )
 from .disclosure import CLASSIFICATIONS
 from .drift import Snapshot, as_payload, compare
-from .fields import FIELDS, IPEDS_FIELDS
+from .fields import ALL_FIELDS, FIELDS, IPEDS_FIELDS
 from .grading import InstitutionGrade, grade_institution, summarize
 from .peers import peer_context
 from .scope import NATIONAL, SAMPLE, Scope, scope_from_payload
@@ -552,6 +553,49 @@ def _cmd_dataset(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_classify(args: argparse.Namespace) -> int:
+    """Print the published contract for the five-state classifier: its schema, or these rules.
+
+    Two ways of asking the same question. ``--schema`` is what the five states and a rule file
+    are, for someone writing one; ``--rules`` is what this repository's own twelve fields say in
+    that format, for someone who wants a worked example rather than a specification.
+    """
+    if args.schema:
+        print(json.dumps(rules.schema(), indent=2, sort_keys=False))
+        return 0
+    print(json.dumps(rules.rules_to_payload(ALL_FIELDS), indent=2, sort_keys=False))
+    return 0
+
+
+def _cmd_classify_csv(args: argparse.Namespace) -> int:
+    """Write a state column beside every value column a rule file names.
+
+    Exit codes: 0 written, 2 the rule file or the input was refused. Refusals are loud and
+    specific because every one of them has a permissive reading that would have produced a
+    plausible file saying something false -- see :mod:`disclosed.rules`.
+    """
+    try:
+        parsed = rules.load_rules(Path(args.rules))
+        text = Path(args.csv).read_text(encoding="utf-8")
+        classified = rules.classify_table(text, parsed)
+    except rules.RuleFileError as exc:
+        print(f"refusing: {exc}", file=sys.stderr)
+        return 2
+    except OSError as exc:
+        print(f"refusing: {exc}", file=sys.stderr)
+        return 2
+
+    if args.out == "-":
+        sys.stdout.write(classified)
+    else:
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(classified, encoding="utf-8", newline="")
+        counted = classified.count("\n") - 1
+        print(f"classified {counted} rows against {len(parsed)} rules -> {out}")
+    return 0
+
+
 def _cmd_crosscheck(args: argparse.Namespace) -> int:
     """Grade IPEDS's own disclosures and report where it disagrees with the Scorecard."""
     try:
@@ -937,6 +981,30 @@ def main(argv: list[str] | None = None) -> int:
     p_data.add_argument("--report", default="data/report.json")
     p_data.add_argument("--out", default="data/dataset.csv")
     p_data.set_defaults(func=_cmd_dataset)
+
+    p_classify = sub.add_parser(
+        "classify",
+        help="print the JSON Schema for the five-state classifier, or this project's own rules",
+    )
+    classify_what = p_classify.add_mutually_exclusive_group(required=True)
+    classify_what.add_argument(
+        "--schema", action="store_true", help="print the JSON Schema for a rule file"
+    )
+    classify_what.add_argument(
+        "--rules",
+        action="store_true",
+        help="print this repository's twelve graded fields in the portable rule format",
+    )
+    p_classify.set_defaults(func=_cmd_classify)
+
+    p_classify_csv = sub.add_parser(
+        "classify-csv",
+        help="write a five-state column beside every value column a rule file names",
+    )
+    p_classify_csv.add_argument("csv", help="CSV to classify")
+    p_classify_csv.add_argument("--rules", required=True, help="rule file to apply")
+    p_classify_csv.add_argument("--out", default="-", help="where to write; '-' for stdout")
+    p_classify_csv.set_defaults(func=_cmd_classify_csv)
 
     p_cross = sub.add_parser(
         "crosscheck",

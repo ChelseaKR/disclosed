@@ -19,6 +19,7 @@ from typing import Final
 from .disclosure import Disclosure, classify
 
 __all__ = [
+    "APPLICABILITY_PREDICATES",
     "FIELDS",
     "IPEDS_FIELDS",
     "IPEDS_SENTINELS",
@@ -26,6 +27,7 @@ __all__ = [
     "Field",
     "field_by_key",
     "field_by_label",
+    "predicate_name",
 ]
 
 # IPEDS encodes three different absences as negative integers. Without this map they would be
@@ -437,6 +439,40 @@ def field_by_key(key: str) -> Field:
             deliberate act that requires writing a rationale.
     """
     return _BY_KEY[key]
+
+
+# The applicability predicates, by the name a rule file may call them. Applicability is a
+# Python callable on :class:`Field` because deciding it needs the whole record, and a callable
+# cannot travel in a JSON rule file. A caller outside this repository is therefore offered the
+# names rather than the functions: naming one is how a portable rule file says "this field does
+# not reach every row", and a name this mapping does not hold is refused rather than ignored.
+#
+# Ignoring it is the failure mode worth spelling out. A rule file that names a predicate nobody
+# implements, silently treated as "applies to everyone", turns rows the rule never reached into
+# rows that failed it -- an invented violation, which is the same error as reading a suppressed
+# value as a zero, one level up.
+APPLICABILITY_PREDICATES: Final[Mapping[str, Callable[[Mapping[str, object]], bool]]] = {
+    "is_an_institution": _is_an_institution,
+    "owes_a_net_price_calculator": _owes_a_net_price_calculator,
+    "has_an_intercollegiate_athletic_program": _has_an_intercollegiate_athletic_program,
+}
+
+
+def predicate_name(predicate: Callable[[Mapping[str, object]], bool] | None) -> str | None:
+    """The registered name of an applicability predicate, or ``None`` if it has none.
+
+    ``None`` for a field that applies to every row, and ``None`` for a predicate that exists but
+    was never registered. The second case is deliberately not an error here: this is the function
+    that describes a field to the outside world, and a field whose applicability cannot be named
+    should be described as unnameable rather than described wrongly. The rule loader is where an
+    unknown name is refused, because that is where acting on it would do damage.
+    """
+    if predicate is None:
+        return None
+    for name, registered in APPLICABILITY_PREDICATES.items():
+        if registered is predicate:
+            return name
+    return None
 
 
 def field_by_label(label: str) -> Field | None:

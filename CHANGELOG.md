@@ -10,6 +10,33 @@ file is the human-readable one.
 
 ### Added
 
+- **The five-state classifier is now something another project can use.** `classify` and
+  `Disclosure` were already the most careful thing in this repository and the only way to reach
+  them was to copy five keyword arguments into a new call site and remember `sentinels`.
+  Forgetting it is not hypothetical: it is exactly how `-1` becomes a measurement of minus one,
+  and the sibling repositories each hand-roll their own version of the same distinction.
+  `disclosed` now publishes a documented surface — `CLASSIFICATIONS`, `Disclosure`,
+  `InstitutionGrade`, `classify`, `grade_institution`, `summarize` — recorded in
+  `docs/CLASSIFIER.md` at **public API surface revision 1**. The doc, `__all__` and this line are
+  held together by a test, so the surface cannot move without somebody saying here that it did.
+  A rule file states the rules as data instead of as arguments. Its JSON Schema is generated from
+  the enum and the predicate registry rather than written by hand, committed at
+  `schema/classification.v1.schema.json`, and printed by `disclosed classify --schema`; a test
+  holds the committed bytes against the code, so a sixth state cannot exist in one and not the
+  other. `disclosed classify --rules` prints this repository's own twelve fields in that format,
+  which is the worked example and also the only honest test that the format expresses the rules
+  it claims to. `disclosed classify-csv <file> --rules <rules.json>` writes a
+  `<column>_disclosure` column beside every value column named, preserving row and column order.
+  Two readings are refused rather than guessed, because each has a permissive alternative that
+  produces a plausible file saying something false. A rule naming a column the CSV does not carry
+  is an error, not an empty result: classifying an absent column marks every row `missing` and
+  publishes a gap in *this file* as a gap in what the publisher disclosed, which is this
+  project's own headline failure mode committed by the tool built to prevent it. A rule naming an
+  applicability predicate this build does not implement is an error, not a field that applies to
+  everyone: reading it permissively moves rows the rule never reached into the denominator and
+  manufactures a violation out of a rule nobody wrote. Standard library only; no dependency
+  added, no network, and the site and dataset bytes are unchanged.
+
 - **The daily snapshot now tells somebody when federal disclosure moves.** It has computed drift
   since it was written and printed it into the job summary of a run that is green because the
   fetch worked. A policy change in federal disclosure is the event this project exists to notice,
