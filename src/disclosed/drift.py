@@ -31,14 +31,22 @@ denominator as though it were the numerator.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from dataclasses import field as dataclass_field
-from typing import Final
+from typing import Any, Final
 
 from .disclosure import Disclosure
 from .grading import InstitutionGrade
 
-__all__ = ["SYSTEMIC_THRESHOLD", "FieldDrift", "Snapshot", "compare", "snapshot"]
+__all__ = [
+    "SYSTEMIC_THRESHOLD",
+    "FieldDrift",
+    "Snapshot",
+    "as_payload",
+    "compare",
+    "snapshot",
+]
 
 # A change is called systemic when the share of applicable institutions reporting a field moves by
 # at least this much. A judgement call, stated in the published methodology so a reader can
@@ -160,6 +168,53 @@ class FieldDrift:
         loudest possible version of reading an absence as a number.
         """
         return self.rate_change is not None and abs(self.rate_change) >= SYSTEMIC_THRESHOLD
+
+    @property
+    def measured(self) -> bool:
+        """Whether a reporting rate could be computed for both runs.
+
+        Named rather than left as ``rate_change is not None`` at each call site, because every
+        consumer has to make the same distinction and the one that forgets it is the one that
+        reads an unknown as no change.
+        """
+        return self.rate_change is not None
+
+    def as_dict(self) -> dict[str, Any]:
+        """One field's drift, for a consumer that is not a terminal.
+
+        ``rate_change`` stays ``null`` when unmeasured rather than becoming ``0.0``, and
+        ``measured`` is carried beside it so a reader never has to infer the difference from a
+        missing key. Those are the same sentence twice on purpose: this payload's whole job is
+        to be read by something that did not write it.
+        """
+        return {
+            "field_label": self.field_label,
+            "was_reported": self.was_reported,
+            "now_reported": self.now_reported,
+            "was_applicable": self.was_applicable,
+            "now_applicable": self.now_applicable,
+            "delta": self.delta,
+            "rate_change": self.rate_change,
+            "measured": self.measured,
+            "direction": self.direction,
+            "applicability_moved": self.applicability_moved,
+            "is_systemic": self.is_systemic,
+        }
+
+
+def as_payload(earlier: Snapshot, later: Snapshot, drifts: Sequence[FieldDrift]) -> dict[str, Any]:
+    """The whole comparison, in the shape ``drift --json`` prints.
+
+    Carries both snapshot dates at the top level because every downstream sentence about a
+    drift needs to name the two runs it is between; a finding that does not say *since when*
+    is not checkable.
+    """
+    return {
+        "earlier": earlier.taken,
+        "later": later.taken,
+        "systemic_threshold": SYSTEMIC_THRESHOLD,
+        "fields": [d.as_dict() for d in drifts],
+    }
 
 
 def snapshot(grades: list[InstitutionGrade], *, taken: str) -> Snapshot:

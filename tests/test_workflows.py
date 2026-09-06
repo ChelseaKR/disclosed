@@ -278,16 +278,27 @@ class TestTheDailySnapshotIsGatedByTheRealChecks:
 
     def test_the_token_is_scoped_to_exactly_what_the_route_needs(self) -> None:
         """contents to push, actions to dispatch the gates and the rebuild, statuses to
-        transcribe a job's already-earned result (ADR 0004). Anything wider is a write the job
-        does not need and nobody reviewed."""
+        transcribe a job's already-earned result (ADR 0004), issues to file a systemic or
+        unmeasurable drift. Anything wider is a write the job does not need and nobody
+        reviewed.
+
+        Deliberately an equality and not a subset check: the point is that widening the token
+        has to be done here, in a diff someone reads, rather than by adding a line to the
+        workflow and finding the test still green.
+        """
         job_permissions = re.search(
             r"permissions:\n((?:\s+\w+: \w+.*\n)+)", _WORKFLOW.split("jobs:", 1)[1]
         )
         assert job_permissions is not None
         # Keys read from the start of each line, so a `word: word` inside the trailing comment
-        # that explains a grant is not mistaken for a fourth grant.
+        # that explains a grant is not mistaken for another grant.
         granted = dict(re.findall(r"^\s*(\w+): (\w+)", job_permissions.group(1), re.MULTILINE))
-        assert granted == {"contents": "write", "actions": "write", "statuses": "write"}
+        assert granted == {
+            "contents": "write",
+            "actions": "write",
+            "statuses": "write",
+            "issues": "write",
+        }
 
 
 class TestTheDailySnapshotGradesACaptureItCanProve:
@@ -521,3 +532,37 @@ class TestTheTimingBudgetIsActuallyEnforced:
         for line in self._steps()[position : position + 3]:
             assert "|| true" not in line
             assert "continue-on-error" not in line
+
+
+class TestASystemicDriftIsDelivered:
+    """The snapshot's whole purpose is to notice a policy change in federal disclosure. Until
+    the filing step existed, noticing meant writing it into a job summary on a run that was
+    green because the fetch worked, which is the most reassuring possible way of saying
+    nothing."""
+
+    def test_the_drift_comparison_is_written_somewhere_a_script_can_read(self) -> None:
+        assert "drift --json" in _WORKFLOW, (
+            "the workflow no longer produces a machine-readable comparison, so nothing can "
+            "decide whether the day's finding was worth telling anybody about."
+        )
+
+    def test_a_step_files_the_finding(self) -> None:
+        assert "drift_issue.py" in _WORKFLOW, (
+            "the step that turns a systemic drift into an issue is gone. Without it the "
+            "finding stays in a job summary and the run reports success either way."
+        )
+
+    def test_the_filing_step_runs_only_when_a_comparison_happened(self) -> None:
+        """The first snapshot of a source has nothing to compare against, and filing a drift
+        issue from a comparison that did not happen would be an absence rendered as a finding."""
+        assert "steps.drift.outputs.compared == 'true'" in _WORKFLOW
+
+    def test_the_finding_is_filed_before_the_commit_is_pushed(self) -> None:
+        """So a failure to file fails the job, rather than being hidden behind a successful
+        push that makes the run look finished."""
+        filed = _WORKFLOW.index("drift_issue.py")
+        pushed = _WORKFLOW.index("git push")
+        assert filed < pushed
+
+    def test_the_job_may_write_issues(self) -> None:
+        assert re.search(r"^\s*issues: write", _WORKFLOW, re.MULTILINE)

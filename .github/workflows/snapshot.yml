@@ -57,6 +57,7 @@ jobs:
       contents: write # pushes the snapshot commit: to a staging ref, then to master
       actions: write # dispatches the gate workflows on the staging ref, and the site rebuild
       statuses: write # transcribes each dispatched job's already-earned result (ADR 0004)
+      issues: write # files a systemic or unmeasurable drift as an issue, and closes nothing
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -140,6 +141,7 @@ jobs:
       # job summary so a systemic change is visible without cloning anything. The provenance
       # sidecars live one directory down, so the glob cannot pick one up as a snapshot.
       - name: Report drift since the previous snapshot
+        id: drift
         env:
           TAKEN: ${{ steps.walk.outputs.taken }}
         run: |
@@ -148,8 +150,12 @@ jobs:
           if [ -z "${previous}" ]; then
             echo "First Scorecard snapshot; nothing to compare against yet." \
               >> "$GITHUB_STEP_SUMMARY"
+            echo "compared=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          echo "compared=true" >> "$GITHUB_OUTPUT"
+          python -m disclosed.cli drift --json \
+            "${previous}" "data/snapshots/scorecard/${TAKEN}.json" > "${RUNNER_TEMP}/drift.json"
           {
             echo "## Disclosure drift: $(basename "${previous}" .json) to ${TAKEN}"
             echo '```'
@@ -157,6 +163,18 @@ jobs:
               "${previous}" "data/snapshots/scorecard/${TAKEN}.json"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # The finding, delivered rather than left in a job summary on a green run. Opens or
+      # updates one issue per systemic field, plus one for any field whose rate could not be
+      # measured at all; closes nothing, because a drift that stops appearing means the two
+      # most recent snapshots agree, which is what a new steady state looks like on its first
+      # day. Runs before the commit steps so a failure to file is not hidden behind a push.
+      - name: File any systemic or unmeasurable drift as an issue
+        if: steps.drift.outputs.compared == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python .github/scripts/drift_issue.py "${RUNNER_TEMP}/drift.json"
 
       # Staged BEFORE the comparison, because `git diff` compares the index and the working tree
       # and an untracked file is in neither. Every daily snapshot is a new path, so the old shape
