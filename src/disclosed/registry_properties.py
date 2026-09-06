@@ -87,14 +87,44 @@ def census(capture: Capture) -> dict[str, Any]:
             "registry. A partial walk is a failure, not data."
         )
     organizations = capture.organizations
+    # ``ceterms:addressRegion`` is free text holding US state names, US state abbreviations and
+    # regions of other countries, so this counts distinct address regions and not states -- the
+    # same count ``registry.measure`` takes over the same walk, and named the same way. It is
+    # carried here because ``report`` below is handed this payload and nothing else: a field the
+    # capture drops is a field the report can only guess at, and its guess would be zero.
+    regions = {o.state for o in organizations if o.state}
     return {
         "kind": CENSUS_KIND,
         "organizations": len(organizations),
         "publishing_an_ipeds_id": sum(1 for o in organizations if o.ipeds_id is not None),
+        "distinct_address_regions": len(regions),
+        "organizations_without_an_address_region": sum(1 for o in organizations if not o.state),
         "signatures": _signature_rows(organizations),
         "identifier_type_names": _identifier_rows(organizations),
         "provenance": capture.provenance(),
     }
+
+
+def _walk_date(provenance: dict[str, Any]) -> str:
+    """When the pages were actually fetched, not when this reduction last ran.
+
+    ``walked_at`` is stamped with the clock at the top of :func:`credential_registry.walk`, and
+    that walk serves from a page cache, so re-reducing a committed capture moves ``walked_at``
+    while every page in it still carries the day it really arrived. The note below says "walked
+    ... on", so it takes the date from the pages and falls back to ``walked_at`` only when there
+    are none to read. A rerun's clock published as an observation date is the same error as an
+    unmeasured region count published as zero, one field over.
+    """
+    pages = provenance.get("pages")
+    if isinstance(pages, list):
+        fetched = [
+            str(page["fetched_at"])
+            for page in pages
+            if isinstance(page, dict) and page.get("fetched_at")
+        ]
+        if fetched:
+            return max(fetched)
+    return str(provenance.get("walked_at", ""))
 
 
 def _rate(part: int, whole: int) -> float | None:
@@ -145,7 +175,16 @@ def _identifier_report(rows: list[dict[str, Any]], joined_total: int) -> list[di
     ]
 
 
-def _note(everywhere: int, joined_total: int, walked_at: str) -> str:
+def _note(everywhere: int, joined_total: int, walked_at: str, regions: int | None) -> str:
+    counted = (
+        "The states figure is a count of distinct ceterms:addressRegion values, which the "
+        "registry publishes as free text including regions outside the United States, so it "
+        "counts regions rather than states."
+        if regions is not None
+        else "This capture did not carry an address region through, so the states figure is "
+        "null rather than zero: the regions were not counted, which is a different fact from "
+        "there being none."
+    )
     return (
         f"Which CTDL property names appear on each of the {everywhere} organizations the "
         f"Credential Registry publishes under resource_type=organization, walked to the "
@@ -153,7 +192,8 @@ def _note(everywhere: int, joined_total: int, walked_at: str) -> str:
         "organization is graded, named or scored. Rates are given over two denominators that are "
         f"never added together, the whole walk and the {joined_total} organizations that publish "
         "a typed ceterms:ipedsID, because the second is the only population this project could "
-        "grade and the first is mostly training providers that were never in IPEDS."
+        "grade and the first is mostly training providers that were never in IPEDS. "
+        f"{counted}"
     )
 
 
@@ -173,7 +213,12 @@ def report(census_payload: dict[str, Any]) -> dict[str, Any]:
     signatures: list[dict[str, Any]] = list(census_payload["signatures"])
     everywhere, joined_total = _totals(signatures)
     provenance = census_payload.get("provenance") or {}
-    walked_at = str(provenance.get("walked_at", ""))
+    walked_at = _walk_date(provenance)
+    # Absent rather than zero. A census written before this field existed did not measure the
+    # regions, and ``Scope.states`` is typed to say so; reading a missing key as 0 is precisely
+    # the defect this field was changed to make unsayable.
+    raw_regions = census_payload.get("distinct_address_regions")
+    regions = int(raw_regions) if isinstance(raw_regions, int) else None
     joined_signatures = [row for row in signatures if row["joined"]]
     largest = max(joined_signatures, key=lambda row: int(row["organizations"]), default=None)
     properties = _property_rows(signatures, everywhere, joined_total)
@@ -183,9 +228,9 @@ def report(census_payload: dict[str, Any]) -> dict[str, Any]:
             kind=NATIONAL,
             source=_SOURCE,
             institutions=everywhere,
-            states=0,
+            states=regions,
             universe=everywhere,
-            note=_note(everywhere, joined_total, walked_at),
+            note=_note(everywhere, joined_total, walked_at, regions),
         ).as_dict(),
         "organizations": everywhere,
         "publishing_an_ipeds_id": joined_total,
