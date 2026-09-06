@@ -172,7 +172,7 @@ def _render(
         "refusal": None,
         "claims": [],
         "quotes": [],
-        "withheld": {"claims": 0, "quotes": 0, "reasons": {}},
+        "withheld": {"claims": 0, "quotes": 0, "note": 0, "reasons": {}},
         "could_not_answer": "",
         "evidence": pack.for_prompt(),
         "model": {"model": model, "prompt_version": narrate.PROMPT_VERSION, "usage": usage},
@@ -201,8 +201,14 @@ def _render(
     body["withheld"] = {
         "claims": len(verified.withheld_claims),
         "quotes": len(verified.withheld_quotes),
+        # The note is a third channel to the reader and is counted like the other two. LABEL
+        # promises everything shown was checked and everything withheld is counted below; before
+        # this, a note that failed its screen was neither.
+        "note": verified.withheld_note,
         "reasons": dict(verified.reasons),
     }
+    # Already screened by ``verify``: either the model's own note, which passed, or this
+    # project's fixed replacement text. Never unscreened model prose.
     body["could_not_answer"] = verified.could_not_answer
     if verified.malformed:
         body["could_not_answer"] = (

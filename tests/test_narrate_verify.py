@@ -314,6 +314,74 @@ class TestVerifyClaims:
         )
 
 
+class TestVerifyTheCouldNotAnswerNote:
+    """The third channel to the reader, which no screen used to look at (issue #68).
+
+    The claim screens each have a counterpart here, because the note is printed to the reader as
+    a paragraph exactly as a claim is, and it cites nothing at all -- so the whole pack is what it
+    is checked against.
+    """
+
+    def _note(self, pack: lookup.Pack, corpus: Corpus, note: str) -> verify.Verified:
+        reply = json.dumps({"claims": [], "quotes": [], "could_not_answer": note})
+        narration = narrate.narrate(pack, FakeProvider([reply]))
+        return verify.verify(narration, pack, corpus)
+
+    def test_an_empty_note_is_not_a_withholding(self, pack: lookup.Pack, corpus: Corpus) -> None:
+        out = self._note(pack, corpus, "   ")
+        assert out.could_not_answer == "", "narrate strips the note before the verifier sees it"
+        assert out.withheld_note == 0 and out.reasons == {}
+
+    def test_a_plain_note_about_the_pack_stands(self, pack: lookup.Pack, corpus: Corpus) -> None:
+        """A verifier that withholds every note is as useless as one that withholds none."""
+        out = self._note(pack, corpus, "The pack holds nothing that answers that question.")
+        assert out.could_not_answer == "The pack holds nothing that answers that question."
+        assert out.withheld_note == 0 and out.reasons == {}
+
+    @pytest.mark.parametrize(
+        ("note", "reason"),
+        [
+            (
+                "Harvard is a far better school and you should apply.",
+                "note contains a judgement of quality or a recommendation",
+            ),
+            (
+                "This institution has no admission rate.",
+                "note renders an absence as a non-state",
+            ),
+            (
+                "That field is suppressed for privacy reasons.",
+                "note names a classification without citing a classification record",
+            ),
+            (
+                "Its admission rate is about 3%.",
+                "note contains a number not in the pack",
+            ),
+        ],
+    )
+    def test_each_screen_replaces_the_note_and_counts_it(
+        self, pack: lookup.Pack, corpus: Corpus, note: str, reason: str
+    ) -> None:
+        out = self._note(pack, corpus, note)
+        assert out.could_not_answer == verify.NOTE_WITHHELD
+        assert note not in out.could_not_answer
+        assert out.withheld_note == 1
+        assert out.reasons == {reason: 1}
+
+    def test_a_number_the_pack_really_carries_is_allowed_through(
+        self, pack: lookup.Pack, corpus: Corpus
+    ) -> None:
+        """The number screen is checked against the pack, not against the digit.
+
+        A unit id or a snapshot year in a note is a number the model was given, so banning every
+        digit would withhold notes that are entirely honest.
+        """
+        unit_id = pack.records[0].unit_id
+        out = self._note(pack, corpus, f"Nothing in the pack for unit {unit_id} answers that.")
+        assert out.withheld_note == 0
+        assert out.could_not_answer.endswith("answers that.")
+
+
 class TestVerifyQuotes:
     def test_verbatim_quotes_stand_and_paraphrases_do_not(
         self, pack: lookup.Pack, corpus: Corpus
