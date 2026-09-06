@@ -1,4 +1,5 @@
 {
+  "distinct_address_regions": 153,
   "identifier_type_names": [
     {
       "joined": false,
@@ -133,6 +134,7 @@
   ],
   "kind": "credential-registry-property-census",
   "organizations": 33809,
+  "organizations_without_an_address_region": 278,
   "provenance": {
     "base_url": "https://credentialengineregistry.org/ce-registry/search",
     "calls": 0,
