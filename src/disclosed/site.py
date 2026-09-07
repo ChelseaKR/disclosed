@@ -25,22 +25,23 @@ from __future__ import annotations
 import html
 import json
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
 from .disclosure import Disclosure
-from .drift import SYSTEMIC_THRESHOLD
+from .drift import SYSTEMIC_THRESHOLD, FieldDrift, Snapshot
 from .fields import FIELDS, IPEDS_FIELDS, Field, field_by_label
 from .grading import BANDS, BELOW_EVERY_BAND
+from .history import SnapshotSeries
 from .messages import SOURCE_LOCALE, Catalog, load
 from .peers import MIN_PEERS
 from .receipts import ReceiptSource
 from .receipts import dumps as dump_receipt
 from .scope import Scope, scope_from_payload
 
-__all__ = ["Page", "ReceiptMismatch", "build", "slug"]
+__all__ = ["Page", "ReceiptMismatch", "build", "history_page", "history_path", "slug"]
 
 #: How much of a capture digest the citation on an institution page prints. The receipt itself
 #: carries all sixty-four characters; a footnote needs enough to identify the file and no more.
@@ -861,6 +862,208 @@ def _share_of(count: int, total: int, catalog: Catalog = ENGLISH) -> str:
     return f"{count / total:.1%}" if total else catalog.text("share.no_institutions")
 
 
+def _span(series: SnapshotSeries, catalog: Catalog) -> str:
+    """The two dates a series runs between, or the one date it was taken on.
+
+    One string rather than two placeholders, because a series of one run has no span and a
+    sentence reading "2026-08-21 to 2026-08-21" would be describing a range that is not there.
+    """
+    first, last = series.snapshots[0].taken, series.snapshots[-1].taken
+    if first == last:
+        return catalog.text("history.span.one_run", first=html.escape(first))
+    return catalog.text("history.span", first=html.escape(first), last=html.escape(last))
+
+
+def history_path(series: SnapshotSeries) -> str:
+    """Where one source's history is published.
+
+    Lower-cased so the address reads as an address, and derived from the source the snapshots
+    themselves carry rather than from the directory they were filed in. ``history.load`` refuses
+    a set whose sources reduce to the same path, so this is unique across a build by the time
+    anything calls it.
+    """
+    return (
+        f"history/{slug(series.source).lower()}" if series.stated else "history/source-not-stated"
+    )
+
+
+def _rate_cell(series: SnapshotSeries, label: str, snapshot: Snapshot, catalog: Catalog) -> str:
+    """One field's reporting rate in one run, or the reason there is not one.
+
+    Three outcomes and three sentences, never two. A run that did not grade the field, a run that
+    graded it and could not compute a rate, and a rate are different facts, and the cell a reader
+    would otherwise read all three as is ``0%`` -- which would say every institution the field
+    reached had failed to report it, the exact claim this project exists to stop being made by
+    accident.
+    """
+    if not series.graded(label, snapshot):
+        return catalog.text("history.cell.not_graded")
+    rate = snapshot.rate(label)
+    if rate is None:
+        return catalog.text("history.cell.unmeasured")
+    return f"{rate:.1%}"
+
+
+def _reach(moved: int, catalog: Catalog) -> str:
+    """How much the field's denominator moved, as words rather than as a signed integer.
+
+    A field that reached exactly as many institutions in both runs gets its own sentence instead
+    of "0 fewer", which reads as a loss of nothing rather than as no movement.
+    """
+    if moved == 0:
+        return catalog.text("history.movement.reached_the_same")
+    word = catalog.text("history.movement.more" if moved > 0 else "history.movement.fewer")
+    return catalog.count("history.movement.reached", abs(moved), direction=word)
+
+
+def _movement_row(drift: FieldDrift, catalog: Catalog) -> str:
+    """One field's movement across the series, in the words :mod:`disclosed.drift` argues for.
+
+    The direction word is printed only when the rate was measurable in both runs.
+    :attr:`FieldDrift.direction` falls back to the sign of the raw count when it was not, which is
+    a reasonable last resort for a terminal and is not one for a published page: the whole reason
+    this module divides by the applicable population is that the count and the rate can point in
+    opposite directions, and a page that printed "lost" off a count would be committing the
+    mistake the methodology page describes, one link away from the description.
+    """
+    # ``drift.measured`` is this condition, spelled out here so that a type checker can narrow
+    # ``rate_change`` with it. The two must stay the same question; they are one line apart.
+    change = drift.rate_change
+    if change is not None:
+        rate_change = catalog.text("history.movement.points", points=f"{change * 100:+.2f}")
+        direction = catalog.text(f"history.direction.{drift.direction}")
+        systemic = catalog.text(
+            "history.movement.systemic" if drift.is_systemic else "history.movement.not_systemic"
+        )
+    else:
+        rate_change = catalog.text("history.cell.unmeasured")
+        direction = catalog.text("history.direction.unmeasured")
+        systemic = catalog.text("history.movement.unmeasured_is_not_systemic")
+    return (
+        f'<tr><th scope="row">{_rationale_link(drift.field_label, drift.field_label, depth=2)}</th>'
+        f"<td>{direction}</td><td>{html.escape(rate_change)}</td>"
+        f"<td>{html.escape(_reach(drift.applicability_moved, catalog))}</td>"
+        f"<td>{systemic}</td></tr>"
+    )
+
+
+def history_page(series: SnapshotSeries, *, catalog: Catalog = ENGLISH) -> Page:
+    """One source's committed history: what each field's reporting rate did across every run.
+
+    The drift measurement is the most distinctive thing this project publishes and until now it
+    existed only in a job summary on a green run and in the output of a command. This is the page
+    it belongs on.
+
+    Two tables and they never merge. The first is the series itself, one column per run, so a
+    reader can see the shape rather than a summary of it. The second is
+    :meth:`SnapshotSeries.movement` -- ``drift.compare`` between the first run and the last -- and
+    every number in it comes from that call rather than being recomputed here, so the page and the
+    command cannot drift apart.
+
+    One source per page, for the reason ``drift.compare`` refuses a mixed pair: the two histories
+    in this repository share no field, and a table holding both would skip every field and render
+    as "no change", which is the most reassuring possible way of saying nothing at all.
+    """
+    runs = series.snapshots
+    first, last = runs[0], runs[-1]
+    heading = (
+        catalog.text("history.heading", source=html.escape(series.source))
+        if series.stated
+        else catalog.text("history.heading.source_not_stated")
+    )
+    lede = catalog.count(
+        "history.lede",
+        len(runs),
+        span=_span(series, catalog),
+        institutions=f"{last.institutions:,}",
+    )
+    unstated_note = (
+        "" if series.stated else f"<p>{catalog.text('history.source_not_stated.note')}</p>"
+    )
+
+    columns = "".join(f'<th scope="col">{html.escape(snap.taken)}</th>' for snap in runs)
+    rows = "".join(
+        '<tr><th scope="row">{}</th>{}</tr>'.format(
+            _rationale_link(label, label, depth=2),
+            "".join(
+                f"<td>{html.escape(_rate_cell(series, label, snap, catalog))}</td>" for snap in runs
+            ),
+        )
+        for label in series.labels
+    )
+
+    movement = series.movement()
+    if len(runs) < 2:
+        moved = f"<p>{catalog.text('history.movement.one_run')}</p>"
+    elif not movement:
+        moved = "<p>{}</p>".format(
+            catalog.text(
+                "history.movement.nothing_moved",
+                first=html.escape(first.taken),
+                last=html.escape(last.taken),
+            )
+        )
+    else:
+        intro = catalog.text(
+            "history.movement.body",
+            systemic=f"{SYSTEMIC_THRESHOLD:.0%}",
+            methodology="../../methodology/#drift",
+        )
+        caption = catalog.text(
+            "history.movement.caption",
+            first=html.escape(first.taken),
+            last=html.escape(last.taken),
+        )
+        moved = f"""<p>{intro}</p>
+<table>
+<caption>{caption}</caption>
+<thead><tr><th scope="col">{catalog.text("history.movement.field")}</th>\
+<th scope="col">{catalog.text("history.movement.direction")}</th>
+<th scope="col">{catalog.text("history.movement.rate_change")}</th>\
+<th scope="col">{catalog.text("history.movement.reach")}</th>\
+<th scope="col">{catalog.text("history.movement.systemic_column")}</th></tr></thead>
+<tbody>{"".join(_movement_row(d, catalog) for d in movement)}</tbody>
+</table>"""
+
+    body = f"""
+<nav aria-label="Breadcrumb"><a href="../../">{catalog.text("nav.all_institutions")}</a></nav>
+<h1>{heading}</h1>
+<p class="lede">{lede}</p>
+{unstated_note}
+<p>{catalog.text("history.what_a_series_is")}</p>
+
+<h2>{catalog.text("history.rates.heading")}</h2>
+<p>{catalog.text("history.rates.denominator")}</p>
+<table>
+<caption>{catalog.text("history.rates.caption")}</caption>
+<thead><tr><th scope="col">{catalog.text("history.rates.field")}</th>{columns}</tr></thead>
+<tbody>{rows}</tbody>
+</table>
+
+<h2>{catalog.text("history.movement.heading")}</h2>
+{moved}
+
+<p class="caveat">{catalog.text("history.caveat", methodology="../../methodology/#drift")}</p>
+"""
+    title = (
+        catalog.text("history.title", source=series.source)
+        if series.stated
+        else catalog.text("history.title.source_not_stated")
+    )
+    span = _span(series, catalog)
+    description = (
+        catalog.count("history.description", len(runs), source=series.source, span=span)
+        if series.stated
+        else catalog.count("history.description.source_not_stated", len(runs), span=span)
+    )
+    return Page(
+        path=history_path(series),
+        title=title,
+        description=description,
+        body=body,
+    )
+
+
 def scorecard_census_page(payload: dict[str, Any], *, catalog: Catalog = ENGLISH) -> Page:
     """The full College Scorecard walk, beside the 600-institution sample it does not replace.
 
@@ -975,6 +1178,7 @@ def home_page(
     *,
     has_national: bool = False,
     has_scorecard_census: bool = False,
+    histories: Sequence[SnapshotSeries] = (),
     catalog: Catalog = ENGLISH,
 ) -> Page:
     """The landing page: the thesis, what this run found, and where the numbers stop applying."""
@@ -1017,6 +1221,36 @@ def home_page(
     ungradeable_note = (
         f"<p>{catalog.count('home.ungradeable_note', ungradeable)}</p>" if ungradeable else ""
     )
+    # The committed histories, or nothing at all. Nothing at all is the honest rendering of a
+    # build that was given no snapshot directory: a heading over an empty list would say the
+    # series exists and is empty, and what is true is that this build was not shown one. Without
+    # `histories` the home page is byte-for-byte what it was.
+    history_section = ""
+    if histories:
+        listed = "".join(
+            "<li>{}</li>".format(
+                catalog.count(
+                    "home.history.item",
+                    len(series.snapshots),
+                    source=(
+                        f'<a href="{html.escape(history_path(series))}/">'
+                        + html.escape(
+                            series.source
+                            if series.stated
+                            else catalog.text("history.source_not_stated.name")
+                        )
+                        + "</a>"
+                    ),
+                    span=_span(series, catalog),
+                )
+            )
+            for series in histories
+        )
+        history_section = (
+            f"<h2>{catalog.text('home.history.heading')}</h2>\n"
+            f"<p>{catalog.text('home.history.body')}</p>\n"
+            f"<ul>{listed}</ul>\n"
+        )
     # Printed from the scope the run recorded, never from a constant in this template. A caveat
     # written into a template stays true only until somebody renders a different report through
     # it, and the sentence this one carries is the one thing on the page a reader must be able to
@@ -1075,7 +1309,7 @@ def home_page(
 <h2>{catalog.text("home.by_state.heading")}</h2>
 <ul class="states">{states}</ul>
 
-<h2>{catalog.text("home.how.heading")}</h2>
+{history_section}<h2>{catalog.text("home.how.heading")}</h2>
 <p>{catalog.text("home.how.body", methodology="methodology/")}</p>
 {coverage}
 """
@@ -1247,6 +1481,7 @@ def _corpus_pages(
     *,
     national: dict[str, Any] | None,
     scorecard_census: dict[str, Any] | None,
+    histories: Sequence[SnapshotSeries],
     catalog: Catalog,
 ) -> list[Page]:
     """The pages that describe a corpus as a whole, rather than one institution or state.
@@ -1260,6 +1495,7 @@ def _corpus_pages(
             report,
             has_national=national is not None,
             has_scorecard_census=scorecard_census is not None,
+            histories=histories,
             catalog=catalog,
         ),
         methodology_page(catalog=catalog),
@@ -1268,6 +1504,7 @@ def _corpus_pages(
         pages.append(scorecard_census_page(scorecard_census, catalog=catalog))
     if national is not None:
         pages.append(national_page(national, catalog=catalog))
+    pages.extend(history_page(series, catalog=catalog) for series in histories)
     return pages
 
 
@@ -1321,6 +1558,7 @@ def build(
     ask_endpoint: str | None = None,
     locale: str = SOURCE_LOCALE,
     receipts: ReceiptSource | None = None,
+    histories: Sequence[SnapshotSeries] = (),
 ) -> list[Page]:
     """Render the whole site from a graded report.
 
@@ -1346,6 +1584,11 @@ def build(
             are complete can be named; :func:`disclosed.messages.load` refuses the rest rather
             than filling the gaps with English, so a locale either renders a whole site or none
             of one. Today ``en`` is the only catalog in the repository.
+        histories: The committed snapshot series, as :func:`disclosed.history.load` returns them,
+            or empty. Empty means no history page is written and the home page carries no link to
+            one, which is the same "absence over assertion" default as ``national``: a build that
+            was never shown the snapshots must not render a heading implying it looked and found
+            nothing. Without them the build is byte-for-byte what it was.
 
     Returns:
         Every page written, in the order written. Callers use it to assert page counts without
@@ -1363,7 +1606,11 @@ def build(
             findings_by_id.setdefault(unit_id, []).append(finding)
 
     pages: list[Page] = _corpus_pages(
-        report, national=national, scorecard_census=scorecard_census, catalog=catalog
+        report,
+        national=national,
+        scorecard_census=scorecard_census,
+        histories=histories,
+        catalog=catalog,
     )
 
     by_state: dict[str, list[dict[str, Any]]] = {}

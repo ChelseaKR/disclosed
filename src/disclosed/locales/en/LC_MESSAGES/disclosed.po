@@ -739,6 +739,172 @@ msgstr ""
 "rationale behind every row. Institutions are counted here and not named, the same rule the "
 "sample figures on the home page follow."
 
+#. The disclosure-history pages: one per source, rendered from the committed snapshot series.
+#. Three sentences where a table would otherwise print a zero -- a run that never graded a field,
+#. a run that graded it and could not measure a rate, and a movement that could not be measured
+#. at all -- because the cell a reader would read all three as is "0%", which says every
+#. institution the field reached failed to report it.
+msgid "history.heading"
+msgstr "Disclosure history: {source}"
+
+msgid "history.heading.source_not_stated"
+msgstr "Disclosure history: runs that did not state their source"
+
+msgid "history.source_not_stated.name"
+msgstr "Runs that did not state their source"
+
+msgid "history.source_not_stated.note"
+msgstr ""
+"These runs were written before a snapshot recorded which publisher it covered. They are kept "
+"together and compared only against each other: folding them into a named collection would be a "
+"guess printed as a fact, and an unstated source is never treated as matching a stated one."
+
+msgid "history.title"
+msgstr "{source}: disclosure history"
+
+msgid "history.title.source_not_stated"
+msgstr "Disclosure history: source not stated"
+
+msgid "history.span"
+msgstr "{first} to {last}"
+
+msgid "history.span.one_run"
+msgstr "{first}"
+
+msgid "history.lede"
+msgid_plural "history.lede"
+msgstr[0] "{count} committed run, taken {span}, covering {institutions} institutions."
+msgstr[1] ""
+"{count} committed runs, {span}. The most recent covered {institutions} institutions."
+
+msgid "history.description"
+msgid_plural "history.description"
+msgstr[0] ""
+"What each {source} field's reporting rate was in the {count} committed run there is, {span}."
+msgstr[1] ""
+"What each {source} field's reporting rate did across {count} committed runs, {span}."
+
+msgid "history.description.source_not_stated"
+msgid_plural "history.description.source_not_stated"
+msgstr[0] ""
+"{count} committed run, {span}, that did not record which publisher it covered."
+msgstr[1] ""
+"{count} committed runs, {span}, that did not record which publisher they covered."
+
+msgid "history.what_a_series_is"
+msgstr ""
+"A single run cannot tell a field that was never collected from one that was collected until "
+"recently and then stopped. Only the comparison between runs can, which is why the per-field "
+"counts behind every figure below are committed to version control on the day they are taken "
+"rather than left in a job summary."
+
+msgid "history.rates.heading"
+msgstr "Reporting rate by run"
+
+msgid "history.rates.denominator"
+msgstr ""
+"Each rate is the share of the institutions the field <em>reached</em> in that run that reported "
+"it. Institutions that suppressed the field, and institutions the requirement does not reach, "
+"leave the denominator rather than being counted as failures, so a rate here is not a share of "
+"every institution in the run."
+
+msgid "history.rates.caption"
+msgstr "Share of applicable institutions reporting each field, one column per committed run"
+
+msgid "history.rates.field"
+msgstr "Disclosure"
+
+msgid "history.cell.not_graded"
+msgstr "not graded in this run"
+
+msgid "history.cell.unmeasured"
+msgstr "rate unmeasured"
+
+msgid "history.movement.heading"
+msgstr "What moved across the series"
+
+msgid "history.movement.body"
+msgstr ""
+"The first run beside the last, as <code>disclosed drift</code> states it. The movement is in "
+"the rate and never in the count: a field can shed reporters while the share of institutions "
+"reporting it rises, because institutions left the population underneath it. A movement of at "
+"least {systemic} is called systemic, and the <a href=\"{methodology}\">methodology</a> argues "
+"for that number rather than assuming it."
+
+msgid "history.movement.one_run"
+msgstr ""
+"One run is not a comparison. There is nothing here to state until a second run of this source "
+"is committed, and stating it anyway would be a measurement made out of a single observation."
+
+msgid "history.movement.nothing_moved"
+msgstr ""
+"Nothing moved: every field this source grades reported at the same rate on {first} and on "
+"{last}, and no field entered or left the graded set between them."
+
+msgid "history.movement.caption"
+msgstr "Change in each field's reporting rate between {first} and {last}"
+
+msgid "history.movement.field"
+msgstr "Disclosure"
+
+msgid "history.movement.direction"
+msgstr "Direction"
+
+msgid "history.movement.rate_change"
+msgstr "Change in reporting rate"
+
+msgid "history.movement.reach"
+msgstr "Institutions the field reached"
+
+msgid "history.movement.systemic_column"
+msgstr "Systemic"
+
+msgid "history.movement.points"
+msgstr "{points} percentage points"
+
+msgid "history.movement.reached"
+msgid_plural "history.movement.reached"
+msgstr[0] "{count} {direction}"
+msgstr[1] "{count} {direction}"
+
+msgid "history.movement.reached_the_same"
+msgstr "the same institutions"
+
+msgid "history.movement.more"
+msgstr "more"
+
+msgid "history.movement.fewer"
+msgstr "fewer"
+
+msgid "history.movement.systemic"
+msgstr "Yes"
+
+msgid "history.movement.not_systemic"
+msgstr "No"
+
+msgid "history.movement.unmeasured_is_not_systemic"
+msgstr "Not measured, so not systemic"
+
+msgid "history.direction.gained"
+msgstr "Gained"
+
+msgid "history.direction.lost"
+msgstr "Lost"
+
+msgid "history.direction.unchanged"
+msgstr "Unchanged"
+
+msgid "history.direction.unmeasured"
+msgstr "Could not be measured"
+
+msgid "history.caveat"
+msgstr ""
+"Every figure on this page is recomputed from the committed snapshots by the same code the "
+"<code>disclosed drift</code> command runs; the <a href=\"{methodology}\">methodology</a> states "
+"the threshold and the reasoning behind it. A field a run did not grade says so rather than "
+"reading as zero, and a rate that could not be computed says that too: an absence is never "
+"published here as a measurement."
+
 #. The home page title deliberately omits the site's name: shell.title appends it, and
 #. "disclosed: what US colleges do not tell you | disclosed" says it twice.
 msgid "home.title"
@@ -820,6 +986,20 @@ msgstr ""
 
 msgid "home.artifact"
 msgstr "{institution} publishes {field} as <code>{value}</code>"
+
+msgid "home.history.heading"
+msgstr "Disclosure over time"
+
+msgid "home.history.body"
+msgstr ""
+"Every run is committed, so what a field's reporting rate did between them is checkable rather "
+"than asserted. One page per source: the two collections here share no field, and a table "
+"holding both would compare nothing and call it no change."
+
+msgid "home.history.item"
+msgid_plural "home.history.item"
+msgstr[0] "{source}: {count} committed run, {span}."
+msgstr[1] "{source}: {count} committed runs, {span}."
 
 msgid "home.by_state.heading"
 msgstr "By state"

@@ -258,7 +258,7 @@ recorded rather than smoothed over.
   `--budget-path` never makes it exit non-zero and `lighthouse@12` (12.8.2) emits no budget audit,
   reconfirmed on 2026-08-27. The **resource counts** are enforced instead by
   `tests/test_accessibility.py::TestTheResourceBudget` in `make verify`, over one page of each
-  kind and again over all 617 pages of the committed build. As of `docs/adr/0008` the
+  kind and again over all 619 pages of the committed build. As of `docs/adr/0008` the
   **transfer sizes** are enforced there too, by `::TestTheTransferSizeBudget`, reading the
   `resourceSizes` lines out of the budget file rather than restating them, and holding the bytes
   the generator writes to the 80 KiB document line. The largest published page is 65.5 KiB, which

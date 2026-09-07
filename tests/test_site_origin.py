@@ -210,7 +210,7 @@ class TestEachCheckCanFail:
         assert _run(built) == 0
 
     def test_two_pages_sharing_a_description_are_refused(self, built: Path) -> None:
-        """617 pages describing themselves identically is 617 pages a result list cannot tell
+        """619 pages describing themselves identically is 619 pages a result list cannot tell
         apart, and it is the state the sibling documentation site was actually found in."""
         home = built / "index.html"
         other = built / "methodology" / "index.html"

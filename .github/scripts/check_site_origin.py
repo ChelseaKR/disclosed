@@ -23,8 +23,8 @@ Six separate promises are checked, because they can break independently:
    came to emit five rationale links that 404 on the deployed site (issue #69) while this check
    passed the build; each reference is now resolved against the directory its page is really
    served from.
-4. Every page has a non-empty title and description, and no two pages share either. 617 pages
-   describing themselves identically is 617 pages a result list cannot tell apart.
+4. Every page has a non-empty title and description, and no two pages share either. 619 pages
+   describing themselves identically is 619 pages a result list cannot tell apart.
 5. ``sitemap.xml`` lists exactly the pages that were built, no more and no fewer. A sitemap is
    a promise that the URLs in it exist; an entry with no file behind it is a 404 with an
    invitation attached, and a built page missing from the sitemap goes unlisted.

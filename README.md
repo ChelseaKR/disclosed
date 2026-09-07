@@ -135,6 +135,35 @@ sets do not overlap: comparing across them would skip every field and print *"no
 per-field disclosure"*, which is the most reassuring possible way of saying nothing at all.
 `drift` refuses such a pair outright.
 
+### The series, on a page
+
+Until now the drift measurement lived in a job summary on a green run and in the output of a
+command, which meant the most distinctive thing this project publishes was the thing a reader was
+least likely to see. `disclosed site --snapshots-from data/snapshots` renders one
+**disclosure-history page per source** from the committed series: each field's reporting rate in
+every committed run, and what moved between the first run and the last, with the direction word,
+the change in percentage points, how far the field's denominator moved, and whether the movement
+clears the systemic threshold.
+
+Every figure on those pages is recomputed by the same `drift.compare` the command runs, and a
+test binds each cell to it rather than to a number written into a fixture. Three absences a rate
+table would otherwise collapse into `0%` are kept apart and said in words: a field a run never
+graded, a field whose denominator was empty so it has no rate, and a movement that could not be
+measured in one of the two runs and therefore gets no direction word at all — `FieldDrift.direction`
+falls back to the sign of the raw count, which is a reasonable last resort for a terminal and is
+not one for a page whose whole argument is that the count and the rate can point opposite ways.
+
+One source per page, because `drift` refuses a mixed pair for a reason, and a snapshot written
+before scope existed lands on a page that says the source was not recorded rather than being
+folded into the nearest named collection. Without the flag the build is byte-for-byte what it was
+and the site makes no claim about drift, which is the honest rendering of a build that was never
+shown the series.
+
+The committed IPEDS series is what the page is worth reading for: across 2021–2023 the athletics
+disclosure is the only movement over the threshold, and admissions information gained 1.67 points
+while reaching 131 *fewer* institutions — the exact pair of facts a count-based reading got
+backwards.
+
 ### Which institutions, and whether we moved the rules
 
 `drift` says four hundred institutions stopped publishing a field. `diff-report` says which ones,
@@ -506,7 +535,7 @@ bytes. The published site is built without it until the service is deployed, whi
 separate decision. That is enforced in
 `make verify`, by parsing the built HTML for anything that would make a browser fetch a second
 file: once over a fixture holding one page of every kind, and once over the whole published
-site, all 617 pages of it, rendered from `data/report.json`, `data/national.json` and
+site, all 619 pages of it, rendered from `data/report.json`, `data/national.json` and
 `data/scorecard-census.json`. The second pass exists because the fixture's report carries no
 implausible finding, so the markup both the
 home page and the institution pages render around a finding was never parsed by anything, and a
@@ -528,7 +557,7 @@ Moving the counts out of that file fixed one line and left the rest of it in the
 file had been in. The `resourceSizes` lines went on being cited here, in the workflow and in the
 metrics ledger, and went on being enforced by nothing; the ledger said so in as many words, which
 is honest and is not the same as a gate. They are enforced now, in `make verify`, over the
-six-page fixture and again over all 617 published pages: **80 KiB** for the document and **80 KiB**
+six-page fixture and again over all 619 published pages: **80 KiB** for the document and **80 KiB**
 for the page in total, read out of `lighthouse-budget.json` rather than copied out of it, so
 widening the budget widens the test and has to be argued for here. The largest page the committed
 report renders is California's state page at **66.6 KiB**, and that figure is in this sentence
@@ -702,7 +731,7 @@ skips.
 | Documentation | Applies - `CHANGELOG.md`, `CITATION.cff`, `SECURITY.md`, `CONTRIBUTING.md`, ADR log (`docs/adr/`), roadmap and metrics ledger (`docs/ROADMAP.md`) |
 | Quality & Metrics | Applies - metrics ledger with AUTO/REVIEW gates in `docs/ROADMAP.md` |
 | Release & Versioning | N/A - nothing versioned is released; committed data plus a rebuildable static site, no downstream consumers (`docs/adr/0001-no-versioned-release.md`) |
-| Performance | Applies - every line of `lighthouse-budget.json` is enforced by something named. Zero non-document subresources **and** the transfer-size budget in `make verify` over one page of every kind and again over all 617 pages of the committed build (`tests/test_accessibility.py`), with the numbers read out of the budget file rather than copied from it; the three timing lines by `.github/scripts/check_lighthouse_timings.py` in the Lighthouse job, gated only after the runner itself was measured ([ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md), then [ADR 0010](docs/adr/0010-the-timing-budget-becomes-a-gate-after-the-runner-was-measured.md)). A budget line in neither register fails the build. No server-side surface to load-test |
+| Performance | Applies - every line of `lighthouse-budget.json` is enforced by something named. Zero non-document subresources **and** the transfer-size budget in `make verify` over one page of every kind and again over all 619 pages of the committed build (`tests/test_accessibility.py`), with the numbers read out of the budget file rather than copied from it; the three timing lines by `.github/scripts/check_lighthouse_timings.py` in the Lighthouse job, gated only after the runner itself was measured ([ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md), then [ADR 0010](docs/adr/0010-the-timing-budget-becomes-a-gate-after-the-runner-was-measured.md)). A budget line in neither register fails the build. No server-side surface to load-test |
 | Incident Response | Applies - no incidents to date; postmortems will live in `docs/incidents/` |
 | Data Governance | Applies - public federal datasets only, each payload names its source and coverage in its `scope` block; data inventory in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | AI Development Measurement | Applies - declared in `docs/ROADMAP.md` metrics ledger |
