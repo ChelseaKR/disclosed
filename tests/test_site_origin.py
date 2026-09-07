@@ -18,6 +18,7 @@ are broken independently here, one at a time, against a site that is otherwise c
 from __future__ import annotations
 
 import importlib.util
+import json
 import re
 import sys
 from pathlib import Path
@@ -26,7 +27,7 @@ from typing import Any
 
 import pytest
 
-from disclosed import site
+from disclosed import rules, site
 
 _ROOT = Path(__file__).resolve().parent.parent
 _SCRIPT = _ROOT / ".github" / "scripts" / "check_site_origin.py"
@@ -297,6 +298,98 @@ class TestEachCheckCanFail:
     def test_a_missing_robots_is_refused(self, built: Path) -> None:
         (built / "robots.txt").unlink()
         assert _run(built) == 1
+
+
+class TestAPublishedIdentifierResolvesWhereItSaysItDoes:
+    """The rule-file schema's ``$id``, which was a 404 for as long as it has existed.
+
+    ``schema/classification.v1.schema.json`` has been committed, versioned and described as
+    published in the README, in ``docs/CLASSIFIER.md`` and in the schema's own ``$id`` since the
+    classifier was factored out. Nothing wrote it into the site. The deployed build is exactly
+    what ``site.build`` produces, that path was never among the files it produced, and
+    https://chelseakr.github.io/disclosed/schema/classification.v1.schema.json returned 404
+    while three documents said it was published.
+
+    It is issue #2 one file type across, and worse in one respect: a canonical link that points
+    at the wrong host is at least read by a person eventually, whereas an ``$id`` is
+    dereferenced by a validator that reports to nobody.
+    """
+
+    def test_the_build_writes_the_schema_at_the_path_its_identifier_names(
+        self, built: Path
+    ) -> None:
+        published = built / rules.SCHEMA_PATH
+
+        assert published.is_file()
+
+    def test_the_published_identifier_is_the_origin_this_build_was_rendered_for(
+        self, built: Path
+    ) -> None:
+        """Stamped like a canonical link, and for the same reason.
+
+        A schema served at one host and claiming to live at another sends every validator that
+        follows it to a different site.
+        """
+        payload = json.loads((built / rules.SCHEMA_PATH).read_text(encoding="utf-8"))
+
+        assert payload["$id"] == f"{_ORIGIN}/{rules.SCHEMA_PATH}"
+
+    def test_at_the_real_origin_the_published_schema_is_the_committed_one_byte_for_byte(
+        self, tmp_path: Path
+    ) -> None:
+        """The published document and the committed document are one document, not two.
+
+        ``tests/test_classifier_library.py`` already holds the committed file equal to
+        ``rules.schema()`` as parsed JSON. This is the third corner: what a consumer downloads
+        from the site is the same bytes as what they get from a clone.
+        """
+        out = tmp_path / "real"
+        site.build(_REPORT, out, origin=site.DEFAULT_ORIGIN, generated="2026-08-05")
+
+        assert (out / rules.SCHEMA_PATH).read_bytes() == (_ROOT / rules.SCHEMA_PATH).read_bytes()
+
+    def test_the_committed_identifier_names_the_origin_the_site_is_deployed_to(self) -> None:
+        """Otherwise the committed file is correct about a host nobody publishes."""
+        assert rules.SCHEMA_ORIGIN == site.DEFAULT_ORIGIN
+
+    def test_an_identifier_pointing_somewhere_the_build_does_not_serve_is_refused(
+        self, built: Path
+    ) -> None:
+        published = built / rules.SCHEMA_PATH
+        payload = json.loads(published.read_text(encoding="utf-8"))
+        payload["$id"] = "https://elsewhere.test/schema/classification.v1.schema.json"
+        published.write_text(json.dumps(payload), encoding="utf-8")
+
+        assert _run(built) == 1
+
+    def test_a_build_that_published_no_identifier_at_all_is_refused(self, built: Path) -> None:
+        """A loop over an empty set reports success, which is this project's own defect class.
+
+        Deleting the schema returns the site to exactly the state this class was written about,
+        and a checker that called that state fine would be the thing it replaced.
+        """
+        (built / rules.SCHEMA_PATH).unlink()
+
+        assert _run(built) == 1
+
+    def test_a_published_json_document_that_is_not_readable_is_refused(self, built: Path) -> None:
+        (built / rules.SCHEMA_PATH).write_text("{not json", encoding="utf-8")
+
+        assert _run(built) == 1
+
+    def test_a_published_document_with_no_identifier_is_not_mistaken_for_one(
+        self, built: Path
+    ) -> None:
+        """Receipts are JSON and carry no ``$id``; they must not be held to a rule about ``$id``.
+
+        Written as a test rather than left to the ``if`` in the checker, because "skipped" and
+        "checked and passed" are the same green and only one of them is right here.
+        """
+        (built / "institution" / "1" / "receipt.json").write_text(
+            json.dumps({"unit_id": "1"}), encoding="utf-8"
+        )
+
+        assert _run(built) == 0
 
 
 class TestItRefusesRatherThanCertifyingNothing:

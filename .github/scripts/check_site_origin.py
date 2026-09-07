@@ -6,7 +6,7 @@ notice it had stopped being true. This check closes that: it is given the deploy
 Pages API actually reported, and it refuses the build unless every URL the site emits agrees
 with it.
 
-Six separate promises are checked, because they can break independently:
+Seven separate promises are checked, because they can break independently:
 
 1. Every page's ``<link rel="canonical">`` is the deploy target plus that page's own path. A
    page that self-canonicalises somewhere else tells crawlers to index the other place.
@@ -29,6 +29,12 @@ Six separate promises are checked, because they can break independently:
    a promise that the URLs in it exist; an entry with no file behind it is a 404 with an
    invitation attached, and a built page missing from the sitemap goes unlisted.
 6. ``robots.txt`` advertises the sitemap under the same origin.
+7. Every JSON document the build writes that carries an ``$id`` is served at the address that
+   ``$id`` names. A ``$id`` is not a label: it is the URL a consumer's validator dereferences,
+   so a schema whose ``$id`` points somewhere the build does not write is a 404 with a version
+   number on it. ``schema/classification.v1.schema.json`` was in exactly that state --
+   committed, versioned, described as published in three places, and never written into the
+   site -- which is issue #2 again, one file type across.
 
 On (6), and said here rather than left to look like more than it is: a ``robots.txt`` is only
 read at an origin root. Crawlers fetch ``https://chelseakr.github.io/robots.txt``, which this
@@ -43,6 +49,7 @@ Usage: check_site_origin.py <site-dir> <base-url>
 
 from __future__ import annotations
 
+import json
 import posixpath
 import re
 import sys
@@ -173,6 +180,42 @@ def _check_sitemap(site_dir: Path, expected: set[str]) -> list[str]:
     ]
 
 
+def _check_schema_ids(site_dir: Path, base: str) -> list[str]:
+    """Every ``$id`` the build published must resolve to the file that carries it.
+
+    Read from the built output rather than from the repository, because the repository is not
+    what a consumer dereferences. A schema committed at the right path and absent from the
+    deployed site is the failure this exists to catch, and it is invisible from a clone.
+    """
+    documents = sorted(site_dir.rglob("*.json"))
+    problems: list[str] = []
+    checked = 0
+    for document in documents:
+        try:
+            payload = json.loads(document.read_text(encoding="utf-8"))
+        except ValueError as exc:
+            problems.append(f"{document}: is not readable JSON ({exc})")
+            continue
+        if not isinstance(payload, dict) or "$id" not in payload:
+            continue
+        checked += 1
+        want = f"{base}/{document.relative_to(site_dir).as_posix()}"
+        if payload["$id"] != want:
+            problems.append(
+                f"{document}: $id is {payload['$id']!r} but the build serves it at {want!r}; "
+                "an $id is the address a validator dereferences, so this one resolves to a 404"
+            )
+    if not checked:
+        # A loop over an empty set reports success, and this project has already found that
+        # shape in its own repository more than once. The site has published a schema since the
+        # classifier was factored out; a build with none is a build that dropped it.
+        problems.append(
+            f"no published JSON document under {site_dir} carries an $id. The rule-file schema "
+            "is supposed to be one of them, and a check that examined nothing is not a pass."
+        )
+    return problems
+
+
 def _check_robots(site_dir: Path, base: str) -> list[str]:
     """robots.txt must point at the sitemap under the same origin."""
     robots = site_dir / "robots.txt"
@@ -212,6 +255,7 @@ def main(argv: list[str]) -> int:
     problems += _check_self_description(site_dir, pages)
     problems += _check_sitemap(site_dir, expected)
     problems += _check_robots(site_dir, base)
+    problems += _check_schema_ids(site_dir, base)
 
     if problems:
         _report(problems, base)

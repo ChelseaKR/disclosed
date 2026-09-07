@@ -43,6 +43,8 @@ from .fields import APPLICABILITY_PREDICATES, Field, predicate_name
 
 __all__ = [
     "RULES_FORMAT_VERSION",
+    "SCHEMA_ORIGIN",
+    "SCHEMA_PATH",
     "STATE_COLUMN_SUFFIX",
     "Rule",
     "RuleFileError",
@@ -64,9 +66,15 @@ RULES_FORMAT_VERSION: Final[int] = 1
 # One suffix, in one place, because a consumer joining on it should not have to guess.
 STATE_COLUMN_SUFFIX: Final[str] = "_disclosure"
 
-_SCHEMA_ID: Final[str] = (
-    "https://chelseakr.github.io/disclosed/schema/classification.v1.schema.json"
-)
+#: Where the published rule-file schema says it lives, split into the origin it is served from
+#: and the path under it. Split rather than written as one string because the path is what the
+#: site build has to write the file at: an ``$id`` is a promise that the document resolves there,
+#: and until the build wrote it the promise was a 404 that nothing in this repository could
+#: notice. ``.github/scripts/check_site_origin.py`` holds the origin half against the deploy
+#: target the Pages API actually reported, which is the only place it can be checked honestly.
+SCHEMA_PATH: Final[str] = "schema/classification.v1.schema.json"
+SCHEMA_ORIGIN: Final[str] = "https://chelseakr.github.io/disclosed"
+_SCHEMA_ID: Final[str] = f"{SCHEMA_ORIGIN}/{SCHEMA_PATH}"
 
 # Every key a rule object may carry. Unknown keys are refused rather than ignored: a rule file
 # with ``credible_maximum`` in it is a file whose author believed they had set an upper bound, and

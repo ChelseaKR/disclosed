@@ -39,6 +39,8 @@ from .messages import SOURCE_LOCALE, Catalog, load
 from .peers import MIN_PEERS
 from .receipts import ReceiptSource
 from .receipts import dumps as dump_receipt
+from .rules import SCHEMA_PATH
+from .rules import schema as rule_schema
 from .scope import Scope, scope_from_payload
 
 __all__ = ["Page", "ReceiptMismatch", "build", "history_page", "history_path", "slug"]
@@ -1672,6 +1674,38 @@ def build(
     # fetched once, by a crawler on another host, and a 404 there is reported to nobody. It is a
     # byte copy rather than a render, so a rebuild of the same report stays byte-identical.
     (out_dir / OG_CARD_NAME).write_bytes(_OG_CARD_SOURCE.read_bytes())
+
+    # The published rule-file schema, written at the address its own ``$id`` names.
+    #
+    # `schema/classification.v1.schema.json` has been committed and versioned since the
+    # classifier was factored out, and its `$id` says in terms that it resolves at
+    # https://chelseakr.github.io/disclosed/schema/classification.v1.schema.json. Nothing put it
+    # there. The deployed site is exactly what this function writes, that path was never among
+    # the files it wrote, and the URL served a 404 while the schema, the README and
+    # docs/CLASSIFIER.md all described it as published. A `$id` is a resolvable address by
+    # definition -- it is what a consumer's validator dereferences -- so this was a promise the
+    # build was not keeping, and it was invisible because the file existed in the repository.
+    #
+    # Rendered from ``rules.schema()`` rather than copied off disk, for two reasons. The
+    # committed file lives at the repository root, outside the installed package, so a copy
+    # would work from a clone and silently write nothing from a wheel. And
+    # ``tests/test_classifier_library.py`` already holds the committed file equal to that
+    # function, so generating it here means the published document, the committed document and
+    # the code cannot come apart in any pair.
+    #
+    # The ``$id`` is stamped with the origin this build is for, exactly as the canonical links
+    # are, and for the same reason: an ``$id`` states where the document *is*. A copy served at
+    # one host claiming to live at another is issue #2 with a version number on it, and it would
+    # be the more damaging form, because a validator follows an ``$id`` without a human ever
+    # seeing the address. At ``DEFAULT_ORIGIN`` the result is byte-identical to the committed
+    # file, which a test asserts.
+    published_schema = dict(rule_schema())
+    published_schema["$id"] = f"{origin}/{SCHEMA_PATH}"
+    schema_target = out_dir / SCHEMA_PATH
+    schema_target.parent.mkdir(parents=True, exist_ok=True)
+    schema_target.write_text(
+        json.dumps(published_schema, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+    )
 
     # robots.txt, written where this site lives rather than where robots.txt is
     # read. Worth being plain about, because the file looks like coverage it
