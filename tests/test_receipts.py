@@ -224,6 +224,40 @@ class TestTheReplayCatchesATamperedReceipt:
         assert result.exit_code == receipts.DISAGREES
         assert "rules_version" in {d.what for d in result.disagreements}
 
+    def test_a_rewritten_score_is_named_even_when_every_classification_agrees(
+        self, sample_source: receipts.ReceiptSource
+    ) -> None:
+        """The arithmetic is part of the claim. A receipt whose fields all agree but whose grade
+        was edited is exactly the tampering a field-only comparison would wave through."""
+        receipt = self._receipt(sample_source)
+        receipt["score"] = 0.11
+        receipt["letter"] = "F"
+
+        result = receipts.verify(
+            receipt, list(sample_source.records.values()), source=sample_source.identity
+        )
+
+        assert result.exit_code == receipts.DISAGREES
+        assert {d.what for d in result.disagreements} == {"score", "letter"}
+
+    def test_a_field_entry_that_is_not_a_field_entry_is_ignored_rather_than_crashing(
+        self, sample_source: receipts.ReceiptSource
+    ) -> None:
+        """A hand-edited receipt is the normal input here, so junk in the list is not a traceback.
+
+        It is also not silently an agreement: the entries that *are* readable still have to match,
+        which is what the assertion below checks.
+        """
+        receipt = self._receipt(sample_source)
+        receipt["fields"].append("not an object")
+        receipt["fields"].append({"label": "no key at all", "classification": "missing"})
+
+        result = receipts.verify(
+            receipt, list(sample_source.records.values()), source=sample_source.identity
+        )
+
+        assert result.exit_code == receipts.AGREES
+
     def test_an_institution_the_source_does_not_hold_is_not_a_disagreement(
         self, sample_source: receipts.ReceiptSource
     ) -> None:
@@ -297,6 +331,22 @@ class TestTheVerbsAndTheirExitCodes:
 
         assert code == receipts.DISAGREES
         assert payload["fields"][0]["key"] in capsys.readouterr().out
+
+    def test_a_receipt_naming_another_capture_says_so_before_the_verdict(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """A reader who does not know the receipt names other bytes cannot interpret the answer."""
+        written = self._written(tmp_path)
+        payload = json.loads(written.read_text(encoding="utf-8"))
+        payload["source"]["sha256"] = "f" * 64
+        written.write_text(receipts.dumps(payload), encoding="utf-8")
+        capsys.readouterr()
+
+        code = cli.main(["verify-receipt", str(written), "--source", str(SAMPLE)])
+
+        out = capsys.readouterr().out
+        assert code == receipts.AGREES
+        assert "ffffffffffff" in out and "agrees with the receipt" in out
 
     def test_a_receipt_for_a_missing_institution_exits_two(self, tmp_path: Path) -> None:
         written = self._written(tmp_path)
