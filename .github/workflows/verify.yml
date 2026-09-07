@@ -93,7 +93,18 @@ jobs:
         run: >
           python -m disclosed.cli site
           --report /tmp/report.json --national data/national.json
+          --receipts-from data/sample.json
           --out /tmp/site --generated "${GITHUB_SHA}"
+      # Every receipt the build wrote, replayed against the same committed records the report was
+      # graded from. `make verify` does this over the same set in `tests/test_receipts.py`; this
+      # is the end-to-end form, over the files that actually reached the output directory.
+      - name: Replay every receipt the build wrote
+        run: |
+          written=$(find /tmp/site/institution -name receipt.json | wc -l)
+          test "$written" -ge 500
+          find /tmp/site/institution -name receipt.json -print0 | xargs -0 \
+            python -m disclosed.cli verify-receipt --source data/sample.json > /dev/null
+          echo "$written receipts replayed"
       # The committed dataset.csv is what anyone citing this project will download, so it must
       # never fall behind the report it claims to describe. A test asserts they match; this
       # proves the export still runs end to end.

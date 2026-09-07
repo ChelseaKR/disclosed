@@ -903,51 +903,66 @@ def _cmd_receipt(args: argparse.Namespace) -> int:
     return receipts.AGREES
 
 
-def _cmd_verify_receipt(args: argparse.Namespace) -> int:
-    """Regrade the record a receipt names and report every difference.
-
-    Exit codes are the interface: 0 the replay agrees, 1 it disagrees, 2 the source does not hold
-    that institution, 3 the receipt could not be read. The last is separate on purpose -- a
-    verifier that returned "agrees" for a file it failed to parse would be a check that cannot
-    fail.
-    """
+def _verify_one(
+    path: str, source: receipts.ReceiptSource, *, as_json: bool
+) -> tuple[int, dict[str, Any] | None]:
+    """Replay one receipt and print what happened, or say why it could not be read."""
     try:
-        raw = json.loads(Path(args.receipt).read_text(encoding="utf-8"))
-        receipt = receipts.read_receipt(raw)
+        receipt = receipts.read_receipt(json.loads(Path(path).read_text(encoding="utf-8")))
     except (OSError, json.JSONDecodeError) as exc:
-        print(f"{args.receipt} could not be read as JSON: {exc}", file=sys.stderr)
-        return receipts.UNREADABLE
+        print(f"{path} could not be read as JSON: {exc}", file=sys.stderr)
+        return receipts.UNREADABLE, None
     except receipts.ReceiptError as exc:
-        print(f"{args.receipt} is not a receipt this build can verify: {exc}", file=sys.stderr)
-        return receipts.UNREADABLE
+        print(f"{path} is not a receipt this build can verify: {exc}", file=sys.stderr)
+        return receipts.UNREADABLE, None
 
-    source = _receipt_source(args.source)
-    if source is None:
-        return receipts.UNREADABLE
     result = receipts.verify(receipt, list(source.records.values()), source=source.identity)
-
-    if args.json:
-        print(json.dumps(result.as_dict(), indent=2, sort_keys=True))
-        return result.exit_code
+    if as_json:
+        return result.exit_code, result.as_dict()
 
     if not result.same_source:
         # Said first, and said whatever the verdict is. A reader who does not know the receipt
         # names other bytes than the ones just replayed cannot interpret either answer.
+        stated = receipt.get("source")
+        digest = stated.get("sha256") if isinstance(stated, dict) else None
         print(
-            f"note: this receipt names capture {receipt.get('source', {}).get('sha256', '?')[:12]}"
-            f" and was replayed against {source.identity.short_sha256}. Any difference below may "
-            "be the two captures disagreeing rather than the grader."
+            f"{path}: note, this receipt names capture {str(digest)[:12]} and was replayed "
+            f"against {source.identity.short_sha256}. Any difference below may be the two "
+            "captures disagreeing rather than the grader."
         )
     if not result.found:
-        print(f"{result.unit_id} is not in {args.source}; nothing was replayed")
-        return result.exit_code
-    if not result.disagreements:
-        print(f"{result.unit_id}: the replay agrees with the receipt on every field")
-        return result.exit_code
-    print(f"{result.unit_id}: the replay disagrees with the receipt")
-    for disagreement in result.disagreements:
-        print(f"  {disagreement.sentence()}")
-    return result.exit_code
+        print(f"{path}: {result.unit_id} is not in the source; nothing was replayed")
+    elif not result.disagreements:
+        print(f"{path}: {result.unit_id} agrees with the receipt on every field")
+    else:
+        print(f"{path}: {result.unit_id} disagrees with the receipt")
+        for disagreement in result.disagreements:
+            print(f"  {disagreement.sentence()}")
+    return result.exit_code, None
+
+
+def _cmd_verify_receipt(args: argparse.Namespace) -> int:
+    """Regrade the record each receipt names and report every difference.
+
+    Exit codes are the interface: 0 every replay agrees, 1 one disagrees, 2 the source does not
+    hold that institution, 3 a receipt could not be read. Over several receipts the worst outcome
+    is returned, because a batch that reported the best one would be a check that cannot fail.
+    """
+    source = _receipt_source(args.source)
+    if source is None:
+        return receipts.UNREADABLE
+    worst = receipts.AGREES
+    payloads: list[dict[str, Any]] = []
+    for path in args.receipt:
+        code, payload = _verify_one(path, source, as_json=args.json)
+        worst = max(worst, code)
+        if payload is not None:
+            payloads.append(payload)
+    if args.json:
+        print(
+            json.dumps(payloads if len(args.receipt) > 1 else payloads[0], indent=2, sort_keys=True)
+        )
+    return worst
 
 
 def _cmd_site(args: argparse.Namespace) -> int:
@@ -1379,7 +1394,14 @@ def main(argv: list[str] | None = None) -> int:
             "the verdict: the exit code is reserved for what the grader says."
         ),
     )
-    p_verify_receipt.add_argument("receipt", help="a receipt written by `disclosed receipt`")
+    p_verify_receipt.add_argument(
+        "receipt",
+        nargs="+",
+        help=(
+            "one or more receipts written by `disclosed receipt`. Over several, the worst outcome "
+            "is returned: a batch reporting its best result would be a check that cannot fail"
+        ),
+    )
     p_verify_receipt.add_argument(
         "--source", required=True, help="the records to regrade the institution from"
     )
