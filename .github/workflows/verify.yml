@@ -95,6 +95,7 @@ jobs:
           --report /tmp/report.json --national data/national.json
           --receipts-from data/sample.json
           --snapshots-from data/snapshots
+          --package datapackage.json
           --out /tmp/site --generated "${GITHUB_SHA}"
       # Every receipt the build wrote, replayed against the same committed records the report was
       # graded from. `make verify` does this over the same set in `tests/test_receipts.py`; this

@@ -34,6 +34,7 @@ from . import (
     history,
     messages,
     national,
+    package,
     receipts,
     registry,
     registry_properties,
@@ -647,7 +648,7 @@ def _cmd_diff_report(args: argparse.Namespace) -> int:
 
 
 def _cmd_dataset(args: argparse.Namespace) -> int:
-    """Write the CSV export and the Table Schema that describes it, from one report."""
+    """Write the CSV export, the Table Schema, and optionally the whole corpus's descriptor."""
     report = json.loads(Path(args.report).read_text(encoding="utf-8"))
     if not report.get("grades"):
         print(f"{args.report} contains no graded institutions; refusing to export", file=sys.stderr)
@@ -659,6 +660,18 @@ def _cmd_dataset(args: argparse.Namespace) -> int:
     schema_path.write_text(dataset.to_schema_json(path=out.name), encoding="utf-8")
     print(f"exported {len(report['grades'])} rows -> {out}")
     print(f"                          schema -> {schema_path}")
+    if args.package:
+        # Written after the CSV and its schema, because the descriptor records their size and
+        # digest and a package generated first would describe the previous export.
+        package_path = Path(args.package)
+        try:
+            descriptor = package.build(Path(args.root))
+        except package.PackageError as exc:
+            print(f"refusing to write a package descriptor: {exc}", file=sys.stderr)
+            return 1
+        package_path.parent.mkdir(parents=True, exist_ok=True)
+        package_path.write_text(package.dumps(descriptor), encoding="utf-8")
+        print(f"      {len(descriptor['resources'])} resources described -> {package_path}")
     return 0
 
 
@@ -1004,6 +1017,9 @@ def _cmd_site(args: argparse.Namespace) -> int:
                 file=sys.stderr,
             )
             return 1
+    package_payload = (
+        json.loads(Path(args.package).read_text(encoding="utf-8")) if args.package else None
+    )
     out = Path(args.out)
     try:
         pages = site.build(
@@ -1017,6 +1033,7 @@ def _cmd_site(args: argparse.Namespace) -> int:
             locale=args.locale,
             receipts=receipt_source,
             histories=histories,
+            package=package_payload,
         )
     except site.ReceiptMismatch as exc:
         # The report and the receipt source disagree about a classification, so the page and the
@@ -1251,6 +1268,21 @@ def main(argv: list[str] | None = None) -> int:
     p_data = sub.add_parser("dataset", help="export a report as CSV plus a Table Schema")
     p_data.add_argument("--report", default="data/report.json")
     p_data.add_argument("--out", default="data/dataset.csv")
+    p_data.add_argument(
+        "--package",
+        default=None,
+        help=(
+            "also write a Frictionless data package descriptor for the whole committed corpus. "
+            "Every resource's size and digest are read off the files themselves, so the "
+            "descriptor cannot name a file this repository does not hold; a path that does not "
+            "resolve refuses the write rather than being published"
+        ),
+    )
+    p_data.add_argument(
+        "--root",
+        default=".",
+        help="the repository root every resource path in --package is relative to",
+    )
     p_data.set_defaults(func=_cmd_dataset)
 
     p_classify = sub.add_parser(
@@ -1379,6 +1411,16 @@ def main(argv: list[str] | None = None) -> int:
             "links them; without it the build is byte-for-byte what it was and the site makes no "
             "claim about drift, which is the honest rendering of a build that was never shown "
             "the series"
+        ),
+    )
+    p_site.add_argument(
+        "--package",
+        default=None,
+        help=(
+            "a Frictionless descriptor written by `disclosed dataset --package`. With it the "
+            "home page's head carries a schema.org Dataset block and dataset.jsonld is served "
+            "beside the pages; without it the build is byte-for-byte what it was and the site "
+            "makes no machine-readable claim about a corpus it was not shown"
         ),
     )
     p_site.add_argument("--out", default="site")

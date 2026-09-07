@@ -29,6 +29,29 @@ file is the human-readable one.
 
 ### Added
 
+- **The whole corpus is one descriptor now, and it cannot describe a file the repository does
+  not hold.** Every artifact here was committed, reproducible and individually documented, and
+  nothing said what the *set* was: a reader who found `data/dataset.csv` had no way to learn that
+  the report it came from, the capture that report was graded from, the national artifact, the
+  two registry measurements and twenty-one committed snapshots are the same corpus, let alone
+  which bytes they were supposed to be.
+  `datapackage.json` at the repository root is a Frictionless data package naming all
+  thirty-eight, each with its media type, its size and its SHA-256 — all three read off the file
+  rather than maintained by hand. A resource whose path does not resolve refuses the write, and a
+  test compares every digest against the bytes on every run: a descriptor is dereferenced by a
+  program, so a path that does not resolve turns "I cannot find this data" into "this data is
+  broken", and nobody would see it happen. `created` is the `walked_at` the capture's provenance
+  records rather than the clock, so regenerating the file is a no-op in git and the corpus is
+  dated to the walk rather than to a rerun.
+  The same corpus is served as a schema.org `Dataset` at `dataset.jsonld`, with a shorter form of
+  the identical document in the home page's `<head>` for harvesters. Every field is read out of
+  the package, so the two cannot disagree. `disclosed dataset --package` writes it, `disclosed
+  site --package` publishes it, and without the flag the site build is byte-for-byte what it was.
+  A register in `package.EXCLUDED` names each committed file that is deliberately not a resource
+  with the reason, and a test refuses a file that is in neither — a silent skip and a documented
+  exclusion look identical from outside, and only one of them is a decision somebody made.
+
+
 - **The disclosure history is a page now, not a job summary.** Seventeen daily Scorecard
   snapshots and three IPEDS collection years were committed and the only way to read them was to
   run `disclosed drift` twice by hand or to open a job summary on a green run — so the most

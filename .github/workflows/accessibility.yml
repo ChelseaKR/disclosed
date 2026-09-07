@@ -87,6 +87,7 @@ jobs:
             --report /tmp/report.json --national data/national.json \
             --scorecard-census data/scorecard-census.json \
             --snapshots-from data/snapshots \
+            --package datapackage.json \
             --out site --generated "${GITHUB_SHA}"
 
       - name: Serve it

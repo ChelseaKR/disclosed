@@ -68,6 +68,7 @@ jobs:
           --scorecard-census data/scorecard-census.json
           --receipts-from data/sample.json
           --snapshots-from data/snapshots
+          --package datapackage.json
           --out site
           --origin "$SITE_ORIGIN"
           --generated "$(date -u +%F)"

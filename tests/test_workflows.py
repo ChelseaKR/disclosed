@@ -346,6 +346,50 @@ class TestTheDailySnapshotGradesACaptureItCanProve:
         assert "path: /tmp/capture.json" in block
 
 
+class TestThePackageDescriptorTravelsWithTheSnapshot:
+    """The descriptor names every committed artifact, and a snapshot is one of them.
+
+    ``tests/test_package.py`` holds the descriptor to the files it *names* -- it cannot describe
+    a file the repository does not hold. It deliberately does not gate the other direction for
+    the daily series, because that would be a test going red overnight for a reason nobody
+    caused. This is what keeps the other direction true instead: the workflow regenerates the
+    descriptor and commits it in the same commit as the snapshot, so the two never come apart by
+    a day.
+    """
+
+    def _index(self, pattern: str) -> int:
+        lines = _steps(_WORKFLOW)
+        found = [i for i, line in enumerate(lines) if re.search(pattern, line)]
+        assert found, f"snapshot.yml has no executable line matching {pattern!r}"
+        return found[0]
+
+    def test_the_descriptor_is_regenerated_before_the_commit(self) -> None:
+        regenerated = self._index(r"--package datapackage\.json --root \.$")
+        committed = self._index(r"^git add data/snapshots/ datapackage\.json$")
+        assert regenerated < committed
+
+    def test_the_descriptor_is_staged_with_the_snapshot_and_not_beside_it(self) -> None:
+        """Staged together, so a run that adds a snapshot and not the descriptor cannot commit."""
+        assert "git add data/snapshots/ datapackage.json" in _WORKFLOW
+        assert (
+            "git diff --cached --quiet --exit-code -- data/snapshots/ datapackage.json" in _WORKFLOW
+        )
+
+    def test_regenerating_it_does_not_overwrite_the_committed_export(self) -> None:
+        """The command writes a CSV too, and the daily job has no business rewriting that one.
+
+        The export is regenerated from ``data/report.json`` by ``make dataset`` in the commit
+        that changes the report. Letting a nightly job write it would put a second author on a
+        committed artifact, and a difference there would appear on a day nobody touched it.
+        """
+        lines = _steps(_WORKFLOW)
+        regenerated = next(
+            i for i, line in enumerate(lines) if "--package datapackage.json" in line
+        )
+        block = " ".join(lines[max(0, regenerated - 3) : regenerated + 1])
+        assert "--out /tmp/dataset.csv" in block
+
+
 class TestTheSecurityScansCanFail:
     """The three scans in ``security.yml``, checked for the ways a scan reports nothing.
 
