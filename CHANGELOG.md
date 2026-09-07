@@ -10,6 +10,26 @@ file is the human-readable one.
 
 ### Added
 
+- **`disclosed diff-report` says which institutions moved, and refuses to guess who moved
+  them.** `drift` measures the population: four hundred institutions stopped publishing a field.
+  The new verb compares two whole reports institution by institution and states every move as a
+  transition between two of the five states (`reported -> missing`, `not_applicable -> missing`,
+  and so on), with a transition matrix, the institutions that entered or left the frame, and
+  `--institution <unit_id>` for one of them. The unit is the transition and never the value: a
+  college that published a 31% admission rate and now publishes 44% has disclosed exactly as much
+  as before and produces no transition, so a report diffed against itself is empty.
+  Every report now carries `rules_version`, the version of this repository's own bands, credible
+  ranges and applicability predicates, and the verb refuses a pair naming two different versions
+  while naming both. `reported -> implausible` has two possible authors — the institution
+  published a different number, or we rewrote the range it is checked against — and those are
+  opposite findings. A report that states no version is not treated as agreeing with one that
+  does; the comparison runs and says out loud that it could not confirm the rules. Three further
+  absences are carried rather than resolved: a grade with no `unit_id` is counted as unmatchable
+  instead of keyed on the empty string, a classification word this build cannot read is reported
+  as unreadable instead of counted as a move, and a field graded in only one of the two reports
+  is not compared at all, because adding a field to the graded set is a change in this project
+  and not in the publisher.
+
 - **The five-state classifier is now something another project can use.** `classify` and
   `Disclosure` were already the most careful thing in this repository and the only way to reach
   them was to copy five keyword arguments into a new call site and remember `sentinels`.

@@ -4,7 +4,8 @@
 ``grade`` runs the checks against the College Scorecard, live or from a capture, and writes a
 report. ``crosscheck`` does the same against the whole IPEDS directory and reports where the two
 federal sources disagree. ``snapshot`` reduces either to per-field counts, ``drift`` compares two
-of those, ``national`` reduces a population-wide run to the artifact the site's national claims
+of those, ``diff-report`` compares two whole reports institution by institution as five-state
+transitions, ``national`` reduces a population-wide run to the artifact the site's national claims
 rest on, ``dataset`` exports CSV, and ``site`` renders a report as static HTML.
 
 The reductions exist because the full runs are large and regenerable while the claims made about
@@ -40,8 +41,10 @@ from . import (
 from .disclosure import CLASSIFICATIONS
 from .drift import Snapshot, as_payload, compare
 from .fields import ALL_FIELDS, FIELDS, IPEDS_FIELDS
-from .grading import InstitutionGrade, grade_institution, summarize
+from .grading import RULES_VERSION, InstitutionGrade, grade_institution, summarize
 from .peers import peer_context
+from .report_diff import NOT_GRADEABLE, InstitutionChange, ReportDiff, compare_reports
+from .report_diff import as_payload as as_diff_payload
 from .scope import NATIONAL, SAMPLE, Scope, scope_from_payload
 from .sources import college_scorecard, credential_registry, ipeds
 
@@ -163,6 +166,10 @@ def _grade_payload(
 
     return {
         "scope": scope.as_dict(),
+        # Which rules graded this run, carried in the payload for the same reason the scope is:
+        # a consumer comparing two reports has to be able to tell a publisher that changed from a
+        # grader that changed, and a version remembered by the reader is a version nobody checked.
+        "rules_version": RULES_VERSION,
         "institutions": len(grades),
         "ungradeable": sum(1 for g in grades if g.score is None),
         "overall": asdict(summarize(grades, label="all institutions")),
@@ -537,6 +544,106 @@ def _cmd_drift(args: argparse.Namespace) -> int:
     return 0
 
 
+def _render_institution_change(change: InstitutionChange) -> None:
+    """Print one institution's transitions, its score move, and nothing it did not do."""
+    print(f"  {change.unit_id}  {change.name or 'unnamed'}  {change.state or '--'}")
+    for transition in change.transitions:
+        print(f"      {transition.field_label:34} {transition.label}")
+    for label in change.unreadable_fields:
+        # Never folded into the transitions above. A word this build cannot read is a gap in the
+        # reader, not a move by the publisher, and printing it as a transition would invent one.
+        print(f"      {label:34} unreadable classification, not counted as a transition")
+    if change.gradeability_changed:
+        was = change.was_letter or NOT_GRADEABLE
+        now = change.now_letter or NOT_GRADEABLE
+        print(f"      {'grade':34} {was} -> {now}")
+    elif change.letter_moved:
+        moved = change.score_change
+        # An absent score move prints as words. Through a percent format it would have printed
+        # "+0.0", which reads as "the score held" rather than "there was no score to move".
+        by = "score not comparable" if moved is None else f"{moved * 100:+.1f} points"
+        print(f"      {'grade':34} {change.was_letter} -> {change.now_letter}   {by}")
+
+
+def _render_diff_preamble(diff: ReportDiff) -> None:
+    """What the comparison could and could not establish, before any transition is printed."""
+    if diff.rules_confirmed:
+        print(
+            f"compared {diff.compared} institutions graded under rules {diff.later_rules_version}"
+        )
+    else:
+        # The reason this sentence exists: a transition table printed under a heading that does
+        # not qualify the rules invites the reader to attribute every move to the publisher.
+        print(
+            f"compared {diff.compared} institutions; the two reports do not confirm the same "
+            f"grading rules ({diff.earlier_rules_version or 'unstated'} and "
+            f"{diff.later_rules_version or 'unstated'}), so a transition here may be the "
+            "grader's and not the publisher's"
+        )
+    for count, noun in ((diff.unmatchable_earlier, "earlier"), (diff.unmatchable_later, "later")):
+        if count:
+            # Counted and said out loud. A grade with no id was excluded from the comparison, and
+            # a comparison that silently drops rows reports a smaller population as a stable one.
+            print(f"  {count} grades in the {noun} report carry no id and could not be matched")
+    for label in diff.fields_only_in_earlier + diff.fields_only_in_later:
+        print(f"  {label} is graded in only one of the two reports and was not compared")
+
+
+def _render_frame_moves(diff: ReportDiff) -> None:
+    """Institutions that arrived or departed, never counted among the transitions."""
+    for moves, verb in ((diff.entered, "entered"), (diff.left, "left")):
+        for move in moves:
+            name = move.name or "unnamed"
+            print(f"  {move.unit_id}  {name}  {move.state or '--'}  {verb} the frame")
+
+
+def _render_diff(diff: ReportDiff) -> None:
+    """The comparison as a person reads it, with every absence stated as words."""
+    _render_diff_preamble(diff)
+    if not diff.changed and not diff.entered and not diff.left:
+        print("no institution-level transitions between the two reports")
+        return
+    if diff.matrix:
+        print(f"  transitions ({diff.transition_count} across {len(diff.changed)} institutions)")
+        for label, count in diff.matrix:
+            print(f"    {count:>6}  {label}")
+    for change in diff.changed:
+        _render_institution_change(change)
+    _render_frame_moves(diff)
+
+
+def _cmd_diff_report(args: argparse.Namespace) -> int:
+    """Compare two reports institution by institution, as five-state transitions.
+
+    ``drift`` says four hundred institutions stopped publishing a field; this says which ones.
+    The verb refuses two comparisons rather than answering them wrongly: two different sources,
+    in ``drift``'s own wording, and two different rules versions, because a state that moved
+    because this project rewrote a credible range is not a state a publisher moved.
+    """
+    earlier = json.loads(Path(args.earlier).read_text(encoding="utf-8"))
+    later = json.loads(Path(args.later).read_text(encoding="utf-8"))
+    try:
+        diff = compare_reports(earlier, later, institution=args.institution)
+    except ValueError as exc:
+        print(f"{exc}", file=sys.stderr)
+        return 1
+    if args.institution is not None and not (diff.compared or diff.entered or diff.left):
+        # Not an empty diff. An institution neither report holds has not been shown to be
+        # unchanged, and printing "no transitions" for a mistyped id would report an absence
+        # as a finding, which is the defect this project is named after.
+        print(
+            f"{args.institution} is in neither report; nothing was compared",
+            file=sys.stderr,
+        )
+        return 1
+    if args.json:
+        # Sorted keys and a fixed indent, so two runs over the same pair are byte-identical.
+        print(json.dumps(as_diff_payload(diff), indent=2, sort_keys=True))
+        return 0
+    _render_diff(diff)
+    return 0
+
+
 def _cmd_dataset(args: argparse.Namespace) -> int:
     """Write the CSV export and the Table Schema that describes it, from one report."""
     report = json.loads(Path(args.report).read_text(encoding="utf-8"))
@@ -630,6 +737,7 @@ def _cmd_crosscheck(args: argparse.Namespace) -> int:
     )
     payload = {
         "scope": scope.as_dict(),
+        "rules_version": RULES_VERSION,
         "institutions": len(grades),
         "ungradeable": sum(1 for g in grades if g.score is None),
         "overall": asdict(overall),
@@ -976,6 +1084,24 @@ def main(argv: list[str] | None = None) -> int:
         help="print the comparison as JSON, for a consumer that is not a terminal",
     )
     p_drift.set_defaults(func=_cmd_drift)
+
+    p_diff = sub.add_parser(
+        "diff-report",
+        help="compare two reports institution by institution, as five-state transitions",
+    )
+    p_diff.add_argument("earlier")
+    p_diff.add_argument("later")
+    p_diff.add_argument(
+        "--institution",
+        default=None,
+        help="restrict the comparison to one unit id",
+    )
+    p_diff.add_argument(
+        "--json",
+        action="store_true",
+        help="print the comparison as JSON, for a consumer that is not a terminal",
+    )
+    p_diff.set_defaults(func=_cmd_diff_report)
 
     p_data = sub.add_parser("dataset", help="export a report as CSV plus a Table Schema")
     p_data.add_argument("--report", default="data/report.json")

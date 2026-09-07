@@ -35,12 +35,28 @@ from .fields import FIELDS, Field
 
 __all__ = [
     "BANDS",
+    "RULES_VERSION",
     "FieldResult",
     "GroupSummary",
     "InstitutionGrade",
     "grade_institution",
     "summarize",
 ]
+
+# Which version of this repository's grading rules produced a report: the band table above, the
+# field definitions in :mod:`disclosed.fields`, and the classifier they call.
+#
+# It exists so that a comparison between two reports can refuse rather than mislead. An
+# institution whose admission rate went from ``reported`` to ``implausible`` between two runs
+# either published a different number or was graded against a different credible range, and those
+# are opposite findings: the first is the institution's doing and the second is ours.
+# :func:`disclosed.report_diff.compare_reports` stops when the two versions differ, and says both.
+#
+# Bump it in the same commit that changes a band, a credible range, an applicability predicate or
+# a classification rule. Deliberately not the package version, which ADR 0001 holds at
+# ``0.1.0.dev0`` for a reason that has nothing to do with the grader, and deliberately not
+# derived from a git hash, which would change on every commit and make every diff refuse.
+RULES_VERSION: Final[str] = "2026-09-06.1"
 
 # Letter bands. Chosen so that a B means "a reader can mostly use this record" rather than
 # "above average", because grading on a curve would hide a field-wide collapse in reporting.

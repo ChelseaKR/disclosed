@@ -9418,6 +9418,7 @@
       ]
     ]
   },
+  "rules_version": "2026-09-06.1",
   "scope": {
     "coverage": 0.09523809523809523,
     "institutions": 600,
