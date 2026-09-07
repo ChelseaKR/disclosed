@@ -8,6 +8,25 @@ file is the human-readable one.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The published rule-file schema's `$id` was a 404.**
+  `schema/classification.v1.schema.json` has been committed, versioned and described as
+  published — in `docs/CLASSIFIER.md`, in the code and in the schema's own `$id` — since the
+  classifier was factored out. Nothing wrote it into the site. The deployed build is exactly
+  what `site.build` produces, that path was never among the files it produced, and
+  https://chelseakr.github.io/disclosed/schema/classification.v1.schema.json returned 404 while
+  three documents said otherwise. That is issue #2 one file type across, and worse in one
+  respect: a wrong canonical link is eventually read by a person, whereas an `$id` is
+  dereferenced by a validator that reports to nobody.
+  The build now writes it, rendered from `rules.schema()` rather than copied off disk — the
+  committed file lives outside the installed package, so a copy would work from a clone and
+  silently write nothing from a wheel — with the `$id` stamped with the origin the build is
+  for, exactly as canonical links are. At the deploy origin the result is byte-identical to the
+  committed file, which a test asserts. `.github/scripts/check_site_origin.py` gains a seventh
+  promise: every `$id` the build publishes must resolve to the file that carries it, and a build
+  that published no `$id` at all is refused rather than passing over an empty set.
+
 ### Added
 
 - **The disclosure history is a page now, not a job summary.** Seventeen daily Scorecard

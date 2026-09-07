@@ -51,8 +51,17 @@ file still parses, not what this site was rendered from that week.
 
 A rule file states, as data, what `classify` would otherwise be told through keyword arguments at
 a call site somebody has to remember to write. The schema is committed at
-[`schema/classification.v1.schema.json`](../schema/classification.v1.schema.json) and printed by
-`disclosed classify --schema`.
+[`schema/classification.v1.schema.json`](../schema/classification.v1.schema.json), printed by
+`disclosed classify --schema`, and **served** at the address its own `$id` names:
+<https://chelseakr.github.io/disclosed/schema/classification.v1.schema.json>.
+
+That last clause is newer than the other two. The `$id` claimed that address from the day the
+schema was written, and nothing put a file there: the deployed site is exactly what
+`disclosed site` writes, and that path was never among the files it wrote, so the URL a
+validator dereferences returned 404 while this document, the schema and the code all described
+it as published. `site.build` now writes it, stamped with the origin the build is for in the
+same way canonical links are, and `.github/scripts/check_site_origin.py` refuses a build whose
+published `$id` points anywhere the build does not serve.
 
 ```json
 {
