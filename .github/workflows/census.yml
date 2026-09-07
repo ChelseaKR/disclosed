@@ -51,8 +51,15 @@ jobs:
       # One stable path. The day of the walk is inside the file, in its provenance, and a
       # re-census replaces the file in a commit whose diff names the institutions that moved;
       # git keeps the old capture, and nothing downstream has to know a date to find the frame.
+      #
+      # `shell: bash` is `bash --noprofile --norc -eo pipefail {0}`. Actions' default `run:`
+      # shell is `bash -e {0}` -- errexit WITHOUT pipefail -- so `fetch | tee` exited with
+      # TEE's status: the one network- and key-bound command in this workflow could fail and
+      # this step would still conclude success. The replay below catches a capture that was
+      # never written; it cannot catch a walk that failed after writing one.
       - name: Walk the API with provenance
         id: walk
+        shell: bash
         env:
           DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
         run: |

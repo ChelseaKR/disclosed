@@ -88,8 +88,19 @@ jobs:
           fi
 
       # The only step that touches the network or the key. Everything after it reads the file.
+      #
+      # `shell: bash` is `bash --noprofile --norc -eo pipefail {0}`. Actions' default `run:`
+      # shell is `bash -e {0}` -- errexit WITHOUT pipefail -- so `fetch | tee` exited with
+      # TEE's status and this step reported success whatever the walk did. `fetch`'s own
+      # `return 1` paths write nothing and are caught downstream, but a failure AFTER the
+      # capture is written -- in `summarize_capture` or the `--provenance-out` sidecar write --
+      # left the capture on disk, graded, reduced and committed with NO provenance sidecar for
+      # the day. `git add data/snapshots/` stages whatever is there, and the post-condition
+      # below asserts the snapshot path only, never the sidecar. The walk's own status is the
+      # only thing that would have said so.
       - name: Walk the API with provenance
         id: walk
+        shell: bash
         env:
           DATA_GOV_API_KEY: ${{ secrets.DATA_GOV_API_KEY }}
         run: |
