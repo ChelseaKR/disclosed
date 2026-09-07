@@ -33,6 +33,7 @@ from . import (
     frame,
     messages,
     national,
+    receipts,
     registry,
     registry_properties,
     rules,
@@ -853,6 +854,102 @@ def _cmd_census_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def _receipt_source(path_text: str) -> receipts.ReceiptSource | None:
+    """Read a Scorecard source file into the records receipts are issued from.
+
+    ``None`` on any failure, with the reason on stderr. Callers turn that into a non-zero exit
+    rather than proceeding with an empty index, because an empty index issues no receipts and a
+    build that silently issued none would publish pages whose "check this yourself" section had
+    quietly gone missing.
+    """
+    path = Path(path_text)
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"{path_text} could not be read as JSON: {exc}", file=sys.stderr)
+        return None
+    try:
+        records, provenance = college_scorecard.read_capture(raw)
+    except college_scorecard.ScorecardError as exc:
+        print(f"{path_text} is {exc}", file=sys.stderr)
+        return None
+    if not records:
+        print(f"{path_text} carries no records, so no receipt can be issued", file=sys.stderr)
+        return None
+    return receipts.load_source(path, records, provenance)
+
+
+def _cmd_receipt(args: argparse.Namespace) -> int:
+    """Write one institution's receipt, or say that the source does not hold its record."""
+    source = _receipt_source(args.source)
+    if source is None:
+        return receipts.UNREADABLE
+    receipt = source.receipt(args.unit_id)
+    if receipt is None:
+        print(
+            f"unit id {args.unit_id} is not in {args.source}. No receipt is written: a receipt "
+            "for a record nobody holds would state a grade derived from nothing.",
+            file=sys.stderr,
+        )
+        return receipts.NOT_IN_SOURCE
+    text = receipts.dumps(receipt)
+    if args.out:
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8")
+        print(f"receipt for {args.unit_id} -> {args.out}")
+    else:
+        sys.stdout.write(text)
+    return receipts.AGREES
+
+
+def _cmd_verify_receipt(args: argparse.Namespace) -> int:
+    """Regrade the record a receipt names and report every difference.
+
+    Exit codes are the interface: 0 the replay agrees, 1 it disagrees, 2 the source does not hold
+    that institution, 3 the receipt could not be read. The last is separate on purpose -- a
+    verifier that returned "agrees" for a file it failed to parse would be a check that cannot
+    fail.
+    """
+    try:
+        raw = json.loads(Path(args.receipt).read_text(encoding="utf-8"))
+        receipt = receipts.read_receipt(raw)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"{args.receipt} could not be read as JSON: {exc}", file=sys.stderr)
+        return receipts.UNREADABLE
+    except receipts.ReceiptError as exc:
+        print(f"{args.receipt} is not a receipt this build can verify: {exc}", file=sys.stderr)
+        return receipts.UNREADABLE
+
+    source = _receipt_source(args.source)
+    if source is None:
+        return receipts.UNREADABLE
+    result = receipts.verify(receipt, list(source.records.values()), source=source.identity)
+
+    if args.json:
+        print(json.dumps(result.as_dict(), indent=2, sort_keys=True))
+        return result.exit_code
+
+    if not result.same_source:
+        # Said first, and said whatever the verdict is. A reader who does not know the receipt
+        # names other bytes than the ones just replayed cannot interpret either answer.
+        print(
+            f"note: this receipt names capture {receipt.get('source', {}).get('sha256', '?')[:12]}"
+            f" and was replayed against {source.identity.short_sha256}. Any difference below may "
+            "be the two captures disagreeing rather than the grader."
+        )
+    if not result.found:
+        print(f"{result.unit_id} is not in {args.source}; nothing was replayed")
+        return result.exit_code
+    if not result.disagreements:
+        print(f"{result.unit_id}: the replay agrees with the receipt on every field")
+        return result.exit_code
+    print(f"{result.unit_id}: the replay disagrees with the receipt")
+    for disagreement in result.disagreements:
+        print(f"  {disagreement.sentence()}")
+    return result.exit_code
+
+
 def _cmd_site(args: argparse.Namespace) -> int:
     report = json.loads(Path(args.report).read_text(encoding="utf-8"))
     if not report.get("grades"):
@@ -868,17 +965,30 @@ def _cmd_site(args: argparse.Namespace) -> int:
         if args.scorecard_census
         else None
     )
+    receipt_source: receipts.ReceiptSource | None = None
+    if args.receipts_from:
+        receipt_source = _receipt_source(args.receipts_from)
+        if receipt_source is None:
+            return 1
     out = Path(args.out)
-    pages = site.build(
-        report,
-        out,
-        origin=args.origin,
-        generated=args.generated,
-        national=national_payload,
-        scorecard_census=census_payload,
-        ask_endpoint=args.ask_endpoint,
-        locale=args.locale,
-    )
+    try:
+        pages = site.build(
+            report,
+            out,
+            origin=args.origin,
+            generated=args.generated,
+            national=national_payload,
+            scorecard_census=census_payload,
+            ask_endpoint=args.ask_endpoint,
+            locale=args.locale,
+            receipts=receipt_source,
+        )
+    except site.ReceiptMismatch as exc:
+        # The report and the receipt source disagree about a classification, so the page and the
+        # receipt beside it would contradict each other. Refused rather than published: a receipt
+        # that argues with the page it sits under is worse than no receipt.
+        print(f"refusing to build: {exc}", file=sys.stderr)
+        return 1
     print(f"built {len(pages)} pages -> {out}")
     return 0
 
@@ -1216,6 +1326,15 @@ def main(argv: list[str] | None = None) -> int:
             "it is only half in is an absence published as a fact"
         ),
     )
+    p_site.add_argument(
+        "--receipts-from",
+        default=None,
+        help=(
+            "the Scorecard records this report was graded from. With it, every institution page "
+            "gets a receipt.json beside it and a section saying how to replay it; without it the "
+            "build is byte-for-byte what it was and no page claims a receipt it does not have"
+        ),
+    )
     p_site.add_argument("--out", default="site")
     p_site.add_argument("--origin", default=site.DEFAULT_ORIGIN)
     p_site.add_argument(
@@ -1227,6 +1346,47 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     p_site.set_defaults(func=_cmd_site)
+
+    p_receipt = sub.add_parser(
+        "receipt",
+        help="write one institution's disclosure receipt from a committed source",
+        description=(
+            "A receipt states which capture, which rules, which record, and what each field was "
+            "classified as. Only an implausible field carries its value; every other value stays "
+            "with the publisher, because this project grades disclosure and not performance."
+        ),
+    )
+    p_receipt.add_argument("unit_id", help="IPEDS unit id, as the College Scorecard publishes it")
+    p_receipt.add_argument(
+        "--source",
+        required=True,
+        help=(
+            "a capture written by `disclosed fetch`, or a bare JSON array of records such as "
+            "data/sample.json. Required: a receipt names the bytes it was derived from, and a "
+            "live fetch of one institution would give a reader nothing to check it against"
+        ),
+    )
+    p_receipt.add_argument("--out", default=None, help="file to write; stdout when omitted")
+    p_receipt.set_defaults(func=_cmd_receipt)
+
+    p_verify_receipt = sub.add_parser(
+        "verify-receipt",
+        help="regrade the record a receipt names and report every difference",
+        description=(
+            "Exit 0 the replay agrees, 1 it disagrees, 2 the source does not hold that "
+            "institution, 3 the receipt could not be read. A receipt naming a different capture "
+            "than the one replayed is reported in the first line and does not by itself change "
+            "the verdict: the exit code is reserved for what the grader says."
+        ),
+    )
+    p_verify_receipt.add_argument("receipt", help="a receipt written by `disclosed receipt`")
+    p_verify_receipt.add_argument(
+        "--source", required=True, help="the records to regrade the institution from"
+    )
+    p_verify_receipt.add_argument(
+        "--json", action="store_true", help="write the verification as JSON instead of prose"
+    )
+    p_verify_receipt.set_defaults(func=_cmd_verify_receipt)
 
     p_corpus = sub.add_parser(
         "corpus", help="re-extract (or, with --fetch, re-download) the federal definitions corpus"

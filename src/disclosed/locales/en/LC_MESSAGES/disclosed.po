@@ -227,6 +227,50 @@ msgstr ""
 "intended. If you believe a field is marked wrongly, the <a href=\"{methodology}\">methodology"
 "</a> states every rule and the reasoning behind it."
 
+#. The receipt section, rendered only when the site is built with --receipts-from. It is the
+#. "check this yourself" half of the contract: the page states a classification, and the receipt
+#. beside it states which capture and which rules produced it, so a graded institution can
+#. replay the claim from public inputs rather than take the page's word for it.
+msgid "receipt.heading"
+msgstr "Check this page against the federal record"
+
+msgid "receipt.lede"
+msgstr ""
+"Every classification above was derived from one row of a committed federal capture by rules "
+"kept in this repository. The receipt beside this page is that derivation, machine-readable: "
+"the capture it came from and its digest, the version of the rules that read it, and each "
+"field's classification. It carries the value of an implausible field, because that number is "
+"what this page argues with; it carries no other value, because a list of one college's "
+"tuition, earnings and completion rate beside a letter grade would be a performance record."
+
+msgid "receipt.link"
+msgstr "Machine-readable receipt (receipt.json)"
+
+msgid "receipt.verify.intro"
+msgstr ""
+"Replay it against the same committed file, with no key and no network. The command exits 0 "
+"when the replay agrees with the receipt and names the field when it does not."
+
+msgid "receipt.verify.command"
+msgstr "disclosed verify-receipt receipt.json --source {source}"
+
+msgid "receipt.cite.heading"
+msgstr "Cite this record"
+
+msgid "receipt.cite.text"
+msgstr ""
+"{name}, disclosure receipt for IPEDS unit id {unit_id}. Graded by rules version "
+"{rules_version} from {source} (sha256 {digest}), {walked}."
+
+msgid "receipt.cite.walked"
+msgstr "walked {walked}"
+
+#. Used where the source file carries no provenance -- data/sample.json is a bare array of
+#. records -- so there is no walk date to cite. Said in words rather than filled in from the
+#. clock, which would date the federal record to the day somebody rendered a page.
+msgid "receipt.cite.walked_unrecorded"
+msgstr "walked on a date the source file does not record"
+
 #. The opt-in question form, rendered only when the site is built with --ask-endpoint. The
 #. sentences the script itself shows, and everything disclosed.ask replies with, are English
 #. whatever this catalog says: see docs/I18N.md.
