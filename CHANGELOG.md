@@ -10,6 +10,35 @@ file is the human-readable one.
 
 ### Added
 
+- **Every institution page now carries a receipt, and two verbs replay it.** A college could
+  read this project's claim about it and had no way to check it short of cloning the repository.
+  `disclosed receipt <unit_id> --source <file>` writes the derivation down — the source file and
+  its sha256, the grading rules version, the peer group, and each field's classification with the
+  anchor of the rationale behind it — and `disclosed verify-receipt` regrades that record from the
+  same committed file and reports every difference. Exit 0 agrees, 1 disagrees and names the
+  field, 2 the source does not hold that institution, 3 the receipt could not be read; over
+  several receipts the worst outcome is returned, because a batch reporting its best result would
+  be a check that cannot fail. A receipt naming a different capture than the one replayed is
+  reported in its own line and does not become the verdict, since replaying an old receipt against
+  a newer capture is a legitimate thing to want to do.
+  **A receipt never carries a reported value.** Only an implausible field carries its number, with
+  the bounds it fell outside, because there the number is the finding; a file listing 6,273
+  colleges' tuition, earnings and completion rates beside a letter grade would be a performance
+  record, and this project grades disclosure. The rule is asserted over every institution in the
+  committed census rather than over a fixture.
+  `disclosed site --receipts-from` writes `receipt.json` beside every institution page and renders
+  the section that links it, states the replay command and gives the citation; without the flag
+  the build is byte-for-byte what it was and no page claims a receipt it does not have. The build
+  refuses outright when the report and the receipt source classify the same field differently,
+  because that means the two were graded from different bytes and the page and the receipt beside
+  it would contradict each other. `pages.yml` and the verify workflow replay every receipt the
+  build writes, and refuse a build that wrote too few of them to be the committed report's
+  institutions.
+  Determinism is measured across three interpreters under three `PYTHONHASHSEED` values rather
+  than twice inside one, and the serialised key order is pinned by name: deleting `sort_keys=True`
+  left every other test green, because CPython preserves insertion order and the cross-process
+  check sees stable bytes in an order the format no longer promises.
+
 - **`disclosed diff-report` says which institutions moved, and refuses to guess who moved
   them.** `drift` measures the population: four hundred institutions stopped publishing a field.
   The new verb compares two whole reports institution by institution and states every move as a

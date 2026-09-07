@@ -25,6 +25,7 @@ from __future__ import annotations
 import html
 import json
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
@@ -35,9 +36,15 @@ from .fields import FIELDS, IPEDS_FIELDS, Field, field_by_label
 from .grading import BANDS, BELOW_EVERY_BAND
 from .messages import SOURCE_LOCALE, Catalog, load
 from .peers import MIN_PEERS
+from .receipts import ReceiptSource
+from .receipts import dumps as dump_receipt
 from .scope import Scope, scope_from_payload
 
-__all__ = ["Page", "build", "slug"]
+__all__ = ["Page", "ReceiptMismatch", "build", "slug"]
+
+#: How much of a capture digest the citation on an institution page prints. The receipt itself
+#: carries all sixty-four characters; a footnote needs enough to identify the file and no more.
+_SHORT_DIGEST: Final[int] = 12
 
 #: The catalog every page function falls back to, so that calling one of them without saying
 #: which language you want renders the language this project's prose is written and reviewed in.
@@ -183,6 +190,78 @@ def _institution_path(row: dict[str, Any]) -> str | None:
     return f"institution/{safe}" if safe else None
 
 
+class ReceiptMismatch(ValueError):
+    """The report and the receipt source disagree about how an institution was classified.
+
+    Raised rather than rendered. A page whose own receipt contradicts it is worse than a page
+    with no receipt: the receipt is the artifact a reader is invited to check the page against,
+    so publishing the two side by side would hand every reader the same unexplained conflict.
+    In practice this means the report was graded from different bytes than ``--receipts-from``
+    names, which is a build mistake and not a finding about anybody.
+    """
+
+
+def _agrees_with_the_report(receipt: Mapping[str, Any], row: Mapping[str, Any]) -> None:
+    """Refuse to publish a page and a receipt that classify the same field differently.
+
+    The page is rendered from the committed report and the receipt is derived from the records
+    ``--receipts-from`` names. Those are two files, and nothing but this check stops them being
+    two different runs. Compared on the field label, because that is the only key the report
+    carries; the receipt carries both and its label comes from the same field definitions.
+    """
+    stated = row.get("fields")
+    stated = stated if isinstance(stated, dict) else {}
+    for entry in receipt.get("fields", []):
+        if not isinstance(entry, dict):
+            continue
+        label = entry.get("label")
+        if label in stated and stated[label] != entry.get("classification"):
+            raise ReceiptMismatch(
+                f"unit {receipt.get('unit_id')} is {stated[label]!r} on {label!r} in the report "
+                f"and {entry.get('classification')!r} in a receipt derived from "
+                f"{receipt.get('source', {}).get('name')}. The report and --receipts-from are "
+                "not the same run, so the page and the receipt beside it would contradict."
+            )
+
+
+def _receipt_block(receipt: Mapping[str, Any], row: Mapping[str, Any], catalog: Catalog) -> str:
+    """The "check this yourself" section: what the receipt is, where it is, and how to replay it.
+
+    The citation is assembled from the receipt's own identifiers rather than from anything on
+    the page, so a reader who copies it is quoting the artifact and not a rendering of it.
+    """
+    source = receipt.get("source")
+    source = source if isinstance(source, dict) else {}
+    digest = str(source.get("sha256") or "")
+    walked = source.get("walked_at")
+    walked_text = (
+        catalog.text("receipt.cite.walked", walked=html.escape(str(walked)))
+        if isinstance(walked, str) and walked
+        else catalog.text("receipt.cite.walked_unrecorded")
+    )
+    command = catalog.text("receipt.verify.command", source=html.escape(str(source.get("name"))))
+    citation = catalog.text(
+        "receipt.cite.text",
+        name=html.escape(_name_of(dict(row), catalog)),
+        unit_id=html.escape(str(receipt.get("unit_id"))),
+        rules_version=html.escape(str(receipt.get("rules_version"))),
+        source=html.escape(str(source.get("name"))),
+        digest=html.escape(digest[:_SHORT_DIGEST]),
+        walked=walked_text,
+    )
+    return (
+        f'<section class="receipt">'
+        f"<h2>{catalog.text('receipt.heading')}</h2>"
+        f"<p>{catalog.text('receipt.lede')}</p>"
+        f'<p><a href="receipt.json">{catalog.text("receipt.link")}</a></p>'
+        f"<p>{catalog.text('receipt.verify.intro')}</p>"
+        f"<pre><code>{html.escape(command)}</code></pre>"
+        f"<h3>{catalog.text('receipt.cite.heading')}</h3>"
+        f'<p class="citation">{citation}</p>'
+        f"</section>"
+    )
+
+
 def institution_page(
     row: dict[str, Any],
     findings: list[dict[str, Any]],
@@ -190,11 +269,17 @@ def institution_page(
     path: str,
     ask_endpoint: str | None = None,
     catalog: Catalog = ENGLISH,
+    receipt: Mapping[str, Any] | None = None,
 ) -> Page:
     """One institution: its grade, every field's disclosure state, and any implausible values.
 
     With ``ask_endpoint`` the page also carries the opt-in question form and the one inline
     script behind it (see :func:`_ask_widget`); without it the page is exactly what it was.
+
+    With ``receipt`` it also carries the section that links the machine-readable receipt written
+    beside it and states the command that replays it. Without one the section is absent rather
+    than empty: a page that offered a receipt link where no file was written would be publishing
+    a broken promise, which is this project's own defect class dressed as a hyperlink.
     """
     name = _name_of(row, catalog)
     letter = row.get("letter")
@@ -288,6 +373,7 @@ def institution_page(
 </table>
 {findings_html}
 <p class="caveat">{catalog.text("institution.caveat", methodology="../../methodology/")}</p>
+{_receipt_block(receipt, row, catalog) if receipt is not None else ""}
 {_ask_widget(str(row.get("unit_id")), ask_endpoint, catalog) if ask_endpoint else ""}
 """
     # The name alone does not identify an institution, and this project of all
@@ -1185,6 +1271,45 @@ def _corpus_pages(
     return pages
 
 
+def _institution_pages(
+    grades: list[dict[str, Any]],
+    findings_by_id: dict[str, list[dict[str, Any]]],
+    *,
+    ask_endpoint: str | None,
+    catalog: Catalog,
+    receipts: ReceiptSource | None,
+) -> tuple[list[Page], list[tuple[str, dict[str, Any]]]]:
+    """One page per institution that can be given a stable URL, and the receipts to write beside.
+
+    The receipts are returned rather than written here so that :func:`build` writes every file in
+    one pass, after every page has rendered: a receipt.json sitting in a directory whose
+    index.html was never written would be a citable artifact with no page behind it.
+    """
+    pages: list[Page] = []
+    written: list[tuple[str, dict[str, Any]]] = []
+    for row in sorted(grades, key=lambda r: str(r.get("unit_id"))):
+        path = _institution_path(row)
+        if path is None:
+            # Counted in the state listings, but given no URL. See _institution_path.
+            continue
+        unit_id = str(row.get("unit_id"))
+        receipt = receipts.receipt(unit_id) if receipts is not None else None
+        if receipt is not None:
+            _agrees_with_the_report(receipt, row)
+            written.append((path, receipt))
+        pages.append(
+            institution_page(
+                row,
+                findings_by_id.get(unit_id, []),
+                path=path,
+                ask_endpoint=ask_endpoint,
+                catalog=catalog,
+                receipt=receipt,
+            )
+        )
+    return pages, written
+
+
 def build(
     report: dict[str, Any],
     out_dir: Path,
@@ -1195,6 +1320,7 @@ def build(
     scorecard_census: dict[str, Any] | None = None,
     ask_endpoint: str | None = None,
     locale: str = SOURCE_LOCALE,
+    receipts: ReceiptSource | None = None,
 ) -> list[Page]:
     """Render the whole site from a graded report.
 
@@ -1252,21 +1378,14 @@ def build(
             continue
         pages.append(state_page(summary, by_state.get(code, []), catalog=catalog))
 
-    for row in sorted(grades, key=lambda r: str(r.get("unit_id"))):
-        path = _institution_path(row)
-        if path is None:
-            # Counted in the state listings, but given no URL. See _institution_path.
-            continue
-        unit_id = str(row.get("unit_id"))
-        pages.append(
-            institution_page(
-                row,
-                findings_by_id.get(unit_id, []),
-                path=path,
-                ask_endpoint=ask_endpoint,
-                catalog=catalog,
-            )
-        )
+    institution_pages, written_receipts = _institution_pages(
+        grades,
+        findings_by_id,
+        ask_endpoint=ask_endpoint,
+        catalog=catalog,
+        receipts=receipts,
+    )
+    pages.extend(institution_pages)
 
     for page in pages:
         target = out_dir / page.path if page.path else out_dir
@@ -1282,6 +1401,12 @@ def build(
             ),
             encoding="utf-8",
         )
+
+    # The receipts, written into the same directories as the pages that link them. After the
+    # pages rather than before, so a build that fails part-way through leaves no receipt.json
+    # sitting beside a page that was never rendered.
+    for path, receipt in written_receipts:
+        (out_dir / path / "receipt.json").write_text(dump_receipt(receipt), encoding="utf-8")
 
     # The share card every page's og:image names. Written here, in the same pass that writes the
     # pages that promise it, so the promise and the file cannot come apart: a link preview is

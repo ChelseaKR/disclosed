@@ -241,6 +241,40 @@ disclosed site    --report data/report.json --out site --generated 2026-08-05 \
                   --ask-endpoint https://example.invalid/ask
 ```
 
+### Check one institution's page from public inputs
+
+Every institution page carries a `receipt.json` beside it, and the published site is built with
+`--receipts-from data/sample.json` so that every one of them is there. A receipt is the derivation
+of that page written down: which file it came from and that file's sha256, which version of the
+grading rules read it, and what each field was classified as. Nothing in it is fetched and nothing
+is dated from the clock — the date on a receipt is the capture's walk date, or a sentence saying
+the source file records none.
+
+```sh
+disclosed receipt 100654 --source data/sample.json --out receipt.json
+disclosed verify-receipt receipt.json --source data/sample.json
+```
+
+`verify-receipt` regrades that one record from the committed file and reports every difference. It
+exits **0** when the replay agrees, **1** when it disagrees and names the field, **2** when the
+source does not hold that institution, and **3** when the receipt could not be read — the last is
+separate because a verifier that answered "agrees" for a file it failed to parse would be a check
+that cannot fail. Given several receipts it returns the worst outcome, for the same reason. A
+receipt naming a different capture than the one being replayed is reported in its own line and
+does **not** become the verdict: replaying an old receipt against a newer capture is a legitimate
+thing to do, and answering it with "disagrees" would say the grader changed its mind when what
+changed was the input.
+
+**A receipt never carries a reported value.** Only an implausible field carries its number,
+because there the number is the finding and an institution cannot argue with a bound it has not
+been shown. A file listing 6,273 colleges' tuition, earnings and completion rates beside a letter
+grade would be a performance record, and this project grades disclosure. The rule is asserted over
+every institution in the committed census rather than over a fixture, in `tests/test_receipts.py`.
+
+The site build refuses when the report and `--receipts-from` classify the same field differently,
+which means the two were graded from different bytes. A receipt that argues with the page it sits
+under is worse than no receipt.
+
 `data/dataset.csv` ships with a Table Schema at `data/dataset.schema.json`, generated in the same
 pass so the two cannot drift. Every graded field is exported as a word (`reported`, `missing`,
 `suppressed`, `not_applicable`, `implausible`) rather than as a value, so no cell in a

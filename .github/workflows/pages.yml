@@ -66,11 +66,30 @@ jobs:
           --report data/report.json
           --national data/national.json
           --scorecard-census data/scorecard-census.json
+          --receipts-from data/sample.json
           --out site
           --origin "$SITE_ORIGIN"
           --generated "$(date -u +%F)"
       - name: Fail if the render produced nothing
         run: test -s site/index.html
+
+      # Every institution page links a receipt.json beside it, so every one of those files has to
+      # be there and has to replay from the same committed records the report was graded from. A
+      # link to an artifact nobody checked is worse than no link: the receipt is the thing readers
+      # are invited to check the page against.
+      - name: Verify every receipt the build just wrote
+        run: |
+          receipts=$(find site/institution -name receipt.json | wc -l)
+          if [ "$receipts" -lt 500 ]; then
+            echo "::error::the build wrote $receipts receipts, which is too few to be the" \
+                 "committed report's institutions. Refusing to publish pages that link a file" \
+                 "the build did not write."
+            exit 1
+          fi
+          find site/institution -name receipt.json -print0 | xargs -0 \
+            python -m disclosed.cli verify-receipt --source data/sample.json > /tmp/receipts.log
+          echo "$receipts receipts replayed against data/sample.json"
+
       - name: Fail if the site's URLs disagree with the deploy target
         run: python .github/scripts/check_site_origin.py site "$SITE_ORIGIN"
 

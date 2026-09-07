@@ -27,7 +27,7 @@ from typing import Any, ClassVar
 
 import pytest
 
-from disclosed import national, site
+from disclosed import national, receipts, site
 
 _REPORT: dict[str, Any] = {
     "scope": {
@@ -162,10 +162,14 @@ def _size_budgets() -> dict[str, int]:
 def published(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """The published site, built from the committed artifacts, once for the whole module.
 
-    Same three arguments ``pages.yml`` passes to ``disclosed site``, so a page this fixture never
-    renders is a page the real published site was never audited over either.
+    Same arguments ``pages.yml`` passes to ``disclosed site``, so a page this fixture never
+    renders is a page the real published site was never audited over either. ``--receipts-from``
+    is among them: without it every institution page here would be missing the receipt section
+    the published one carries, and a budget measured over that shape would be a budget nobody
+    applied to the bytes a visitor gets.
     """
     out = tmp_path_factory.mktemp("published")
+    sample = _DATA / "sample.json"
     site.build(
         json.loads((_DATA / "report.json").read_text(encoding="utf-8")),
         out,
@@ -173,6 +177,7 @@ def published(tmp_path_factory: pytest.TempPathFactory) -> Path:
         generated="2026-08-05",
         national=json.loads((_DATA / "national.json").read_text(encoding="utf-8")),
         scorecard_census=json.loads((_DATA / "scorecard-census.json").read_text(encoding="utf-8")),
+        receipts=receipts.load_source(sample, json.loads(sample.read_text(encoding="utf-8")), None),
     )
     return out
 

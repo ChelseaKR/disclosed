@@ -33,7 +33,7 @@ grade:
 	$(PYTHON) -m disclosed.cli grade --out data/report.json
 
 site:
-	$(PYTHON) -m disclosed.cli site --report data/report.json --national data/national.json --scorecard-census data/scorecard-census.json --out site --generated $(shell date -u +%F)
+	$(PYTHON) -m disclosed.cli site --report data/report.json --national data/national.json --scorecard-census data/scorecard-census.json --receipts-from data/sample.json --out site --generated $(shell date -u +%F)
 
 dataset:
 	$(PYTHON) -m disclosed.cli dataset --report data/report.json --out data/dataset.csv
