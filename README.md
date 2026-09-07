@@ -135,6 +135,29 @@ sets do not overlap: comparing across them would skip every field and print *"no
 per-field disclosure"*, which is the most reassuring possible way of saying nothing at all.
 `drift` refuses such a pair outright.
 
+### Which institutions, and whether we moved the rules
+
+`drift` says four hundred institutions stopped publishing a field. `diff-report` says which ones,
+by comparing two whole reports institution by institution and stating every move as a transition
+between two of the five states:
+
+```sh
+disclosed diff-report data/report.json /tmp/report-today.json
+disclosed diff-report data/report.json /tmp/report-today.json --institution 105525
+```
+
+The unit is the transition and never the value. A college that published a 31% admission rate and
+now publishes 44% has disclosed exactly as much as before, so it produces no transition at all; a
+report diffed against itself is empty.
+
+Every report carries `rules_version`, the version of this repository's own bands, credible ranges
+and applicability predicates. `diff-report` refuses a pair that names two different versions, and
+names both. The reason is that `reported → implausible` has two possible authors: the institution
+published a different number, or *we* rewrote the range it is checked against. Those are opposite
+findings, and attributing the second one to a college would be the most confident possible way of
+being wrong. A report that does not state a version is not treated as agreeing with one that does;
+the comparison still runs and says out loud that it could not confirm the rules.
+
 ### Drift is a change in rate, and it took real history to prove it
 
 Measured on counts, those three years produced three confident systemic findings and **all three
