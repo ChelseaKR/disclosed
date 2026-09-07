@@ -36,6 +36,8 @@ from .fields import FIELDS, IPEDS_FIELDS, Field, field_by_label
 from .grading import BANDS, BELOW_EVERY_BAND
 from .history import SnapshotSeries
 from .messages import SOURCE_LOCALE, Catalog, load
+from .package import DATASET_JSONLD_NAME, to_jsonld
+from .package import dumps as package_dumps
 from .peers import MIN_PEERS
 from .receipts import ReceiptSource
 from .receipts import dumps as dump_receipt
@@ -109,6 +111,15 @@ class Page:
     title: str
     description: str
     body: str
+
+    head: str = ""
+    """Markup for this page's ``<head>``, or nothing.
+
+    Exactly one page uses it -- the home page's schema.org ``Dataset`` block -- and it defaults
+    to empty so that every other page's bytes are what they were. A head is not a place to put
+    prose: whatever goes here is machine-readable metadata a reader never sees, so it does not
+    come from the message catalog and is not translated.
+    """
 
 
 def slug(text: str) -> str:
@@ -1189,6 +1200,7 @@ def home_page(
     has_national: bool = False,
     has_scorecard_census: bool = False,
     histories: Sequence[SnapshotSeries] = (),
+    dataset_jsonld: dict[str, Any] | None = None,
     catalog: Catalog = ENGLISH,
 ) -> Page:
     """The landing page: the thesis, what this run found, and where the numbers stop applying."""
@@ -1323,8 +1335,26 @@ def home_page(
 <p>{catalog.text("home.how.body", methodology="methodology/")}</p>
 {coverage}
 """
+    # The corpus, as a machine can read it. A catalogue harvester is the one reader that will
+    # never read the prose above, and this project's whole argument rests on committed data that
+    # somebody outside the repository can find, validate and cite. The block names the tabular
+    # export and the full package descriptor rather than all thirty-eight resources: a head is
+    # parsed on every visit, and the complete manifest is one dereference away at
+    # dataset.jsonld rather than absent.
+    #
+    # Not from the message catalog. Every value in it is either a URL, a digest or a title that
+    # is also a filename, and a translated schema.org block would be a second, divergent claim
+    # about what the dataset is.
+    head = (
+        ""
+        if dataset_jsonld is None
+        else '<script type="application/ld+json">{}</script>\n'.format(
+            json.dumps(dataset_jsonld, sort_keys=True, ensure_ascii=False).replace("<", "\\u003c")
+        )
+    )
     return Page(
         path="",
+        head=head,
         # Not "disclosed: what US colleges do not tell you". _shell appends
         # " | disclosed" to every title, so that one rendered as "disclosed:
         # what US colleges do not tell you | disclosed" -- the site's name
@@ -1475,7 +1505,7 @@ def _shell(
 <meta name="twitter:image" content="{card}">
 <meta name="twitter:image:alt" content="{alt}">
 <style>{_STYLE}</style>
-</head>
+{page.head}</head>
 <body>
 <a class="skip" href="#content">{catalog.text("shell.skip_link")}</a>
 <main id="content">
@@ -1496,6 +1526,7 @@ def _corpus_pages(
     national: dict[str, Any] | None,
     scorecard_census: dict[str, Any] | None,
     histories: Sequence[SnapshotSeries],
+    dataset_jsonld: dict[str, Any] | None,
     catalog: Catalog,
 ) -> list[Page]:
     """The pages that describe a corpus as a whole, rather than one institution or state.
@@ -1510,6 +1541,7 @@ def _corpus_pages(
             has_national=national is not None,
             has_scorecard_census=scorecard_census is not None,
             histories=histories,
+            dataset_jsonld=dataset_jsonld,
             catalog=catalog,
         ),
         methodology_page(catalog=catalog),
@@ -1573,6 +1605,7 @@ def build(
     locale: str = SOURCE_LOCALE,
     receipts: ReceiptSource | None = None,
     histories: Sequence[SnapshotSeries] = (),
+    package: dict[str, Any] | None = None,
 ) -> list[Page]:
     """Render the whole site from a graded report.
 
@@ -1598,6 +1631,11 @@ def build(
             are complete can be named; :func:`disclosed.messages.load` refuses the rest rather
             than filling the gaps with English, so a locale either renders a whole site or none
             of one. Today ``en`` is the only catalog in the repository.
+        package: The Frictionless descriptor for the committed corpus, as
+            :func:`disclosed.package.build` returns it, or ``None``. With it the home page's
+            head carries a schema.org ``Dataset`` block and ``dataset.jsonld`` is written beside
+            the pages; without it the build is byte-for-byte what it was and the site makes no
+            machine-readable claim about a corpus it was not shown.
         histories: The committed snapshot series, as :func:`disclosed.history.load` returns them,
             or empty. Empty means no history page is written and the home page carries no link to
             one, which is the same "absence over assertion" default as ``national``: a build that
@@ -1619,11 +1657,15 @@ def build(
         if isinstance(unit_id, str) and unit_id:
             findings_by_id.setdefault(unit_id, []).append(finding)
 
+    dataset_jsonld = (
+        None if package is None else to_jsonld(package, origin=origin, distributions="primary")
+    )
     pages: list[Page] = _corpus_pages(
         report,
         national=national,
         scorecard_census=scorecard_census,
         histories=histories,
+        dataset_jsonld=dataset_jsonld,
         catalog=catalog,
     )
 
@@ -1706,6 +1748,15 @@ def build(
     schema_target.write_text(
         json.dumps(published_schema, indent=2, sort_keys=False) + "\n", encoding="utf-8"
     )
+
+    # The whole corpus as a schema.org Dataset, served beside the pages that describe it. The
+    # home page's head carries the same document with its download list trimmed to the tabular
+    # export; this is the complete one, naming every committed file with its size and digest. A
+    # harvester that follows the identifier in the head lands here.
+    if package is not None:
+        (out_dir / DATASET_JSONLD_NAME).write_text(
+            package_dumps(to_jsonld(package, origin=origin)), encoding="utf-8"
+        )
 
     # robots.txt, written where this site lives rather than where robots.txt is
     # read. Worth being plain about, because the file looks like coverage it

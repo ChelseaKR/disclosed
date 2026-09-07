@@ -27,7 +27,7 @@ from typing import Any, ClassVar
 
 import pytest
 
-from disclosed import history, national, receipts, site
+from disclosed import history, national, package, receipts, site
 
 _REPORT: dict[str, Any] = {
     "scope": {
@@ -185,6 +185,7 @@ def published(tmp_path_factory: pytest.TempPathFactory) -> Path:
         scorecard_census=json.loads((_DATA / "scorecard-census.json").read_text(encoding="utf-8")),
         receipts=receipts.load_source(sample, json.loads(sample.read_text(encoding="utf-8")), None),
         histories=history.load(_DATA / "snapshots"),
+        package=json.loads((_ROOT / package.PACKAGE_NAME).read_text(encoding="utf-8")),
     )
     return out
 
@@ -474,16 +475,43 @@ class TestTheResourceBudget:
     # they name a URL, they do not retrieve one.
     _INERT_LINK_RELS = frozenset({"canonical", "alternate"})
 
+    # Script types that are data rather than code. A `<script type="application/ld+json">` block
+    # is not parsed as JavaScript, is not executed, and -- with no `src` -- is not fetched: it is
+    # markup a harvester reads out of the document it is already holding. The home page's
+    # schema.org Dataset block is one, and it is the reason this set exists.
+    #
+    # The narrowing is exactly one attribute wide, and the two guards below are what keep it
+    # that narrow. A `src` on a data block is still a fetch and is still counted, and a type
+    # this set does not name -- including no type at all, which means JavaScript -- is still
+    # counted. `tests/test_accessibility.py::TestAScriptIsStillARequestUnlessItIsInertData`
+    # asserts both, because a widened exception is how a gate stops being one.
+    _INERT_SCRIPT_TYPES = frozenset({"application/ld+json"})
+
     class _Resources(html.parser.HTMLParser):
-        def __init__(self, fetching: frozenset[str], inert_rels: frozenset[str]) -> None:
+        def __init__(
+            self,
+            fetching: frozenset[str],
+            inert_rels: frozenset[str],
+            inert_script_types: frozenset[str] = frozenset(),
+        ) -> None:
             super().__init__()
             self._fetching = fetching
             self._inert_rels = inert_rels
+            self._inert_script_types = inert_script_types
             self.requests: list[str] = []
+
+        def _is_inert_data(self, tag: str, attributes: dict[str, str]) -> bool:
+            return (
+                tag == "script"
+                and "src" not in attributes
+                and attributes.get("type", "").strip().lower() in self._inert_script_types
+            )
 
         def handle_starttag(self, tag: str, attrs: Any) -> None:
             attributes = {name: (value or "") for name, value in attrs}
-            if tag in self._fetching:
+            if self._is_inert_data(tag, attributes):
+                pass
+            elif tag in self._fetching:
                 self.requests.append(f"<{tag}>")
             elif tag == "link":
                 rel = attributes.get("rel", "").strip().lower()
@@ -495,8 +523,17 @@ class TestTheResourceBudget:
                 )
 
     def _requests(self, page: Path) -> list[str]:
-        parser = self._Resources(self._FETCHING_TAGS, self._INERT_LINK_RELS)
+        parser = self._Resources(
+            self._FETCHING_TAGS, self._INERT_LINK_RELS, self._INERT_SCRIPT_TYPES
+        )
         parser.feed(page.read_text(encoding="utf-8"))
+        return parser.requests
+
+    def _requests_in(self, markup: str) -> list[str]:
+        parser = self._Resources(
+            self._FETCHING_TAGS, self._INERT_LINK_RELS, self._INERT_SCRIPT_TYPES
+        )
+        parser.feed(markup)
         return parser.requests
 
     def test_no_page_fetches_anything_but_itself(self, built: Path) -> None:
@@ -520,6 +557,55 @@ class TestTheResourceBudget:
                 assert "@import" not in block, page
                 assert "url(" not in block, page
                 assert "@font-face" not in block, page
+
+
+class TestAScriptIsStillARequestUnlessItIsInertData:
+    """The one exception the count makes, fenced on both sides.
+
+    ``TestTheResourceBudget`` refuses every request a page makes, and the README's claim is that
+    there are no scripts. A ``<script type="application/ld+json">`` block is neither: it is not
+    executed and, with no ``src``, it is not fetched -- it is a schema.org ``Dataset`` a
+    harvester reads out of the document it already has. That exception is worth exactly one
+    attribute, and these are the assertions that keep it there. An exception nobody probes is how
+    a budget quietly stops being one.
+    """
+
+    def test_a_data_block_is_not_counted(self) -> None:
+        budget = TestTheResourceBudget()
+
+        assert budget._requests_in('<script type="application/ld+json">{}</script>') == []
+
+    def test_a_data_block_with_a_src_is_still_a_fetch(self) -> None:
+        budget = TestTheResourceBudget()
+
+        assert budget._requests_in(
+            '<script type="application/ld+json" src="https://elsewhere.test/x.json"></script>'
+        ) == ["<script>"]
+
+    def test_an_ordinary_inline_script_is_still_counted(self) -> None:
+        """The opt-in question form's script is one, and the published build carries none."""
+        budget = TestTheResourceBudget()
+
+        assert budget._requests_in("<script>alert(1)</script>") == ["<script>"]
+        assert budget._requests_in('<script type="module">export {}</script>') == ["<script>"]
+
+    def test_a_script_element_with_a_src_is_still_counted(self) -> None:
+        budget = TestTheResourceBudget()
+
+        assert budget._requests_in('<script src="tracker.js"></script>') == ["<script>"]
+
+    def test_the_exception_names_exactly_one_type(self) -> None:
+        """Stated as an assertion so that widening it is an edit somebody has to argue for."""
+        assert TestTheResourceBudget._INERT_SCRIPT_TYPES == frozenset({"application/ld+json"})
+
+    def test_the_published_home_page_carries_that_block_and_nothing_else_script_shaped(
+        self, published: Path
+    ) -> None:
+        """Otherwise the four assertions above are about a case the site does not contain."""
+        home = (published / "index.html").read_text(encoding="utf-8")
+        scripts = re.findall(r"<script\b[^>]*>", home)
+
+        assert scripts == ['<script type="application/ld+json">']
 
 
 class TestMeaningIsNeverCarriedByColourAlone:

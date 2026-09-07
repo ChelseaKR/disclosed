@@ -194,13 +194,25 @@ jobs:
       # running while the run above graded 6,273 institutions each time, and the record this
       # project's entire drift argument depends on was written to a runner and thrown away. The
       # comparison a new file can fail is the index against HEAD, which is what `--cached` is.
+      # The package descriptor names every committed artifact with its size and digest, and a
+      # snapshot is one of them. Regenerated here rather than left to somebody remembering,
+      # because a descriptor that stops mentioning half the series is a descriptor whose users
+      # never learn the rest exists -- and it is regenerated BEFORE the staging step below, so
+      # the tests that hold every named resource to its bytes run over the same tree that will
+      # reach master.
+      - name: Bring the package descriptor with the snapshot
+        run: |
+          python -m disclosed.cli dataset \
+            --report data/report.json --out /tmp/dataset.csv \
+            --package datapackage.json --root .
+
       - name: Commit the snapshot
         id: commit
         env:
           TAKEN: ${{ steps.walk.outputs.taken }}
         run: |
-          git add data/snapshots/
-          if git diff --cached --quiet --exit-code -- data/snapshots/; then
+          git add data/snapshots/ datapackage.json
+          if git diff --cached --quiet --exit-code -- data/snapshots/ datapackage.json; then
             echo "Snapshot for ${TAKEN} is byte-identical to the committed one; nothing to commit."
             echo "committed=false" >> "$GITHUB_OUTPUT"
             exit 0

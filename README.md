@@ -82,7 +82,7 @@ make replay        # the same contract for the IPEDS national artifact, from the
 Export the classified dataset, or grade the census yourself:
 
 ```sh
-make dataset       # data/dataset.csv plus its Table Schema, generated in one pass
+make dataset       # data/dataset.csv, its Table Schema and datapackage.json, in one pass
 disclosed grade --source data/census/scorecard.json --out /tmp/census-graded.json
 ```
 
@@ -264,7 +264,8 @@ the page exactly like a field everybody suddenly started reporting.
 
 ```sh
 disclosed site    --report data/report.json --out site --generated 2026-08-05
-disclosed dataset --report data/report.json --out data/dataset.csv
+disclosed dataset --report data/report.json --out data/dataset.csv \
+                  --package datapackage.json --root .
 # With a running disclosed.ask service (ADR 0006), institution pages gain the opt-in form:
 disclosed site    --report data/report.json --out site --generated 2026-08-05 \
                   --ask-endpoint https://example.invalid/ask
@@ -310,6 +311,41 @@ pass so the two cannot drift. Every graded field is exported as a word (`reporte
 classification column is ever empty. Exactly one column may be empty, `disclosure_score`, and only
 when an institution had nothing to be graded on. A `gradeable` column travels beside it saying so,
 because an empty numeric cell is ambiguous on its own and spreadsheets coerce blanks to zero.
+
+### The whole corpus, as one descriptor
+
+`datapackage.json` at the repository root is a [Frictionless](https://specs.frictionlessdata.io/)
+data package describing every committed artifact: the graded export and its full Table Schema, the
+report it was exported from, the federal captures that report was graded from, the IPEDS archives,
+the two Credential Registry measurements, and every committed snapshot. Each resource carries its
+media type, its size in bytes and its SHA-256, and all three are **read off the file** rather than
+maintained by hand.
+
+That is the property worth stating: **the descriptor cannot describe a file this repository does
+not hold.** A resource whose path does not resolve refuses the write rather than being published,
+and a test compares every digest against the bytes on every run. A descriptor is dereferenced by
+a program, so a path that does not resolve turns "I cannot find this data" into "this data is
+broken", and nobody here would ever see it happen.
+
+`created` is the `walked_at` the capture's own provenance records — the date the corpus is about,
+not the date somebody reran a command. Reading it from the clock would make regenerating the file
+a diff every time.
+
+The same corpus is served as a schema.org `Dataset` at `dataset.jsonld`, with a shorter form of
+the same document in the home page's `<head>`, for catalogue harvesters — the one reader that will
+never read any of the prose above. Every field in it is read out of the package, so the two cannot
+disagree about what the dataset is.
+
+Two things it is not. It is **not** validated by `frictionless validate`: pulling that library's
+transitive tree into a repository whose runtime dependency list is empty was not worth it for one
+file, so `tests/test_package.py` checks the Data Package v1 requirements that can be checked
+structurally — required keys, resource names the spec's tooling accepts, uniqueness, and paths
+that are relative and do not escape the package — and says in its own docstring what that does not
+cover. And a committed descriptor can be **stale in one direction**: a file added after it was
+generated is one it does not mention. The daily snapshot workflow regenerates and commits it in
+the same commit as the snapshot, and `tests/test_workflows.py` holds it to that, but of the two
+failure modes only "names a file nobody has" can mislead a consumer, and only that one fails a
+build.
 
 ## How we grade
 

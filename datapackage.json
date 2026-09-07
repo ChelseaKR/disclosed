@@ -1,0 +1,596 @@
+{
+  "created": "2026-08-21T11:13:38Z",
+  "description": "Grades US higher-education institutions on what they disclose rather than on how they perform. Every field is classified into one of five states -- reported, implausible, suppressed, not applicable, missing -- so that an absence is never published as a measurement. The corpus is the graded export, the federal captures it was derived from, and the committed run-by-run series that makes drift measurable.",
+  "homepage": "https://chelseakr.github.io/disclosed",
+  "keywords": [
+    "higher education",
+    "disclosure",
+    "transparency",
+    "College Scorecard",
+    "IPEDS",
+    "missing data",
+    "data quality"
+  ],
+  "licenses": [
+    {
+      "name": "Apache-2.0",
+      "path": "https://www.apache.org/licenses/LICENSE-2.0",
+      "title": "Apache License 2.0"
+    }
+  ],
+  "name": "disclosed",
+  "profile": "data-package",
+  "repository": "https://github.com/ChelseaKR/disclosed",
+  "resources": [
+    {
+      "bytes": 64738,
+      "description": "One row per institution. Every graded field is exported as a classification word rather than as a value, so that an unreported field, a field suppressed to protect a small cohort, a field that does not apply and a genuine zero stay four distinguishable facts in a spreadsheet.",
+      "encoding": "utf-8",
+      "format": "csv",
+      "hash": "sha256:197e140bf80cecc8321e5629a507e6782e2cded1384639039032a9feb2e1a351",
+      "mediatype": "text/csv",
+      "name": "disclosure-grades",
+      "path": "data/dataset.csv",
+      "profile": "tabular-data-resource",
+      "schema": {
+        "fields": [
+          {
+            "description": "Federal IPEDS unit id. Empty only when the source published no identifier, in which case the row cannot be joined to anything and is included for completeness of counts.",
+            "name": "unit_id",
+            "type": "string"
+          },
+          {
+            "description": "Institution name exactly as published. Empty when the source did not name the institution; never the string 'None'.",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "description": "Two-letter state or territory code as published by the source.",
+            "name": "state",
+            "type": "string"
+          },
+          {
+            "description": "Share of applicable fields the institution actually published, weighted. EMPTY, never zero, when every graded field was suppressed or inapplicable and there is therefore nothing to score. See the gradeable column. A genuine 0 means the institution was gradeable and published nothing, which is a different fact.",
+            "name": "disclosure_score",
+            "type": "number"
+          },
+          {
+            "description": "Whether the institution had any applicable field to be graded on. False means disclosure_score is empty by definition rather than by accident.",
+            "name": "gradeable",
+            "type": "boolean"
+          },
+          {
+            "description": "Letter band for disclosure_score. Empty exactly when gradeable is false.",
+            "name": "letter",
+            "type": "string"
+          },
+          {
+            "constraints": {
+              "enum": [
+                "reported",
+                "implausible",
+                "suppressed",
+                "not_applicable",
+                "missing",
+                "not_in_report"
+              ]
+            },
+            "description": "How Median earnings 10 years after entry was disclosed. Median earnings of zero across a whole cohort ten years out would mean no former student had any earnings at all, which no real institution produces. The floor of $1,000 is deliberately far below any plausible median so that only artifacts trip it. The ceiling accommodates specialist medical and dental programs.",
+            "name": "earnings_10_yrs_after_entry_median",
+            "source_key": "latest.earnings.10_yrs_after_entry.median",
+            "type": "string",
+            "weight": 1.5
+          },
+          {
+            "constraints": {
+              "enum": [
+                "reported",
+                "implausible",
+                "suppressed",
+                "not_applicable",
+                "missing",
+                "not_in_report"
+              ]
+            },
+            "description": "How Completion rate, 150% of normal time was disclosed. A rate is a proportion, so anything outside 0 to 1 is a unit error rather than a measurement. An exact zero is treated as an artifact because an institution that graduated nobody in the cohort would not still be reporting; two institutions in a 600-school sample publish exactly zero here.",
+            "name": "completion_completion_rate_4yr_150nt",
+            "source_key": "latest.completion.completion_rate_4yr_150nt",
+            "type": "string",
+            "weight": 1.5
+          },
+          {
+            "constraints": {
+              "enum": [
+                "reported",
+                "implausible",
+                "suppressed",
+                "not_applicable",
+                "missing",
+                "not_in_report"
+              ]
+            },
+            "description": "How Admission rate was disclosed. Same proportion bounds as completion. An exact zero would mean the institution admitted no applicant at all, which is an artifact rather than a policy. Note that open-enrollment institutions legitimately have no admission rate; those are expected to arrive as an explicit not-applicable rather than as a zero, and are excluded from the denominator when they do.",
+            "name": "admissions_admission_rate_overall",
+            "source_key": "latest.admissions.admission_rate.overall",
+            "type": "string",
+            "weight": 1.0
+          },
+          {
+            "constraints": {
+              "enum": [
+                "reported",
+                "implausible",
+                "suppressed",
+                "not_applicable",
+                "missing",
+                "not_in_report"
+              ]
+            },
+            "description": "How Median debt at completion was disclosed. Zero is credible here and is not treated as an artifact: a fully funded institution can genuinely graduate students with no federal debt. The ceiling is set above aggregate federal borrowing limits for professional programs.",
+            "name": "aid_median_debt_completers_overall",
+            "source_key": "latest.aid.median_debt.completers.overall",
+            "type": "string",
+            "weight": 1.0
+          },
+          {
+            "constraints": {
+              "enum": [
+                "reported",
+                "implausible",
+                "suppressed",
+                "not_applicable",
+                "missing",
+                "not_in_report"
+              ]
+            },
+            "description": "How In-state tuition was disclosed. A published tuition of exactly zero is nearly always an unpopulated field rather than a free institution. The handful of genuinely tuition-free colleges are a known, small set and are better served by an explicit exemption than by a silent zero.",
+            "name": "cost_tuition_in_state",
+            "source_key": "latest.cost.tuition.in_state",
+            "type": "string",
+            "weight": 1.0
+          },
+          {
+            "constraints": {
+              "enum": [
+                "reported",
+                "implausible",
+                "suppressed",
+                "not_applicable",
+                "missing",
+                "not_in_report"
+              ]
+            },
+            "description": "How Enrollment was disclosed. An institution reporting zero students is either closed or has not populated the field. Either way the rest of its record should not be read as current.",
+            "name": "student_size",
+            "source_key": "latest.student.size",
+            "type": "string",
+            "weight": 1.0
+          }
+        ],
+        "missingValues": [
+          ""
+        ],
+        "primaryKey": [
+          "unit_id"
+        ]
+      },
+      "title": "Disclosure grades for US higher-education institutions"
+    },
+    {
+      "bytes": 6784,
+      "description": "The same schema this descriptor carries inline, as a standalone file for a consumer who wants the column contract without the package. Generated from the field definitions in the pass that writes the CSV, so the two cannot drift.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:e9ed137bf7b1ad792d093b5dd28cd0efb1eb0fa69bec68887efcf816207c5f87",
+      "mediatype": "application/json",
+      "name": "disclosure-grades-schema",
+      "path": "data/dataset.schema.json",
+      "title": "The Table Schema for the CSV, published on its own"
+    },
+    {
+      "bytes": 284642,
+      "description": "Every institution's per-field classifications, score and letter, the scope the run covered, the rules version that graded it, and every implausible finding with the peer group behind it.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:72003b85528cff64ca9be4f51b4495b4784992ce55eda0c84ddfec95d8cd5948",
+      "mediatype": "application/json",
+      "name": "report",
+      "path": "data/report.json",
+      "title": "The graded report the CSV is exported from"
+    },
+    {
+      "bytes": 253930,
+      "description": "The 600-institution slice the site's sample figures describe. Committed so that every grade on the site can be replayed from the bytes it was derived from, which is what the per-institution receipts verify against.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:012bc6010d9934f5354f6e1ec9db4ea53f812b379f5198d802cae0b55fd6de37",
+      "mediatype": "application/json",
+      "name": "scorecard-sample",
+      "path": "data/sample.json",
+      "title": "The College Scorecard records the committed report was graded from"
+    },
+    {
+      "bytes": 2610514,
+      "description": "Every institution the College Scorecard published on the walk date, with the provenance of every page fetched: the call count, each page's status and digest, and whether the walk paged the API to exhaustion. Without that last fact a large capture is still a sample.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:ab6b9ab92408a2a6ae17e31a9d1f3bb1ce7b401f9376e58aa29fc18f4c467318",
+      "mediatype": "application/json",
+      "name": "scorecard-capture",
+      "path": "data/census/scorecard.json",
+      "title": "The College Scorecard walk the census figures rest on"
+    },
+    {
+      "bytes": 3991,
+      "description": "What the whole College Scorecard population discloses, with the composition of both frames stated side by side so the skew of the 600-institution sample is a table rather than a sentence.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:d6743898fefcc8210ab27bf3c40075946cb0ec45176a44256c8a40648987f539",
+      "mediatype": "application/json",
+      "name": "scorecard-census",
+      "path": "data/scorecard-census.json",
+      "title": "The census reduced to per-field figures, beside the sample's"
+    },
+    {
+      "bytes": 99324,
+      "description": "The whole IPEDS directory graded on the six addresses it publishes, with the institutions a statute reaches that the federal record carries no address for.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:aadf2056bdf36abf267a3eb9b4a58f85d2b9fdb65fd9741b883e8f9dff240272",
+      "mediatype": "application/json",
+      "name": "national",
+      "path": "data/national.json",
+      "title": "The IPEDS-wide figures and the statute-backed gaps"
+    },
+    {
+      "bytes": 7923407,
+      "description": "The registry's organization records as walked, with the provenance of the walk. The input to the join measurement below.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:a6f061edbdf8ce7a11fd105bae9ed18beae6cf64b90ac563f9fbeda8152b4acf",
+      "mediatype": "application/json",
+      "name": "registry-organizations",
+      "path": "data/registry/organizations.json",
+      "title": "The Credential Registry organizations capture"
+    },
+    {
+      "bytes": 403268,
+      "description": "Which properties the registry's organizations actually carry, as walked. The input to the property census below.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:d3a9d92c38a68bab7d3545c4154c7429b374b59a5600828989820a2ac75e4762",
+      "mediatype": "application/json",
+      "name": "registry-properties-capture",
+      "path": "data/registry/properties.json",
+      "title": "The Credential Registry property capture"
+    },
+    {
+      "bytes": 3607,
+      "description": "The measured join between the Credential Registry's organizations and the two federal identifier spaces, with the denominators every share is taken over.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:9dc89fe85bf434aa99a866505df024a824906ed95951e2139b97a736e873caec",
+      "mediatype": "application/json",
+      "name": "registry-join",
+      "path": "data/registry-join.json",
+      "title": "How far the Credential Registry reaches into the federal corpora"
+    },
+    {
+      "bytes": 16803,
+      "description": "The property census behind the decision not to write a registry adapter: which properties appear, over how many organizations, and how many of those the federal corpora can be joined to.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:5605503a52c4e8d94b1be8b1da01b17f2cbc3bb014b4b4505ae5cd7ddb0dcd3d",
+      "mediatype": "application/json",
+      "name": "registry-properties",
+      "path": "data/registry-properties.json",
+      "title": "What the Credential Registry's organizations actually publish"
+    },
+    {
+      "bytes": 1022829,
+      "description": "The published archive exactly as downloaded. Committed so that the national figures derived from the 2021 collection can be regenerated from a clone rather than taken on trust.",
+      "format": "zip",
+      "hash": "sha256:6ea1a974e2994cfcf066b4910bcdad7b0df6f927e6871f3d55532af94b965389",
+      "mediatype": "application/zip",
+      "name": "ipeds-hd-2021",
+      "path": "data/HD2021.zip",
+      "title": "IPEDS directory file, 2021 collection year"
+    },
+    {
+      "bytes": 1053927,
+      "description": "The published archive exactly as downloaded. Committed so that the national figures derived from the 2022 collection can be regenerated from a clone rather than taken on trust.",
+      "format": "zip",
+      "hash": "sha256:e36389b793741bf6886b8d85fa9b42614644162b0d0b1d024a663a9c1865c782",
+      "mediatype": "application/zip",
+      "name": "ipeds-hd-2022",
+      "path": "data/HD2022.zip",
+      "title": "IPEDS directory file, 2022 collection year"
+    },
+    {
+      "bytes": 1110720,
+      "description": "The published archive exactly as downloaded. Committed so that the national figures derived from the 2023 collection can be regenerated from a clone rather than taken on trust.",
+      "format": "zip",
+      "hash": "sha256:e11d35af6f50fbe2f51d8ddd5a9d4f49860abbab7d73beae1f8524f13ad8945b",
+      "mediatype": "application/zip",
+      "name": "ipeds-hd-2023",
+      "path": "data/HD2023.zip",
+      "title": "IPEDS directory file, 2023 collection year"
+    },
+    {
+      "bytes": 272395,
+      "description": "The published archive exactly as downloaded. Committed so that the national figures derived from the 2021 collection can be regenerated from a clone rather than taken on trust.",
+      "format": "zip",
+      "hash": "sha256:ebda1e37595b25746bd590aa3886de2d7672e83daf1297c12aff78787ad87e65",
+      "mediatype": "application/zip",
+      "name": "ipeds-ic-2021",
+      "path": "data/IC2021.zip",
+      "title": "IPEDS institutional characteristics file, 2021 collection year"
+    },
+    {
+      "bytes": 295913,
+      "description": "The published archive exactly as downloaded. Committed so that the national figures derived from the 2022 collection can be regenerated from a clone rather than taken on trust.",
+      "format": "zip",
+      "hash": "sha256:071ee0555be4b95a3132b0b589b474d5f885543efdb5ff9366030d84d776b86d",
+      "mediatype": "application/zip",
+      "name": "ipeds-ic-2022",
+      "path": "data/IC2022.zip",
+      "title": "IPEDS institutional characteristics file, 2022 collection year"
+    },
+    {
+      "bytes": 381806,
+      "description": "The published archive exactly as downloaded. Committed so that the national figures derived from the 2023 collection can be regenerated from a clone rather than taken on trust.",
+      "format": "zip",
+      "hash": "sha256:1454ab8fc5df34aafb04566351c29ed313350f41bc2a241a33fb4f7b93a044a1",
+      "mediatype": "application/zip",
+      "name": "ipeds-ic-2023",
+      "path": "data/IC2023.zip",
+      "title": "IPEDS institutional characteristics file, 2023 collection year"
+    },
+    {
+      "bytes": 832,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:a8c1d461bc3be8d7853ed2e45441203da6b6c1dde5f9bc81316de2f2b3eb9cd8",
+      "mediatype": "application/json",
+      "name": "snapshot-ipeds-2021",
+      "path": "data/snapshots/ipeds/2021.json",
+      "title": "Per-field disclosure counts, ipeds, 2021"
+    },
+    {
+      "bytes": 832,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:860094ecd3c3e236ede332a658855a2c5cf82cef87db029fa3097fcf9f0f35c3",
+      "mediatype": "application/json",
+      "name": "snapshot-ipeds-2022",
+      "path": "data/snapshots/ipeds/2022.json",
+      "title": "Per-field disclosure counts, ipeds, 2022"
+    },
+    {
+      "bytes": 831,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:ba401e0a33c5ed22ec320a2d0967f7818625a4c576e21e8b8d79c5188831c378",
+      "mediatype": "application/json",
+      "name": "snapshot-ipeds-2023",
+      "path": "data/snapshots/ipeds/2023.json",
+      "title": "Per-field disclosure counts, ipeds, 2023"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:10232c700d97341ad1852050dfaa498aa62e9293f8835f7ac6b461dc13d5150d",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-08-21",
+      "path": "data/snapshots/scorecard/2026-08-21.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-08-21"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:cc4ab21dc1a73785131f0332e1b71d832ef6b85a37e5b21a951f60a3549f24f4",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-08-22",
+      "path": "data/snapshots/scorecard/2026-08-22.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-08-22"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:5f8a17bdacb6f8f9adca5c0e753efc22ab980c7b7c82088e447f2cc12026be75",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-08-23",
+      "path": "data/snapshots/scorecard/2026-08-23.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-08-23"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:041e161da1b03507d912c8c561789dd2389a537def3e912f62a31a853d493b60",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-08-24",
+      "path": "data/snapshots/scorecard/2026-08-24.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-08-24"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:305c0545e3b71ec0b27871d489c85ac2f3ee5a5b18e9bff47f267d77123e05a3",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-08-25",
+      "path": "data/snapshots/scorecard/2026-08-25.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-08-25"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:23be07461db6f0b9378abf2e1c885892fbe82da3970ab84e72b10f4e052982b5",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-08-26",
+      "path": "data/snapshots/scorecard/2026-08-26.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-08-26"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:5695b35e029c0864c19843ab11e8a6d3feefb3c7daa659976fb63a7d473d8f18",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-08-27",
+      "path": "data/snapshots/scorecard/2026-08-27.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-08-27"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:7e2d3ee8595701c2d93395ba496899aed0fd28a999eba754e16c93b54130edce",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-08-28",
+      "path": "data/snapshots/scorecard/2026-08-28.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-08-28"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:0b380523a68a7d45a18a0e8ff1a0b81818eea8040560ee79857fc06d5d0c57be",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-08-29",
+      "path": "data/snapshots/scorecard/2026-08-29.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-08-29"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:ecd566c421579336a503c8e8faa776ba14950ad60289d06a795a6bcf7da4bf1e",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-08-30",
+      "path": "data/snapshots/scorecard/2026-08-30.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-08-30"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:ac8c1920270301125841a7d3f84362ad167a283d0c20e0c73f6c47b06c3665f4",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-08-31",
+      "path": "data/snapshots/scorecard/2026-08-31.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-08-31"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:70ef1e8d435505e0c0f4cfad7056ac68303c86565818ca4c47af023085c44828",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-09-01",
+      "path": "data/snapshots/scorecard/2026-09-01.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-09-01"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:f7c7fb9f4fe139ec09970791548344cfa1b7e15ec8aa59839d8e1b14848032ce",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-09-02",
+      "path": "data/snapshots/scorecard/2026-09-02.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-09-02"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:8920ca57ed9e74db2292f94ec5624c6062576e1daf0d02362e6b52bd47fdd43e",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-09-03",
+      "path": "data/snapshots/scorecard/2026-09-03.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-09-03"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:1b2e1d3e8663f6230c5c8bbbcdd41cfb8f9656abd8c368b9a1e8b6592accdd73",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-09-04",
+      "path": "data/snapshots/scorecard/2026-09-04.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-09-04"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:fd2782495365db6724e5f9003999ab54a7bcbbf93e987e00e7cb052b4c3f2a13",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-09-05",
+      "path": "data/snapshots/scorecard/2026-09-05.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-09-05"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:a991a704e70c074796c90575f3ff7e93d89dac06b804596a3c44c03a867580c4",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-09-06",
+      "path": "data/snapshots/scorecard/2026-09-06.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-09-06"
+    },
+    {
+      "bytes": 807,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:2e43ab2b77ce0190fe26dc6c235ad6f51da4cf8be780fcfc83734e0d45130846",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-09-07",
+      "path": "data/snapshots/scorecard/2026-09-07.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-09-07"
+    }
+  ],
+  "sources": [
+    {
+      "path": "https://collegescorecard.ed.gov/data/",
+      "title": "College Scorecard"
+    },
+    {
+      "path": "https://nces.ed.gov/ipeds/use-the-data",
+      "title": "IPEDS"
+    },
+    {
+      "path": "https://credentialengine.org/credential-registry/",
+      "title": "Credential Registry"
+    }
+  ],
+  "title": "disclosed: what US colleges do not tell you"
+}
