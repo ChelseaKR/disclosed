@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -426,6 +427,40 @@ class TestTheSameCaptureProducesTheSameBytes:
         only = rendered.pop()
         assert json.loads(only)["unit_id"] == "100654"
         assert len(json.loads(only)["fields"]) == len(FIELDS)
+
+    def test_the_serialised_key_order_is_pinned_and_not_merely_reproducible(self) -> None:
+        """``sort_keys=True`` is what lets two builds' receipts be diffed line by line.
+
+        Measured while writing this file: deleting ``sort_keys=True`` left every other test here
+        green. CPython preserves a dict's insertion order and ``receipt_for`` builds its keys in a
+        fixed order, so the cross-process check above cannot see the loss -- the bytes are stable,
+        they are just no longer in the order the format promises. Only pinning the order catches
+        it, which is why this assertion names the keys rather than checking they are sorted.
+        """
+        identity = receipts.SourceIdentity(name="fixture.json", sha256="0" * 64, walked_at=None)
+        text = receipts.dumps(receipts.receipt_for({"id": 1, "school.name": "X"}, source=identity))
+
+        assert re.findall(r'^  "([a-z_]+)":', text, re.MULTILINE) == [
+            "fields",
+            "kind",
+            "letter",
+            "name",
+            "peer_group",
+            "rules_version",
+            "schema_version",
+            "score",
+            "source",
+            "state",
+            "unit_id",
+        ]
+        assert re.findall(r'^      "([a-z_]+)":', text, re.MULTILINE)[:6] == [
+            "classification",
+            "in_denominator",
+            "key",
+            "label",
+            "rationale_anchor",
+            "weight",
+        ]
 
 
 class TestEveryPageLinksAReceiptThatExists:
