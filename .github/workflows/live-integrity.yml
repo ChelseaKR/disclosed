@@ -66,14 +66,31 @@ jobs:
         run: |
           set -uo pipefail
           expected_sha="$(git rev-parse HEAD)"
+          # `set -uo pipefail` ADDS options. It does not clear the `-e` that Actions
+          # already passed to this shell, so a verifier that exited non-zero ended the
+          # step on the line below, `verify_rc` was never assigned, and the excuse
+          # underneath was dead code on the only path it was written for. Suspend
+          # errexit around exactly the verifier call — the shape nearmiss's sentinel
+          # uses — and restore it immediately afterwards.
+          set +e
           python3 tools/verify_live_site.py
           verify_rc="$?"
+          set -e
           # A deploy for a newer commit may have landed while this ran, in which case
           # the live surface differing from THIS commit is the deploy working. Only
           # that exact case is excused, and only by re-reading the remote afterwards.
-          remote_sha="$(git ls-remote --exit-code origin refs/heads/master | cut -f1)"
-          if [ "$remote_sha" != "$expected_sha" ]; then
-            echo "::warning::master moved to ${remote_sha} while this ran; re-run once its deploy finishes"
-            exit 0
+          # "That exact case" is exit 1, "the live surface is not what this commit
+          # publishes" — the one outcome a newer deploy explains. Exit 4 is "the check
+          # could not run": an unreachable origin, an origin that answers a
+          # guaranteed-missing path with something other than 404, a live page with no
+          # generated-on line. master moving explains none of those, and excusing them
+          # would turn the sentinel green on precisely the vacuity that
+          # verify_live_site.py refuses to report as a pass.
+          if [ "$verify_rc" -eq 1 ]; then
+            remote_sha="$(git ls-remote --exit-code origin refs/heads/master | cut -f1)"
+            if [ "$remote_sha" != "$expected_sha" ]; then
+              echo "::warning::master moved to ${remote_sha} while this ran; re-run once its deploy finishes"
+              exit 0
+            fi
           fi
           exit "$verify_rc"
