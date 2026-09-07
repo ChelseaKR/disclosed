@@ -42,15 +42,18 @@ from .disclosure import CLASSIFICATIONS, Disclosure
 from .fields import APPLICABILITY_PREDICATES, Field, predicate_name
 
 __all__ = [
+    "NOT_COVERED",
     "RULES_FORMAT_VERSION",
     "SCHEMA_ORIGIN",
     "SCHEMA_PATH",
     "STATE_COLUMN_SUFFIX",
     "Rule",
     "RuleFileError",
+    "TableReport",
     "classify_rows",
     "classify_table",
     "load_rules",
+    "report_table",
     "rules_from_payload",
     "rules_to_payload",
     "schema",
@@ -436,18 +439,35 @@ def schema() -> dict[str, Any]:
 
 
 def classify_rows(
-    rows: Sequence[Mapping[str, object]], rules: Sequence[Rule]
+    rows: Sequence[Mapping[str, object]],
+    rules: Sequence[Rule],
+    *,
+    columns: Sequence[str] | None = None,
 ) -> list[dict[str, str]]:
     """Classify each row against each rule, returning the state column values only.
 
+    Args:
+        rows: The records to classify.
+        rules: The rules to apply.
+        columns: Which columns the input declares, when the caller knows independently of the
+            rows -- a CSV header, say. Without it the columns are the union of the rows' keys,
+            which is right for a bare list of records and **wrong for a table with a header and
+            no rows**: that union is empty, so every rule's column reads as absent and the caller
+            is told the input "has no column named 'a'" about a file whose header names it.
+            An empty table is a table with nothing in it, not a table missing its columns, and
+            the two want different answers.
+
     Raises:
-        RuleFileError: If a rule names a column no row carries. See the module docstring: an
-            absent column is a question this file does not ask, and marking every row ``missing``
-            would publish that as a finding about the publisher.
+        RuleFileError: If a rule names a column the input does not carry. See the module
+            docstring: an absent column is a question this file does not ask, and marking every
+            row ``missing`` would publish that as a finding about the publisher.
     """
-    present: set[str] = set()
-    for row in rows:
-        present.update(row)
+    if columns is None:
+        present: set[str] = set()
+        for row in rows:
+            present.update(row)
+    else:
+        present = set(columns)
     absent = [rule.column for rule in rules if rule.column not in present]
     if absent:
         raise RuleFileError(
@@ -474,7 +494,7 @@ def classify_table(text: str, rules: Sequence[Rule]) -> str:
         raise RuleFileError("the input has no header row, so no column can be named")
 
     rows = [dict(row) for row in reader]
-    states = classify_rows(rows, rules)
+    states = classify_rows(rows, rules, columns=header)
 
     by_column = {rule.column: rule for rule in rules}
     out_header: list[str] = []
@@ -490,6 +510,196 @@ def classify_table(text: str, rules: Sequence[Rule]) -> str:
     for row, state in zip(rows, states, strict=True):
         writer.writerow({**row, **state})
     return buffer.getvalue()
+
+
+#: What a report says about a column the rule file has nothing to say about. It is deliberately
+#: **not** a sixth :class:`~disclosed.disclosure.Disclosure`: the schema says in terms that there
+#: is no sixth state, and this is not a fact about a cell at all. It is a fact about the *rule
+#: file* -- the publisher wrote no rule for that column -- and it belongs beside the counts rather
+#: than inside them, because a column nobody wrote a rule for has not been found to be anything.
+NOT_COVERED: Final[str] = "not_covered"
+
+
+@dataclass(frozen=True, slots=True)
+class TableReport:
+    """What a rule file found in a table, and what it could not look at.
+
+    The denominator is the point. A conformance tool that answers "0 problems" over a file whose
+    columns none of its rules reached has derived a clean bill of health from nothing, which is
+    the defect this project exists to name, committed by the instrument built to name it. So the
+    report carries the cells it saw, the cells the rules covered and the cells they did not, and
+    :meth:`exit_code` refuses to call an empty denominator a pass.
+    """
+
+    rows: int
+    columns: tuple[str, ...]
+    """Every column of the input, in the order the header gave them."""
+
+    covered: tuple[str, ...]
+    """The columns a rule reached, in rule-file order."""
+
+    counts: Mapping[str, Mapping[str, int]]
+    """Per covered column, the count of each of the five states. Every state is present with a
+    zero rather than omitted: a missing key and a zero read identically to a careless consumer,
+    and only one of them means "none of these"."""
+
+    @property
+    def not_covered(self) -> tuple[str, ...]:
+        """Columns of the input no rule named, in the order the header gave them."""
+        covered = set(self.covered)
+        return tuple(column for column in self.columns if column not in covered)
+
+    @property
+    def cells_seen(self) -> int:
+        return self.rows * len(self.columns)
+
+    @property
+    def cells_covered(self) -> int:
+        return self.rows * len(self.covered)
+
+    @property
+    def cells_not_covered(self) -> int:
+        return self.cells_seen - self.cells_covered
+
+    @property
+    def indistinguishable(self) -> int:
+        """Cells that cannot be told apart from a value nobody measured.
+
+        Everything the rules covered except :attr:`Disclosure.REPORTED`. ``suppressed`` and
+        ``not_applicable`` are in the count on purpose and are **not** a criticism of the
+        publisher: the question is what a reader of the table can distinguish, and a withheld
+        value and an inapplicable one are both cells they cannot read a measurement out of. The
+        per-state breakdown is right there for anyone who wants to say something narrower.
+        """
+        return sum(
+            count
+            for column in self.covered
+            for state, count in self.counts[column].items()
+            if state != Disclosure.REPORTED.value
+        )
+
+    @property
+    def measurable(self) -> bool:
+        """Whether the report rests on anything at all.
+
+        False when the table has no data rows, or when no rule reached a column of it. Either way
+        every count below is zero, and the honest answer is that nothing was examined rather
+        than that nothing was wrong.
+        """
+        return self.rows > 0 and bool(self.covered)
+
+    def exit_code(self) -> int:
+        """0 nothing indistinguishable, 1 something was, 3 there was nothing to look at.
+
+        Three outcomes and not two, and 2 is deliberately skipped: it already means "the input or
+        the rule file was refused" for this command, and an unreadable table and a clean table
+        sharing an exit code is the thing this mode exists to make impossible.
+        """
+        if not self.measurable:
+            return 3
+        return 1 if self.indistinguishable else 0
+
+    def as_dict(self) -> dict[str, Any]:
+        """The report as JSON, for a consumer that is not a terminal."""
+        return {
+            "rows": self.rows,
+            "columns": list(self.columns),
+            "covered": list(self.covered),
+            NOT_COVERED: list(self.not_covered),
+            "cells": {
+                "seen": self.cells_seen,
+                "covered": self.cells_covered,
+                NOT_COVERED: self.cells_not_covered,
+                "indistinguishable_from_unmeasured": self.indistinguishable,
+            },
+            "measurable": self.measurable,
+            "counts": {column: dict(self.counts[column]) for column in self.covered},
+        }
+
+    def as_markdown(self) -> str:
+        """The same report for a person, with the denominator in the first paragraph.
+
+        The denominator goes first because the number a reader will quote is the count of
+        problems, and a count of problems without the population it is out of is the shape this
+        project spends its whole README objecting to.
+        """
+        lines = [
+            "# Table conformance report",
+            "",
+            f"- Rows read: {self.rows:,}",
+            f"- Columns in the table: {len(self.columns):,}",
+            f"- Columns the rules cover: {len(self.covered):,}",
+            f"- Columns the rules do not cover: {len(self.not_covered):,}",
+            f"- Cells seen: {self.cells_seen:,}",
+            f"- Cells the rules cover: {self.cells_covered:,}",
+            f"- Cells the rules do not cover: {self.cells_not_covered:,}",
+        ]
+        if not self.measurable:
+            lines += [
+                "",
+                "**Nothing was examined.** "
+                + (
+                    "The table has no data rows."
+                    if self.rows == 0
+                    else "No rule reached a column of this table."
+                )
+                + " A report of no problems over an empty denominator is not a finding about "
+                "this table; it is a finding about the rule file.",
+                "",
+            ]
+            return "\n".join(lines) + "\n"
+        lines += [
+            f"- Cells indistinguishable from a value nobody measured: "
+            f"{self.indistinguishable:,} of {self.cells_covered:,}",
+            "",
+            "## By column",
+            "",
+            "| Column | " + " | ".join(sorted(CLASSIFICATIONS)) + " |",
+            "| --- | " + " | ".join("---:" for _ in sorted(CLASSIFICATIONS)) + " |",
+        ]
+        for column in self.covered:
+            counts = self.counts[column]
+            cells = " | ".join(f"{counts[state]:,}" for state in sorted(CLASSIFICATIONS))
+            lines.append(f"| {column} | {cells} |")
+        if self.not_covered:
+            lines += [
+                "",
+                "## Columns no rule covers",
+                "",
+                "These are not findings about the table. They are the part of it this rule file "
+                "does not ask about, and they are listed so that the counts above are read "
+                "against the right denominator.",
+                "",
+            ]
+            lines += [f"- `{column}`" for column in self.not_covered]
+        return "\n".join(lines) + "\n"
+
+
+def report_table(text: str, rules: Sequence[Rule]) -> TableReport:
+    """Classify a table and count, rather than rewriting it.
+
+    Raises:
+        RuleFileError: If the input carries no header, or a rule names a column it does not have
+            -- the same two refusals :func:`classify_table` makes, for the same reasons.
+    """
+    reader = csv.DictReader(io.StringIO(text))
+    header = reader.fieldnames
+    if not header:
+        raise RuleFileError("the input has no header row, so no column can be named")
+    rows = [dict(row) for row in reader]
+    states = classify_rows(rows, rules, columns=header)
+    counts: dict[str, dict[str, int]] = {
+        rule.column: dict.fromkeys(sorted(CLASSIFICATIONS), 0) for rule in rules
+    }
+    for state in states:
+        for rule in rules:
+            counts[rule.column][state[rule.state_column]] += 1
+    return TableReport(
+        rows=len(rows),
+        columns=tuple(header),
+        covered=tuple(rule.column for rule in rules),
+        counts=counts,
+    )
 
 
 def load_rules(path: Path) -> tuple[Rule, ...]:

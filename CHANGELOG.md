@@ -10,6 +10,15 @@ file is the human-readable one.
 
 ### Fixed
 
+- **A table with a header and no rows was refused as a table missing its columns.**
+  `classify_rows` derived the set of present columns from the union of the rows' own keys, so a
+  header-only CSV produced *"the input has no column named 'adm_rate'"* about a file whose header
+  names it — a false statement about the input, from the module whose entire argument is about
+  not making those. It now takes the declared columns when the caller knows them, which
+  `classify_table` and the new report mode both do. An empty table is a table with nothing in it,
+  not a table missing its columns, and the two want different answers: the report mode says
+  nothing was examined and exits 3.
+
 - **The published rule-file schema's `$id` was a 404.**
   `schema/classification.v1.schema.json` has been committed, versioned and described as
   published — in `docs/CLASSIFIER.md`, in the code and in the schema's own `$id` — since the
@@ -50,6 +59,22 @@ file is the human-readable one.
   A register in `package.EXCLUDED` names each committed file that is deliberately not a resource
   with the reason, and a test refuses a file that is in neither — a silent skip and a documented
   exclusion look identical from outside, and only one of them is a decision somebody made.
+- **`classify-csv --report`: point it at a published table and a rule file, and it says which
+  cells cannot be distinguished from a value nobody measured.** The verb classified cells and
+  said nothing about the table, so the one artifact here that reads a *foreign* file could not
+  answer the question it exists for. The report carries per-column counts of all five states —
+  every state present with a zero rather than omitted, because a missing key and a zero read
+  identically to a careless consumer — and the denominator those counts are out of: rows read,
+  columns in the table, columns the rules cover, columns they do not, and the same three for
+  cells. JSON or markdown, and in the markdown the denominator is printed above the finding,
+  which a test enforces by index.
+  **Four exit codes rather than two.** 0 nothing indistinguishable, 1 something is, 2 the input
+  or the rule file was refused, 3 there was nothing to look at. An unreadable table and a clean
+  table sharing an exit code is the defect this mode exists to make impossible, and so is a clean
+  table sharing one with a table nothing examined; a test asserts all four are different numbers.
+  `not_covered` appears in the report layer and never as a classification: the schema says there
+  is no sixth state, and a column nobody wrote a rule for is a fact about the rule file rather
+  than a finding about a cell.
 
 
 - **The disclosure history is a page now, not a job summary.** Seventeen daily Scorecard

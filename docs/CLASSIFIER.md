@@ -100,6 +100,49 @@ of the five words. Columns with no rules pass through untouched, and row order i
 
 Exit code 0 on success, 2 on a refusal.
 
+## `classify-csv --report`
+
+```
+disclosed classify-csv their-table.csv --rules their-rules.json --report markdown
+disclosed classify-csv their-table.csv --rules their-rules.json --report json --out report.json
+```
+
+Instead of rewriting the table, report on it. **Point it at any published table of numbers and a
+one-page rule file, and it tells you which cells cannot be distinguished from a value nobody
+measured — and it refuses to score a table it could not read.**
+
+The report carries per-column counts of all five states, every one present with a zero rather than
+omitted, and the **denominator those counts are out of**: rows read, columns in the table, columns
+the rules cover, columns they do not, cells seen, cells covered, cells not covered. The
+denominator is not decoration. A conformance tool that answers "0 problems" over a file whose
+columns none of its rules reached has derived a clean bill of health from nothing, which is the
+defect this project exists to name, committed by the instrument built to name it.
+
+`not_covered` appears in the report and **never as a classification**. There is no sixth state and
+the schema says so; a column nobody wrote a rule for is a fact about the *rule file*, not a finding
+about a cell, and it sits beside the counts rather than inside them.
+
+### Four exit codes, and why not two
+
+| code | meaning |
+| --- | --- |
+| 0 | read fine; every covered cell is a reported value |
+| 1 | read fine; at least one covered cell cannot be told apart from a value nobody measured |
+| 2 | the input or the rule file was refused |
+| 3 | there was nothing to look at — no data rows, or no rule reached a column of this table |
+
+**An unreadable table and a clean table must not share an exit code**, and neither must a clean
+table and one nothing examined. An exit code is the only part of this a script reads, so all four
+are different numbers and a test asserts that they are.
+
+The count of cells "indistinguishable from a value nobody measured" is everything the rules
+covered except `reported`, and `suppressed` and `not_applicable` are inside it on purpose. That is
+not a criticism of the publisher: withholding a value to protect a small cohort is the right thing
+to do, and a question that does not apply was right not to be answered. The question this number
+answers is what a *reader of the table* can tell apart, and in both of those cases the answer is
+"not a measurement". The per-state breakdown is right there for anyone who wants to say something
+narrower.
+
 ## What it refuses, and why
 
 Both refusals are the module's reason for existing. Each has a permissive reading that would
