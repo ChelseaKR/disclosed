@@ -22,6 +22,7 @@ import json
 import re
 import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -455,6 +456,300 @@ class TestTheNegativeControl:
 
         rules_path.write_text(json.dumps(_RULES), encoding="utf-8")
         assert _classify(workspace) == before
+
+
+class TestTheReportModeCountsAgainstItsOwnDenominator:
+    """The mode that makes this a conformance tool rather than a rewriter.
+
+    ``classify-csv`` graded cells and said nothing about the table. A report that counts problems
+    and does not carry the population they are out of is the exact shape this project's README
+    spends its length objecting to, so every count here is asserted beside its denominator, and
+    the case that matters most is the one where the denominator is zero.
+    """
+
+    def _report(self, workspace: Path) -> rules.TableReport:
+        parsed = rules.load_rules(workspace / "rules.json")
+        return rules.report_table((workspace / "input.csv").read_text(encoding="utf-8"), parsed)
+
+    def test_the_counts_are_the_classifications_the_same_rules_produce(
+        self, workspace: Path
+    ) -> None:
+        """The report and the annotated file are one classification, counted two ways."""
+        annotated = _classify(workspace)
+        report = self._report(workspace)
+
+        for column in report.covered:
+            counted = Counter(row[column + rules.STATE_COLUMN_SUFFIX] for row in annotated)
+            assert report.counts[column] == {
+                state: counted.get(state, 0) for state in sorted(CLASSIFICATIONS)
+            }
+
+    def test_every_state_is_present_with_a_zero_rather_than_omitted(self, workspace: Path) -> None:
+        """A missing key and a zero read identically to a careless consumer, and only one of them
+        means "none of these"."""
+        report = self._report(workspace)
+
+        for column in report.covered:
+            assert set(report.counts[column]) == set(CLASSIFICATIONS)
+
+    def test_the_states_of_a_column_sum_to_the_rows(self, workspace: Path) -> None:
+        report = self._report(workspace)
+
+        for column in report.covered:
+            assert sum(report.counts[column].values()) == report.rows
+
+    def test_the_denominator_is_stated_and_adds_up(self, workspace: Path) -> None:
+        report = self._report(workspace)
+
+        assert report.rows == 8
+        assert report.cells_seen == report.rows * len(report.columns)
+        assert report.cells_covered == report.rows * len(report.covered)
+        assert report.cells_covered + report.cells_not_covered == report.cells_seen
+
+    def test_a_column_no_rule_names_is_reported_as_uncovered_and_not_as_a_state(
+        self, workspace: Path
+    ) -> None:
+        """``not_covered`` is a fact about the rule file. The schema says there is no sixth state
+        and that has to keep being true."""
+        report = self._report(workspace)
+
+        assert "name" in report.not_covered
+        assert set(report.covered) & set(report.not_covered) == set()
+        assert rules.NOT_COVERED not in CLASSIFICATIONS
+        for column in report.covered:
+            assert rules.NOT_COVERED not in report.counts[column]
+
+    def test_the_indistinguishable_count_is_every_covered_cell_that_is_not_reported(
+        self, workspace: Path
+    ) -> None:
+        report = self._report(workspace)
+        expected = sum(
+            count
+            for column in report.covered
+            for state, count in report.counts[column].items()
+            if state != "reported"
+        )
+
+        assert report.indistinguishable == expected
+        assert 0 < report.indistinguishable < report.cells_covered
+
+    def test_a_table_with_a_header_and_no_rows_is_not_a_table_missing_its_columns(
+        self, workspace: Path
+    ) -> None:
+        """The columns are declared by the header, and an empty table has all of them.
+
+        Before this, presence was the union of the rows' own keys, so a header-only file produced
+        "the input has no column named 'adm_rate'" about a file whose header names it -- a false
+        statement about the input, from the module whose entire argument is about not making
+        those.
+        """
+        (workspace / "input.csv").write_text(
+            "unit_id,name,adm_rate,npc_url,ipeds.INSTCAT,ipeds.CYACTIVE\n", encoding="utf-8"
+        )
+
+        report = self._report(workspace)
+
+        assert report.rows == 0
+        assert report.covered == ("adm_rate", "npc_url")
+
+    def test_an_empty_table_is_not_measurable_and_says_so(self, workspace: Path) -> None:
+        (workspace / "input.csv").write_text(
+            "unit_id,name,adm_rate,npc_url,ipeds.INSTCAT,ipeds.CYACTIVE\n", encoding="utf-8"
+        )
+
+        report = self._report(workspace)
+
+        assert report.measurable is False
+        assert report.exit_code() == 3
+        assert report.indistinguishable == 0
+        assert "Nothing was examined" in report.as_markdown()
+
+    def test_a_table_where_every_covered_cell_reports_exits_zero(self, workspace: Path) -> None:
+        (workspace / "input.csv").write_text(
+            "unit_id,name,adm_rate,npc_url,ipeds.INSTCAT,ipeds.CYACTIVE\n"
+            "1,Reported College,0.55,https://example.edu/npc,1,1\n",
+            encoding="utf-8",
+        )
+
+        report = self._report(workspace)
+
+        assert report.measurable is True
+        assert report.indistinguishable == 0
+        assert report.exit_code() == 0
+
+    def test_a_clean_table_and_an_empty_one_do_not_share_an_exit_code(
+        self, workspace: Path
+    ) -> None:
+        """The whole reason there are four codes rather than two."""
+        header = "unit_id,name,adm_rate,npc_url,ipeds.INSTCAT,ipeds.CYACTIVE\n"
+        (workspace / "input.csv").write_text(header, encoding="utf-8")
+        empty = self._report(workspace).exit_code()
+        (workspace / "input.csv").write_text(
+            header + "1,Reported College,0.55,https://example.edu/npc,1,1\n", encoding="utf-8"
+        )
+        clean = self._report(workspace).exit_code()
+
+        assert empty != clean
+        assert (empty, clean) == (3, 0)
+
+    def test_the_markdown_states_the_denominator_before_the_finding(self, workspace: Path) -> None:
+        """A count of problems above the population it is out of is the shape this project
+        objects to, and the order is the only thing enforcing it."""
+        body = self._report(workspace).as_markdown()
+
+        assert body.index("Cells the rules cover:") < body.index(
+            "Cells indistinguishable from a value nobody measured"
+        )
+
+    def test_the_json_and_the_markdown_agree_about_the_numbers(self, workspace: Path) -> None:
+        report = self._report(workspace)
+        payload = report.as_dict()
+        body = report.as_markdown()
+
+        assert f"Rows read: {payload['rows']:,}" in body
+        assert f"Cells seen: {payload['cells']['seen']:,}" in body
+        assert f"Cells the rules cover: {payload['cells']['covered']:,}" in body
+
+    def test_the_report_is_deterministic(self, workspace: Path) -> None:
+        first, second = self._report(workspace), self._report(workspace)
+
+        assert first.as_dict() == second.as_dict()
+        assert first.as_markdown() == second.as_markdown()
+
+
+class TestTheReportModeOnTheCommandLine:
+    """The exit codes, which are the only part of this a script reads."""
+
+    def _run(self, workspace: Path, form: str = "json", **kwargs: str) -> int:
+        argv = [
+            "classify-csv",
+            str(workspace / "input.csv"),
+            "--rules",
+            str(workspace / "rules.json"),
+            "--report",
+            form,
+        ]
+        for name, value in kwargs.items():
+            argv += [f"--{name}", value]
+        return main(argv)
+
+    def test_a_table_with_something_indistinguishable_exits_one(
+        self, workspace: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        code = self._run(workspace)
+        payload = json.loads(capsys.readouterr().out)
+
+        assert code == 1
+        assert payload["cells"]["indistinguishable_from_unmeasured"] > 0
+
+    def test_a_table_with_nothing_indistinguishable_exits_zero(
+        self, workspace: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        (workspace / "input.csv").write_text(
+            "unit_id,name,adm_rate,npc_url,ipeds.INSTCAT,ipeds.CYACTIVE\n"
+            "1,Reported College,0.55,https://example.edu/npc,1,1\n",
+            encoding="utf-8",
+        )
+
+        code = self._run(workspace)
+        capsys.readouterr()
+
+        assert code == 0
+
+    def test_a_table_with_nothing_in_it_exits_three_and_says_so_on_stderr(
+        self, workspace: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Three, not zero and not two. An unreadable table and a clean table must not share an
+        exit code, and neither must a clean table and one nothing looked at."""
+        (workspace / "input.csv").write_text(
+            "unit_id,name,adm_rate,npc_url,ipeds.INSTCAT,ipeds.CYACTIVE\n", encoding="utf-8"
+        )
+
+        code = self._run(workspace)
+        captured = capsys.readouterr()
+
+        assert code == 3
+        assert "nothing was examined" in captured.err
+        assert "empty denominator" in captured.err
+        assert json.loads(captured.out)["measurable"] is False
+
+    def test_an_unreadable_input_still_exits_two_in_report_mode(
+        self, workspace: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        code = main(
+            [
+                "classify-csv",
+                str(workspace / "does-not-exist.csv"),
+                "--rules",
+                str(workspace / "rules.json"),
+                "--report",
+                "json",
+            ]
+        )
+
+        assert code == 2
+        assert "refusing" in capsys.readouterr().err
+
+    def test_the_four_exit_codes_are_four_different_numbers(
+        self, workspace: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Asserted together rather than one at a time, because the property is that they differ.
+
+        A tool answering "no problems" for a file it could not parse, or for a file whose columns
+        none of its rules reached, has derived a clean bill of health from an empty denominator.
+        Only an exit code carries that to a script.
+        """
+        header = "unit_id,name,adm_rate,npc_url,ipeds.INSTCAT,ipeds.CYACTIVE\n"
+        found = self._run(workspace)
+        (workspace / "input.csv").write_text(
+            header + "1,Reported College,0.55,https://example.edu/npc,1,1\n", encoding="utf-8"
+        )
+        clean = self._run(workspace)
+        (workspace / "input.csv").write_text(header, encoding="utf-8")
+        nothing = self._run(workspace)
+        unreadable = main(
+            [
+                "classify-csv",
+                str(workspace / "gone.csv"),
+                "--rules",
+                str(workspace / "rules.json"),
+                "--report",
+                "json",
+            ]
+        )
+        capsys.readouterr()
+
+        assert (clean, found, unreadable, nothing) == (0, 1, 2, 3)
+        assert len({clean, found, unreadable, nothing}) == 4
+
+    def test_markdown_is_written_to_a_file_when_asked(
+        self, workspace: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        out = workspace / "report.md"
+
+        code = self._run(workspace, "markdown", out=str(out))
+        captured = capsys.readouterr()
+
+        assert code == 1
+        assert out.read_text(encoding="utf-8").startswith("# Table conformance report")
+        assert "reported on 2 rules" in captured.err
+        assert captured.out == ""
+
+    def test_without_the_flag_the_command_still_writes_the_annotated_table(
+        self, workspace: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """The report is an addition. The verb's existing contract is unchanged."""
+        code = main(
+            [
+                "classify-csv",
+                str(workspace / "input.csv"),
+                "--rules",
+                str(workspace / "rules.json"),
+            ]
+        )
+
+        assert code == 0
+        assert "adm_rate_disclosure" in capsys.readouterr().out
 
 
 class TestTheCommandLine:

@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Sequence
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Final
@@ -690,16 +691,33 @@ def _cmd_classify(args: argparse.Namespace) -> int:
 
 
 def _cmd_classify_csv(args: argparse.Namespace) -> int:
-    """Write a state column beside every value column a rule file names.
+    """Annotate a table with state columns, or report on what the rules found in it.
 
-    Exit codes: 0 written, 2 the rule file or the input was refused. Refusals are loud and
-    specific because every one of them has a permissive reading that would have produced a
-    plausible file saying something false -- see :mod:`disclosed.rules`.
+    Exit codes, and the reason there are four of them rather than two.
+
+    Annotating: **0** written, **2** the rule file or the input was refused.
+
+    Reporting: **0** nothing in the covered cells is indistinguishable from a value nobody
+    measured, **1** something is, **2** the input or the rule file was refused, **3** there was
+    nothing to look at -- the table has no data rows, or no rule reached a column of it.
+
+    Three and two are separate on purpose, and so are three and zero. A tool that answers "no
+    problems" for a file it could not parse, or for a file whose columns none of its rules
+    reached, has derived a clean bill of health from an empty denominator. That is the defect
+    this whole project exists to name, committed by the instrument built to name it, and an exit
+    code is the only part of this a script will read.
+
+    Refusals are loud and specific because every one of them has a permissive reading that would
+    have produced a plausible file saying something false -- see :mod:`disclosed.rules`.
     """
     try:
         parsed = rules.load_rules(Path(args.rules))
         text = Path(args.csv).read_text(encoding="utf-8")
-        classified = rules.classify_table(text, parsed)
+        rendered = (
+            _classification_report(text, parsed, args.report)
+            if args.report
+            else (rules.classify_table(text, parsed), 0)
+        )
     except rules.RuleFileError as exc:
         print(f"refusing: {exc}", file=sys.stderr)
         return 2
@@ -707,15 +725,41 @@ def _cmd_classify_csv(args: argparse.Namespace) -> int:
         print(f"refusing: {exc}", file=sys.stderr)
         return 2
 
+    body, code = rendered
     if args.out == "-":
-        sys.stdout.write(classified)
+        sys.stdout.write(body)
     else:
         out = Path(args.out)
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(classified, encoding="utf-8", newline="")
-        counted = classified.count("\n") - 1
-        print(f"classified {counted} rows against {len(parsed)} rules -> {out}")
-    return 0
+        out.write_text(body, encoding="utf-8", newline="")
+        if args.report:
+            print(f"reported on {len(parsed)} rules -> {out}", file=sys.stderr)
+        else:
+            print(f"classified {body.count(chr(10)) - 1} rows against {len(parsed)} rules -> {out}")
+    return code
+
+
+def _classification_report(text: str, parsed: Sequence[rules.Rule], form: str) -> tuple[str, int]:
+    """The report and the exit code it carries, in the requested form."""
+    report = rules.report_table(text, parsed)
+    body = (
+        json.dumps(report.as_dict(), indent=2, sort_keys=True) + "\n"
+        if form == "json"
+        else report.as_markdown()
+    )
+    if not report.measurable:
+        print(
+            "nothing was examined: "
+            + (
+                "the table has no data rows"
+                if report.rows == 0
+                else "no rule reached a column of this table"
+            )
+            + ". Reporting no problems over an empty denominator would be a finding about the "
+            "rule file dressed as a finding about the table.",
+            file=sys.stderr,
+        )
+    return body, report.exit_code()
 
 
 def _cmd_crosscheck(args: argparse.Namespace) -> int:
@@ -1307,6 +1351,19 @@ def main(argv: list[str] | None = None) -> int:
     p_classify_csv.add_argument("csv", help="CSV to classify")
     p_classify_csv.add_argument("--rules", required=True, help="rule file to apply")
     p_classify_csv.add_argument("--out", default="-", help="where to write; '-' for stdout")
+    p_classify_csv.add_argument(
+        "--report",
+        choices=("json", "markdown"),
+        default=None,
+        help=(
+            "instead of writing the annotated table, report on it: per-column counts by state, "
+            "and the denominator those counts are out of -- cells seen, cells the rules covered, "
+            "cells they did not. Exits 1 when a covered cell cannot be told apart from a value "
+            "nobody measured, and 3 when there was nothing to look at, which is separate from "
+            "the 2 that means the input was refused: an unreadable table and a clean table must "
+            "not share an exit code"
+        ),
+    )
     p_classify_csv.set_defaults(func=_cmd_classify_csv)
 
     p_cross = sub.add_parser(
