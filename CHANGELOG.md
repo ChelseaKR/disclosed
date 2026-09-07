@@ -10,6 +10,27 @@ file is the human-readable one.
 
 ### Added
 
+- **The disclosure history is a page now, not a job summary.** Seventeen daily Scorecard
+  snapshots and three IPEDS collection years were committed and the only way to read them was to
+  run `disclosed drift` twice by hand or to open a job summary on a green run — so the most
+  distinctive measurement this project makes was the one a reader was least likely to see.
+  `disclosed site --snapshots-from data/snapshots` now renders one disclosure-history page per
+  source: each field's reporting rate in every committed run, and what moved between the first run
+  and the last, with the direction word, the change in percentage points, how far the field's
+  denominator moved and whether it clears the systemic threshold. Every figure comes from the same
+  `drift.compare` the command runs, and a test binds each cell to that call rather than to a
+  number written into a fixture.
+  **Three absences that a rate table would otherwise print as `0%` are kept apart and said in
+  words:** a field a run never graded, a field whose denominator was empty and therefore has no
+  rate at all, and a movement that could not be measured in one of the two runs — which gets no
+  direction word, because `FieldDrift.direction` falls back to the sign of the raw count and the
+  whole argument of the drift module is that a count and a rate can point in opposite directions.
+  One source per page, since `drift` refuses a mixed pair for a reason; a snapshot written before
+  scope existed lands on a page that says the source was not recorded rather than being folded
+  into the nearest named collection. Without the flag the build is byte-for-byte what it was and
+  the site makes no claim about drift. The published site grows from 617 to 619 pages, and the
+  history class joins the named report list the Lighthouse job audits.
+
 - **Every institution page now carries a receipt, and two verbs replay it.** A college could
   read this project's claim about it and had no way to check it short of cloning the repository.
   `disclosed receipt <unit_id> --source <file>` writes the derivation down — the source file and

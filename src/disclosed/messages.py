@@ -358,7 +358,7 @@ def _check_placeholders(catalog: Catalog, key: str, message: str, expected: froz
 def load(locale: str = SOURCE_LOCALE) -> Catalog:
     """The catalog for one locale, parsed and checked, or ``CatalogError``.
 
-    Cached, because a 617-page build should read the file once and because a catalog is immutable
+    Cached, because a 619-page build should read the file once and because a catalog is immutable
     by construction. Every locale other than the source is checked against the source before it is
     handed back, so an incomplete translation cannot reach a page.
     """

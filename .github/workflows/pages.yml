@@ -5,7 +5,7 @@ name: publish-site
 # this workflow needs no network, no API key, and no secrets, and the published pages are
 # reproducible from the commit they were built at.
 #
-# The origin stamped into the 617 canonical links, the sitemap and robots.txt is taken from the
+# The origin stamped into the 619 canonical links, the sitemap and robots.txt is taken from the
 # deploy target the Pages API reports, not from a constant in the source. Issue #2 was those
 # URLs naming a host that served a 404, and the reason it went unnoticed for so long is that
 # nothing in the build compared the two. `check_site_origin.py` now does, and fails the build
@@ -67,6 +67,7 @@ jobs:
           --national data/national.json
           --scorecard-census data/scorecard-census.json
           --receipts-from data/sample.json
+          --snapshots-from data/snapshots
           --out site
           --origin "$SITE_ORIGIN"
           --generated "$(date -u +%F)"

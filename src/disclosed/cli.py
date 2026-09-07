@@ -31,6 +31,7 @@ from . import (
     crosswalk,
     dataset,
     frame,
+    history,
     messages,
     national,
     receipts,
@@ -985,6 +986,24 @@ def _cmd_site(args: argparse.Namespace) -> int:
         receipt_source = _receipt_source(args.receipts_from)
         if receipt_source is None:
             return 1
+    histories: tuple[history.SnapshotSeries, ...] = ()
+    if args.snapshots_from:
+        snapshot_root = Path(args.snapshots_from)
+        try:
+            histories = history.load(snapshot_root)
+        except history.HistoryError as exc:
+            # Refused rather than rendered from whatever loaded. A history page is a claim about
+            # a series, and a series this command had to guess about would look exactly like one
+            # it did not.
+            print(f"refusing to build: {exc}", file=sys.stderr)
+            return 1
+        if not histories:
+            print(
+                f"{snapshot_root} holds no snapshots; --snapshots-from was given and found "
+                "nothing, which is a broken invocation rather than a site with no history",
+                file=sys.stderr,
+            )
+            return 1
     out = Path(args.out)
     try:
         pages = site.build(
@@ -997,6 +1016,7 @@ def _cmd_site(args: argparse.Namespace) -> int:
             ask_endpoint=args.ask_endpoint,
             locale=args.locale,
             receipts=receipt_source,
+            histories=histories,
         )
     except site.ReceiptMismatch as exc:
         # The report and the receipt source disagree about a classification, so the page and the
@@ -1348,6 +1368,17 @@ def main(argv: list[str] | None = None) -> int:
             "the Scorecard records this report was graded from. With it, every institution page "
             "gets a receipt.json beside it and a section saying how to replay it; without it the "
             "build is byte-for-byte what it was and no page claims a receipt it does not have"
+        ),
+    )
+    p_site.add_argument(
+        "--snapshots-from",
+        default=None,
+        help=(
+            "a directory of committed per-source snapshot directories, such as data/snapshots. "
+            "With it the site gains one disclosure-history page per source and the home page "
+            "links them; without it the build is byte-for-byte what it was and the site makes no "
+            "claim about drift, which is the honest rendering of a build that was never shown "
+            "the series"
         ),
     )
     p_site.add_argument("--out", default="site")

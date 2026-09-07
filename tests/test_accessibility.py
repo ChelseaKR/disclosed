@@ -27,7 +27,7 @@ from typing import Any, ClassVar
 
 import pytest
 
-from disclosed import national, receipts, site
+from disclosed import history, national, receipts, site
 
 _REPORT: dict[str, Any] = {
     "scope": {
@@ -101,6 +101,14 @@ _NATIONAL: dict[str, Any] = {
 }
 
 
+# The committed report and the committed national artifact: the exact bytes `pages.yml` renders
+# and uploads. Rendered whole in TestTheResourceBudgetOverThePublishedSite below.
+_ROOT = Path(__file__).resolve().parent.parent
+_DATA = _ROOT / "data"
+_WORKFLOWS = _ROOT / ".github" / "workflows"
+_BUDGET_FILE = _ROOT / "lighthouse-budget.json"
+
+
 @pytest.fixture
 def built(tmp_path: Path) -> Path:
     site.build(
@@ -109,6 +117,7 @@ def built(tmp_path: Path) -> Path:
         origin="https://example.test",
         generated="2026-08-05",
         national=national.build(_NATIONAL),
+        histories=history.load(_DATA / "snapshots"),
     )
     return tmp_path
 
@@ -118,12 +127,6 @@ def built(tmp_path: Path) -> Path:
 # that adding a page kind does not fail here, but a build that rendered nothing does.
 _EXPECTED_PAGES: int = 6
 
-# The committed report and the committed national artifact: the exact bytes `pages.yml` renders
-# and uploads. Rendered whole in TestTheResourceBudgetOverThePublishedSite below.
-_ROOT = Path(__file__).resolve().parent.parent
-_DATA = _ROOT / "data"
-_WORKFLOWS = _ROOT / ".github" / "workflows"
-_BUDGET_FILE = _ROOT / "lighthouse-budget.json"
 
 # Lighthouse states resource budgets in KiB.
 _KIB = 1024
@@ -166,7 +169,10 @@ def published(tmp_path_factory: pytest.TempPathFactory) -> Path:
     renders is a page the real published site was never audited over either. ``--receipts-from``
     is among them: without it every institution page here would be missing the receipt section
     the published one carries, and a budget measured over that shape would be a budget nobody
-    applied to the bytes a visitor gets.
+    applied to the bytes a visitor gets. ``--snapshots-from`` is among
+    them for the same reason: the history pages carry the widest table the generator produces,
+    one column per committed run, and the series gains a column every day -- so a budget that
+    never measured them is a budget that has not seen the page most likely to outgrow it.
     """
     out = tmp_path_factory.mktemp("published")
     sample = _DATA / "sample.json"
@@ -178,6 +184,7 @@ def published(tmp_path_factory: pytest.TempPathFactory) -> Path:
         national=json.loads((_DATA / "national.json").read_text(encoding="utf-8")),
         scorecard_census=json.loads((_DATA / "scorecard-census.json").read_text(encoding="utf-8")),
         receipts=receipts.load_source(sample, json.loads(sample.read_text(encoding="utf-8")), None),
+        histories=history.load(_DATA / "snapshots"),
     )
     return out
 
@@ -297,9 +304,15 @@ class TestTheSuiteActuallyAuditsSomething:
 
     def test_one_page_of_every_kind_is_audited(self, built: Path) -> None:
         relative = {p.parent.relative_to(built).as_posix() for p in _pages(built)}
-        assert {".", "methodology", "national", "state/CA", "institution/1", "institution/2"} <= (
-            relative
-        )
+        assert {
+            ".",
+            "methodology",
+            "national",
+            "state/CA",
+            "institution/1",
+            "institution/2",
+            "history/college-scorecard",
+        } <= relative
 
     def test_at_least_one_data_table_is_audited(self, built: Path) -> None:
         """Otherwise the caption and row-header checks are ``all([])`` on every page."""
@@ -314,7 +327,7 @@ class TestTheSuiteActuallyAuditsSomething:
 
 class TestLandmarksAndNavigation:
     def test_every_page_offers_a_skip_link_that_lands_somewhere(self, built: Path) -> None:
-        """617 pages each open with a breadcrumb. Tabbing past it on every one is the bypass-blocks
+        """619 pages each open with a breadcrumb. Tabbing past it on every one is the bypass-blocks
         failure, and the target has to exist or the link is worse than none."""
         for page in _pages(built):
             text = page.read_text(encoding="utf-8")
@@ -642,7 +655,7 @@ class TestTheTransferSizeBudget:
         assert not broken, f"pages over the lighthouse-budget.json resourceSizes lines: {broken}"
 
     def test_no_published_page_exceeds_the_budget(self, published: Path) -> None:
-        """The same lines over the 617 pages ``pages.yml`` uploads, not a six-page fixture.
+        """The same lines over the 619 pages ``pages.yml`` uploads, not a six-page fixture.
 
         The fixture's pages are a few kilobytes each and would stay inside an 80 KiB budget no
         matter what happened to the templates. The published state pages are the ones with a row
