@@ -814,6 +814,9 @@ msgstr "Share of applicable institutions reporting each field, one column per co
 msgid "history.rates.field"
 msgstr "Disclosure"
 
+msgid "history.rates.scroll_label"
+msgstr "Reporting rate by run, scrollable"
+
 msgid "history.cell.not_graded"
 msgstr "not graded in this run"
 

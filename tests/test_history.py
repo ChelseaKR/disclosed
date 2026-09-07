@@ -437,6 +437,34 @@ class TestTheMovementTableIsDriftCompare:
         assert row[3] == "the same institutions"
 
 
+class TestTheWidestTableCanBeReadWithoutAMouse:
+    """The rate table gains a column on every run, so it is the one that will overflow.
+
+    A table clipped at the edge of the viewport is a table whose right-hand half nobody can read,
+    and a scrollable box that only a mouse can scroll is the same defect for a keyboard user. The
+    region is therefore focusable and named, and the stylesheet has to actually let it scroll:
+    a table left at ``width: 100%`` shrinks to its container rather than overflowing it, so the
+    ``overflow-x`` alone would do nothing.
+    """
+
+    def test_the_rate_table_sits_in_a_named_focusable_scroll_region(self) -> None:
+        body = site.history_page(history.load(_SNAPSHOTS)[0]).body
+        opening = re.search(r'<div class="scroll"[^>]*>', body)
+        assert opening is not None
+
+        tag = opening.group(0)
+
+        assert 'role="region"' in tag
+        assert 'tabindex="0"' in tag
+        assert re.search(r'aria-label="[^"]+"', tag)
+
+    def test_the_stylesheet_lets_that_region_scroll(self) -> None:
+        style = re.sub(r"\s+", " ", site._STYLE)
+
+        assert ".scroll { overflow-x: auto; }" in style
+        assert "width: auto" in style.split(".scroll table {", 1)[1].split("}", 1)[0]
+
+
 class TestNoPageMixesSources:
     def test_each_page_names_one_source_and_only_its_own_runs(self) -> None:
         series = history.load(_SNAPSHOTS)

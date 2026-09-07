@@ -982,6 +982,12 @@ def history_page(series: SnapshotSeries, *, catalog: Catalog = ENGLISH) -> Page:
     )
 
     columns = "".join(f'<th scope="col">{html.escape(snap.taken)}</th>' for snap in runs)
+    # The rate table gains a column on every run, so it is the one table here that will outgrow
+    # the page. Scrollable, and focusable so that scrolling it does not require a mouse: a region
+    # a keyboard user cannot reach is a table they cannot read the right-hand half of. Named,
+    # because an unlabelled region in a landmark list is one a screen-reader user has to enter to
+    # identify.
+    scroll_label = html.escape(catalog.text("history.rates.scroll_label"))
     rows = "".join(
         '<tr><th scope="row">{}</th>{}</tr>'.format(
             _rationale_link(label, label, depth=2),
@@ -1034,11 +1040,13 @@ def history_page(series: SnapshotSeries, *, catalog: Catalog = ENGLISH) -> Page:
 
 <h2>{catalog.text("history.rates.heading")}</h2>
 <p>{catalog.text("history.rates.denominator")}</p>
+<div class="scroll" role="region" tabindex="0" aria-label="{scroll_label}">
 <table>
 <caption>{catalog.text("history.rates.caption")}</caption>
 <thead><tr><th scope="col">{catalog.text("history.rates.field")}</th>{columns}</tr></thead>
 <tbody>{rows}</tbody>
 </table>
+</div>
 
 <h2>{catalog.text("history.movement.heading")}</h2>
 {moved}
@@ -1360,6 +1368,10 @@ h2 { margin-top: 2rem; }
 .tag-missing { color: #a8421f; } .tag-suppressed { color: #555; }
 .tag-not-applicable { color: #555; }
 table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+/* A table that gains a column per run overflows eventually. width:auto is what lets it, since a
+   table at width:100% shrinks to the container instead of scrolling inside it. */
+.scroll { overflow-x: auto; }
+.scroll table { min-width: 100%; width: auto; }
 th, td { text-align: left; padding: .4rem .5rem; border-bottom: 1px solid #e3e3e3;
          vertical-align: top; }
 dl.facts { display: grid; grid-template-columns: auto 1fr; gap: .3rem .9rem; }
