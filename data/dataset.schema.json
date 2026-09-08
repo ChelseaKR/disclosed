@@ -64,6 +64,17 @@
       {
         "constraints": {
           "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "description": "Whether the institution has filed a dispute about how Median earnings 10 years after entry was classified, committed under disputes/ and rendered on its page. The classification in the column before this one is unchanged: a dispute is published beside a finding and never folded into one, so this is not a sixth state and must not be read as one. Never empty.",
+        "name": "earnings_10_yrs_after_entry_median_disputed",
+        "type": "boolean"
+      },
+      {
+        "constraints": {
+          "enum": [
             "reported",
             "implausible",
             "suppressed",
@@ -77,6 +88,17 @@
         "source_key": "latest.completion.completion_rate_4yr_150nt",
         "type": "string",
         "weight": 1.5
+      },
+      {
+        "constraints": {
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "description": "Whether the institution has filed a dispute about how Completion rate, 150% of normal time was classified, committed under disputes/ and rendered on its page. The classification in the column before this one is unchanged: a dispute is published beside a finding and never folded into one, so this is not a sixth state and must not be read as one. Never empty.",
+        "name": "completion_completion_rate_4yr_150nt_disputed",
+        "type": "boolean"
       },
       {
         "constraints": {
@@ -98,6 +120,17 @@
       {
         "constraints": {
           "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "description": "Whether the institution has filed a dispute about how Admission rate was classified, committed under disputes/ and rendered on its page. The classification in the column before this one is unchanged: a dispute is published beside a finding and never folded into one, so this is not a sixth state and must not be read as one. Never empty.",
+        "name": "admissions_admission_rate_overall_disputed",
+        "type": "boolean"
+      },
+      {
+        "constraints": {
+          "enum": [
             "reported",
             "implausible",
             "suppressed",
@@ -111,6 +144,17 @@
         "source_key": "latest.aid.median_debt.completers.overall",
         "type": "string",
         "weight": 1.0
+      },
+      {
+        "constraints": {
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "description": "Whether the institution has filed a dispute about how Median debt at completion was classified, committed under disputes/ and rendered on its page. The classification in the column before this one is unchanged: a dispute is published beside a finding and never folded into one, so this is not a sixth state and must not be read as one. Never empty.",
+        "name": "aid_median_debt_completers_overall_disputed",
+        "type": "boolean"
       },
       {
         "constraints": {
@@ -132,6 +176,17 @@
       {
         "constraints": {
           "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "description": "Whether the institution has filed a dispute about how In-state tuition was classified, committed under disputes/ and rendered on its page. The classification in the column before this one is unchanged: a dispute is published beside a finding and never folded into one, so this is not a sixth state and must not be read as one. Never empty.",
+        "name": "cost_tuition_in_state_disputed",
+        "type": "boolean"
+      },
+      {
+        "constraints": {
+          "enum": [
             "reported",
             "implausible",
             "suppressed",
@@ -145,6 +200,17 @@
         "source_key": "latest.student.size",
         "type": "string",
         "weight": 1.0
+      },
+      {
+        "constraints": {
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "description": "Whether the institution has filed a dispute about how Enrollment was classified, committed under disputes/ and rendered on its page. The classification in the column before this one is unchanged: a dispute is published beside a finding and never folded into one, so this is not a sixth state and must not be read as one. Never empty.",
+        "name": "student_size_disputed",
+        "type": "boolean"
       }
     ],
     "missingValues": [

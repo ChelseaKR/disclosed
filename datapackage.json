@@ -23,11 +23,11 @@
   "repository": "https://github.com/ChelseaKR/disclosed",
   "resources": [
     {
-      "bytes": 64738,
+      "bytes": 86568,
       "description": "One row per institution. Every graded field is exported as a classification word rather than as a value, so that an unreported field, a field suppressed to protect a small cohort, a field that does not apply and a genuine zero stay four distinguishable facts in a spreadsheet.",
       "encoding": "utf-8",
       "format": "csv",
-      "hash": "sha256:197e140bf80cecc8321e5629a507e6782e2cded1384639039032a9feb2e1a351",
+      "hash": "sha256:83ed16bfcfcff635d94ad30e3e88eb2c1a2291b7b1cb13212c1f0207055997a0",
       "mediatype": "text/csv",
       "name": "disclosure-grades",
       "path": "data/dataset.csv",
@@ -84,6 +84,17 @@
           {
             "constraints": {
               "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "Whether the institution has filed a dispute about how Median earnings 10 years after entry was classified, committed under disputes/ and rendered on its page. The classification in the column before this one is unchanged: a dispute is published beside a finding and never folded into one, so this is not a sixth state and must not be read as one. Never empty.",
+            "name": "earnings_10_yrs_after_entry_median_disputed",
+            "type": "boolean"
+          },
+          {
+            "constraints": {
+              "enum": [
                 "reported",
                 "implausible",
                 "suppressed",
@@ -97,6 +108,17 @@
             "source_key": "latest.completion.completion_rate_4yr_150nt",
             "type": "string",
             "weight": 1.5
+          },
+          {
+            "constraints": {
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "Whether the institution has filed a dispute about how Completion rate, 150% of normal time was classified, committed under disputes/ and rendered on its page. The classification in the column before this one is unchanged: a dispute is published beside a finding and never folded into one, so this is not a sixth state and must not be read as one. Never empty.",
+            "name": "completion_completion_rate_4yr_150nt_disputed",
+            "type": "boolean"
           },
           {
             "constraints": {
@@ -118,6 +140,17 @@
           {
             "constraints": {
               "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "Whether the institution has filed a dispute about how Admission rate was classified, committed under disputes/ and rendered on its page. The classification in the column before this one is unchanged: a dispute is published beside a finding and never folded into one, so this is not a sixth state and must not be read as one. Never empty.",
+            "name": "admissions_admission_rate_overall_disputed",
+            "type": "boolean"
+          },
+          {
+            "constraints": {
+              "enum": [
                 "reported",
                 "implausible",
                 "suppressed",
@@ -131,6 +164,17 @@
             "source_key": "latest.aid.median_debt.completers.overall",
             "type": "string",
             "weight": 1.0
+          },
+          {
+            "constraints": {
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "Whether the institution has filed a dispute about how Median debt at completion was classified, committed under disputes/ and rendered on its page. The classification in the column before this one is unchanged: a dispute is published beside a finding and never folded into one, so this is not a sixth state and must not be read as one. Never empty.",
+            "name": "aid_median_debt_completers_overall_disputed",
+            "type": "boolean"
           },
           {
             "constraints": {
@@ -152,6 +196,17 @@
           {
             "constraints": {
               "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "Whether the institution has filed a dispute about how In-state tuition was classified, committed under disputes/ and rendered on its page. The classification in the column before this one is unchanged: a dispute is published beside a finding and never folded into one, so this is not a sixth state and must not be read as one. Never empty.",
+            "name": "cost_tuition_in_state_disputed",
+            "type": "boolean"
+          },
+          {
+            "constraints": {
+              "enum": [
                 "reported",
                 "implausible",
                 "suppressed",
@@ -165,6 +220,17 @@
             "source_key": "latest.student.size",
             "type": "string",
             "weight": 1.0
+          },
+          {
+            "constraints": {
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "description": "Whether the institution has filed a dispute about how Enrollment was classified, committed under disputes/ and rendered on its page. The classification in the column before this one is unchanged: a dispute is published beside a finding and never folded into one, so this is not a sixth state and must not be read as one. Never empty.",
+            "name": "student_size_disputed",
+            "type": "boolean"
           }
         ],
         "missingValues": [
@@ -177,11 +243,11 @@
       "title": "Disclosure grades for US higher-education institutions"
     },
     {
-      "bytes": 6784,
+      "bytes": 10271,
       "description": "The same schema this descriptor carries inline, as a standalone file for a consumer who wants the column contract without the package. Generated from the field definitions in the pass that writes the CSV, so the two cannot drift.",
       "encoding": "utf-8",
       "format": "json",
-      "hash": "sha256:e9ed137bf7b1ad792d093b5dd28cd0efb1eb0fa69bec68887efcf816207c5f87",
+      "hash": "sha256:f1e7b912d2a94d88e1c6c80917fa64c83474dc162ce1d2e443cc90e3eabe2283",
       "mediatype": "application/json",
       "name": "disclosure-grades-schema",
       "path": "data/dataset.schema.json",

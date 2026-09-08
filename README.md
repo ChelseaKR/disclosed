@@ -347,6 +347,41 @@ the same commit as the snapshot, and `tests/test_workflows.py` holds it to that,
 failure modes only "names a file nobody has" can mislead a consumer, and only that one fails a
 build.
 
+## Dispute a finding
+
+The contract below says a scorecard that cannot be disputed line by line is an accusation. The
+rationales make every finding arguable; `disputes/` is where the argument lands somewhere a reader
+of the finding will actually see. Until now the only channel was a GitHub issue, which is
+invisible from the page it is about.
+
+A dispute is a committed file — `disputes/<unit_id>.json` naming the field, the classification, the
+institution's own statement, a public URL, the date and who filed it. It arrives by pull request
+through an issue template, is reviewed like any other change, and is rendered on that
+institution's page with the statement quoted **verbatim** and the evidence linked.
+
+**Filing does not change a grade, and that is deliberate.** Report bytes, grade bytes and every
+published figure are identical with and without disputes, asserted by a test that builds the site
+both ways and requires exactly one page to differ. A channel that silently moved a score would be
+a scoring input wearing a comment's clothes, and the institution best at filing paperwork would
+score highest. If a finding is actually wrong, the fix is a change to a rule or to the data, in a
+commit that says so — and the dispute is the record of how it was asked for.
+
+Three things `make verify` refuses, each because it would publish a rebuttal of a finding nobody
+made: an institution this project does not grade, a field it does not check, and a classification
+the report does not give (a dispute overtaken by a regrading is stale, not wrong, and rendering it
+beside a state it does not name would put words in the institution's mouth). `evidence_url` is
+rendered as a link and never fetched: whether the page behind it says what the statement says is a
+judgement, and this channel carries the claim, attributed, rather than settling it.
+
+The schema is [`schema/dispute.v1.schema.json`](schema/dispute.v1.schema.json), served at
+<https://chelseakr.github.io/disclosed/schema/dispute.v1.schema.json>, and the CSV export gains a
+`<column>_disputed` cell beside every classification — `true` or `false`, never empty, and never a
+sixth state.
+
+**The directory is empty.** Nothing in it is a placeholder or an example: a fabricated dispute
+attributed to a real college would be exactly the kind of plausible, unfounded statement this
+project exists to object to. The fixtures are in `tests/`; the register is theirs.
+
 ## How we grade
 
 Every credible range is a judgement call, so every one carries a written rationale that a graded

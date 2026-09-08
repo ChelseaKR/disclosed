@@ -31,6 +31,9 @@ from pathlib import Path
 from typing import Any, Final
 
 from .disclosure import Disclosure
+from .disputes import SCHEMA_PATH as DISPUTE_SCHEMA_PATH
+from .disputes import Dispute, by_institution
+from .disputes import schema as dispute_schema
 from .drift import SYSTEMIC_THRESHOLD, FieldDrift, Snapshot
 from .fields import FIELDS, IPEDS_FIELDS, Field, field_by_label
 from .grading import BANDS, BELOW_EVERY_BAND
@@ -312,6 +315,47 @@ def _peer_cell(panel: PeerDisclosure | None, catalog: Catalog) -> str:
     )
 
 
+def _dispute_block(disputes: Sequence[Dispute], catalog: Catalog) -> str:
+    """What an institution says about the findings on its own page.
+
+    The statement is escaped and quoted and never summarised: it is somebody else's account of
+    their own disclosure, and paraphrasing it would make this project the author of the other
+    side of its own argument. The evidence is a link and is never fetched.
+
+    Nothing here changes a grade, and the section says so in as many words rather than leaving a
+    reader to infer it from the unchanged number above. A dispute that moved a score would be a
+    scoring input wearing a comment's clothes.
+    """
+    if not disputes:
+        return ""
+    items = []
+    for dispute in disputes:
+        label, _ = _classification_copy(Disclosure(dispute.disputed_classification), catalog)
+        items.append(
+            "<li>"
+            + catalog.text(
+                "dispute.item",
+                field=_rationale_link(dispute.field, dispute.field, depth=2),
+                classification=html.escape(label),
+                filed_by=html.escape(dispute.filed_by),
+                filed=html.escape(dispute.filed),
+            )
+            + f"<blockquote><p>{html.escape(dispute.statement)}</p></blockquote>"
+            + '<p class="why"><a href="{}">{}</a></p>'.format(
+                html.escape(dispute.evidence_url), catalog.text("dispute.evidence")
+            )
+            + "</li>"
+        )
+    return (
+        '<section class="disputed">'
+        f"<h2>{catalog.text('dispute.heading')}</h2>"
+        f"<p>{catalog.text('dispute.lede')}</p>"
+        f'<ul class="findings">{"".join(items)}</ul>'
+        f'<p class="why">{catalog.text("dispute.how_to_file", source=html.escape(SOURCE_URL))}</p>'
+        "</section>\n"
+    )
+
+
 def institution_page(
     row: dict[str, Any],
     findings: list[dict[str, Any]],
@@ -321,6 +365,7 @@ def institution_page(
     catalog: Catalog = ENGLISH,
     receipt: Mapping[str, Any] | None = None,
     peer_disclosure: Mapping[str, PeerDisclosure] | None = None,
+    disputes: Sequence[Dispute] = (),
 ) -> Page:
     """One institution: its grade, every field's disclosure state, and any implausible values.
 
@@ -336,6 +381,10 @@ def institution_page(
     published for each field. Without it the column is absent and the page's bytes are what they
     were: an institution the report gives no peer group has nothing to be compared against, and a
     column of dashes would look like an answer.
+    With ``disputes`` it carries what this institution has said about the findings on it, quoted
+    verbatim. Without any it carries nothing rather than an empty heading, because a "Disputed"
+    section reading "none" would invite the reading that the institution was asked and declined,
+    and nobody asked.
     """
     name = _name_of(row, catalog)
     letter = row.get("letter")
@@ -432,6 +481,8 @@ def institution_page(
         if peer_disclosure
         else ""
     )
+    disputed = _dispute_block(disputes, catalog)
+    receipt_block = _receipt_block(receipt, row, catalog) if receipt is not None else ""
     body = f"""
 <nav aria-label="Breadcrumb"><a href="../../">{catalog.text("nav.all_institutions")}</a> \
 / {state_link}</nav>
@@ -453,7 +504,7 @@ def institution_page(
 </table>{peer_note}
 {findings_html}
 <p class="caveat">{catalog.text("institution.caveat", methodology="../../methodology/")}</p>
-{_receipt_block(receipt, row, catalog) if receipt is not None else ""}
+{disputed}{receipt_block}
 {_ask_widget(str(row.get("unit_id")), ask_endpoint, catalog) if ask_endpoint else ""}
 """
     # The name alone does not identify an institution, and this project of all
@@ -783,6 +834,7 @@ def methodology_page(*, catalog: Catalog = ENGLISH) -> Page:
 
 <h2>{catalog.text("methodology.wrong.heading")}</h2>
 <p>{catalog.text("methodology.wrong.body")}</p>
+<p>{catalog.text("methodology.wrong.dispute", source=html.escape(SOURCE_URL))}</p>
 """
     return Page(
         path="methodology",
@@ -1665,6 +1717,7 @@ def _institution_pages(
     catalog: Catalog,
     receipts: ReceiptSource | None,
     panels: Mapping[str, Mapping[str, PeerDisclosure]],
+    disputes_by_id: Mapping[str, Sequence[Dispute]],
 ) -> tuple[list[Page], list[tuple[str, dict[str, Any]]]]:
     """One page per institution that can be given a stable URL, and the receipts to write beside.
 
@@ -1693,6 +1746,7 @@ def _institution_pages(
                 catalog=catalog,
                 receipt=receipt,
                 peer_disclosure=panels.get(unit_id),
+                disputes=disputes_by_id.get(unit_id, ()),
             )
         )
     return pages, written
@@ -1711,6 +1765,7 @@ def build(
     receipts: ReceiptSource | None = None,
     histories: Sequence[SnapshotSeries] = (),
     package: dict[str, Any] | None = None,
+    disputes: Sequence[Dispute] = (),
 ) -> list[Page]:
     """Render the whole site from a graded report.
 
@@ -1741,6 +1796,12 @@ def build(
             head carries a schema.org ``Dataset`` block and ``dataset.jsonld`` is written beside
             the pages; without it the build is byte-for-byte what it was and the site makes no
             machine-readable claim about a corpus it was not shown.
+        disputes: Committed disputes, as :func:`disclosed.disputes.load` returns them, or empty.
+            Each is rendered on the page of the institution that filed it, quoted verbatim.
+            **No grade, score, letter or published figure moves.** A dispute is published beside
+            a finding and never folded into one; a channel that silently changed a grade would be
+            a scoring input wearing a comment's clothes, and the institution best at filing
+            paperwork would score highest.
         histories: The committed snapshot series, as :func:`disclosed.history.load` returns them,
             or empty. Empty means no history page is written and the home page carries no link to
             one, which is the same "absence over assertion" default as ``national``: a build that
@@ -1793,6 +1854,7 @@ def build(
         catalog=catalog,
         receipts=receipts,
         panels=peer_panels(report),
+        disputes_by_id=by_institution(disputes),
     )
     pages.extend(institution_pages)
 
@@ -1847,13 +1909,20 @@ def build(
     # be the more damaging form, because a validator follows an ``$id`` without a human ever
     # seeing the address. At ``DEFAULT_ORIGIN`` the result is byte-identical to the committed
     # file, which a test asserts.
-    published_schema = dict(rule_schema())
-    published_schema["$id"] = f"{origin}/{SCHEMA_PATH}"
-    schema_target = out_dir / SCHEMA_PATH
-    schema_target.parent.mkdir(parents=True, exist_ok=True)
-    schema_target.write_text(
-        json.dumps(published_schema, indent=2, sort_keys=False) + "\n", encoding="utf-8"
-    )
+    # Both published schemas, each stamped with the origin this build is for. A second one was
+    # the moment to stop writing this twice: the pair is a list, so a third cannot be added to
+    # the repository and left out of the site the way the first one was for months.
+    for path, document in (
+        (SCHEMA_PATH, rule_schema()),
+        (DISPUTE_SCHEMA_PATH, dispute_schema()),
+    ):
+        published_schema = dict(document)
+        published_schema["$id"] = f"{origin}/{path}"
+        schema_target = out_dir / path
+        schema_target.parent.mkdir(parents=True, exist_ok=True)
+        schema_target.write_text(
+            json.dumps(published_schema, indent=2, sort_keys=False) + "\n", encoding="utf-8"
+        )
 
     # The whole corpus as a schema.org Dataset, served beside the pages that describe it. The
     # home page's head carries the same document with its download list trimmed to the tabular

@@ -1,0 +1,84 @@
+name: Dispute a finding
+description: You are a graded institution and one of our findings about you is wrong.
+title: "Dispute: <institution name>, <field>"
+labels: ["dispute"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A scorecard that cannot be disputed line by line is not a scorecard, it is an accusation.
+        This is how the argument gets onto your page.
+
+        **What happens to this.** A maintainer turns it into `disputes/<unit_id>.json` in a pull
+        request, and once merged your statement is rendered on your institution's page, quoted
+        exactly as you wrote it, beside the finding it is about. Your grade does not change
+        because you filed — a dispute is published next to a finding, never folded into one. If
+        the finding is actually wrong, the fix is a change to the rule or to the data, in a
+        commit that says so, and this issue is the record of how that was asked for.
+
+        You can also send the pull request yourself. `disputes/README.md` has the format.
+  - type: input
+    id: unit_id
+    attributes:
+      label: IPEDS unit id
+      description: The number in your institution page's URL, e.g. 100654.
+      placeholder: "100654"
+    validations:
+      required: true
+  - type: input
+    id: field
+    attributes:
+      label: Which field
+      description: >-
+        The row heading exactly as it appears on the page, e.g. "Admission rate". A field this
+        project does not grade for you will be refused rather than rendered, because a rebuttal
+        of a finding nobody made is not a finding either.
+      placeholder: "Admission rate"
+    validations:
+      required: true
+  - type: dropdown
+    id: disputed_classification
+    attributes:
+      label: What we classified it as
+      description: >-
+        Copy it from the page. Carried so that a dispute overtaken by a regrading is refused as
+        stale rather than published beside a state it does not name.
+      options:
+        - reported
+        - implausible
+        - suppressed
+        - not_applicable
+        - missing
+    validations:
+      required: true
+  - type: textarea
+    id: statement
+    attributes:
+      label: Your statement
+      description: >-
+        In your own words. This is quoted verbatim and is never summarised — it is your account
+        of your own disclosure, and paraphrasing it here would make us the author of both sides
+        of the argument.
+    validations:
+      required: true
+  - type: input
+    id: evidence_url
+    attributes:
+      label: Where the disclosure is
+      description: >-
+        A public URL. It is rendered as a link and never fetched: whether the page says what your
+        statement says is a judgement, and this channel carries your claim rather than settling
+        it.
+      placeholder: "https://example.edu/about/admissions"
+    validations:
+      required: true
+  - type: input
+    id: filed_by
+    attributes:
+      label: Who is filing
+      description: >-
+        A name or an office. Required — an anonymous statement on an institution's page is not
+        attributable to anyone, including the institution.
+      placeholder: "Office of Institutional Research, Example University"
+    validations:
+      required: true

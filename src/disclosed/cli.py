@@ -31,6 +31,7 @@ from typing import Any, Final
 from . import (
     crosswalk,
     dataset,
+    disputes,
     frame,
     history,
     messages,
@@ -723,7 +724,19 @@ def _cmd_dataset(args: argparse.Namespace) -> int:
         return 1
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(dataset.to_csv(report), encoding="utf-8", newline="")
+    filed: tuple[disputes.Dispute, ...] = ()
+    if args.disputes_from:
+        try:
+            filed = disputes.load(Path(args.disputes_from))
+            disputes.check_against(filed, report)
+        except disputes.DisputeError as exc:
+            print(f"refusing to export: {exc}", file=sys.stderr)
+            return 1
+    out.write_text(
+        dataset.to_csv(report, disputed=frozenset((d.unit_id, d.field) for d in filed)),
+        encoding="utf-8",
+        newline="",
+    )
     schema_path = out.with_suffix(".schema.json")
     schema_path.write_text(dataset.to_schema_json(path=out.name), encoding="utf-8")
     print(f"exported {len(report['grades'])} rows -> {out}")
@@ -1128,6 +1141,18 @@ def _cmd_site(args: argparse.Namespace) -> int:
                 file=sys.stderr,
             )
             return 1
+    filed: tuple[disputes.Dispute, ...] = ()
+    if args.disputes_from:
+        try:
+            filed = disputes.load(Path(args.disputes_from))
+            disputes.check_against(filed, report)
+        except disputes.DisputeError as exc:
+            # Refused rather than skipped. A dispute that failed to load and was quietly dropped
+            # would leave an institution believing its statement was published when the page
+            # never carried it, and one naming a finding this report does not make would render
+            # as a rebuttal of something nobody said.
+            print(f"refusing to build: {exc}", file=sys.stderr)
+            return 1
     package_payload = (
         json.loads(Path(args.package).read_text(encoding="utf-8")) if args.package else None
     )
@@ -1145,6 +1170,7 @@ def _cmd_site(args: argparse.Namespace) -> int:
             receipts=receipt_source,
             histories=histories,
             package=package_payload,
+            disputes=filed,
         )
     except site.ReceiptMismatch as exc:
         # The report and the receipt source disagree about a classification, so the page and the
@@ -1380,6 +1406,15 @@ def main(argv: list[str] | None = None) -> int:
     p_data.add_argument("--report", default="data/report.json")
     p_data.add_argument("--out", default="data/dataset.csv")
     p_data.add_argument(
+        "--disputes-from",
+        default=None,
+        help=(
+            "a directory of committed dispute files. Each sets the <column>_disputed cell for "
+            "the institution and field it names; the classification beside it is unchanged, "
+            "because a dispute is published next to a finding and never folded into one"
+        ),
+    )
+    p_data.add_argument(
         "--package",
         default=None,
         help=(
@@ -1535,6 +1570,18 @@ def main(argv: list[str] | None = None) -> int:
             "links them; without it the build is byte-for-byte what it was and the site makes no "
             "claim about drift, which is the honest rendering of a build that was never shown "
             "the series"
+        ),
+    )
+    p_site.add_argument(
+        "--disputes-from",
+        default=None,
+        help=(
+            "a directory of committed dispute files, one per institution, such as disputes/. "
+            "Each is rendered on that institution's page with its statement quoted verbatim. No "
+            "grade, score or published figure moves: a dispute is published beside a finding and "
+            "never folded into one. Without the flag no page carries the section, because a "
+            "'Disputed' heading reading 'none' would invite the reading that the institution was "
+            "asked and declined"
         ),
     )
     p_site.add_argument(
