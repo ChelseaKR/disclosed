@@ -191,6 +191,35 @@ msgstr "Field"
 msgid "institution.table.status"
 msgstr "Status"
 
+#. The peer column. Rendered only where the report gives the institution a peer group, because a
+#. column of dashes looks like an answer. Three sentences where a share would otherwise be
+#. printed: a group too small to compare against, a field nobody comparable was asked, and the
+#. comparison itself.
+msgid "institution.table.peers"
+msgstr "Comparable institutions"
+
+msgid "institution.peers.publish"
+msgid_plural "institution.peers.publish"
+msgstr[0] "{reporting} of {count} publish it ({share})"
+msgstr[1] "{reporting} of {count} publish it ({share})"
+
+msgid "institution.peers.too_few"
+msgid_plural "institution.peers.too_few"
+msgstr[0] "only {count} comparable institution; too few to compare"
+msgstr[1] "only {count} comparable institutions; too few to compare"
+
+msgid "institution.peers.none_asked"
+msgstr "no comparable institution was asked this"
+
+msgid "institution.peers.note"
+msgstr ""
+"Compared against {group}, this institution excluded. The denominator is the institutions the "
+"field actually reached: peers that suppressed it, and peers the requirement does not reach, "
+"leave it rather than being counted as failures. A group of fewer than {min_peers} says so "
+"instead of printing a share, and a field none of them were asked says that too — the share "
+"would be a division by nothing, and a zero there would say every comparable institution had "
+"failed to publish it."
+
 msgid "institution.table.meaning"
 msgstr "What that means"
 
@@ -454,6 +483,15 @@ msgstr ""
 "about six, and the finding says so instead of borrowing the confidence of the fifty. Below "
 "either bar the finding is still reported and still links here; it simply arrives without a "
 "peer comparison attached, because an unsupported comparison is worse than none."
+
+msgid "methodology.peers.disclosure"
+msgstr ""
+"The same peer groups carry a second comparison, on every graded field rather than only on an "
+"implausible one: how many comparable institutions published that field at all. A national "
+"share is a fact about the country; a reader of one college's page wants to know whether the "
+"colleges most like it manage to publish what it did not. The counts are taken over the "
+"institutions the field reached, the institution itself is excluded from its own comparison, "
+"and a group too small to say anything with says so rather than printing a percentage."
 
 msgid "methodology.bands.heading"
 msgstr "Letter bands"

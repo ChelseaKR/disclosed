@@ -38,14 +38,22 @@ from .history import SnapshotSeries
 from .messages import SOURCE_LOCALE, Catalog, load
 from .package import DATASET_JSONLD_NAME, to_jsonld
 from .package import dumps as package_dumps
-from .peers import MIN_PEERS
+from .peers import MIN_PEERS, PeerDisclosure
 from .receipts import ReceiptSource
 from .receipts import dumps as dump_receipt
 from .rules import SCHEMA_PATH
 from .rules import schema as rule_schema
 from .scope import Scope, scope_from_payload
 
-__all__ = ["Page", "ReceiptMismatch", "build", "history_page", "history_path", "slug"]
+__all__ = [
+    "Page",
+    "ReceiptMismatch",
+    "build",
+    "history_page",
+    "history_path",
+    "peer_panels",
+    "slug",
+]
 
 #: How much of a capture digest the citation on an institution page prints. The receipt itself
 #: carries all sixty-four characters; a footnote needs enough to identify the file and no more.
@@ -276,6 +284,34 @@ def _receipt_block(receipt: Mapping[str, Any], row: Mapping[str, Any], catalog: 
     )
 
 
+def _peer_cell(panel: PeerDisclosure | None, catalog: Catalog) -> str:
+    """What comparable institutions did with this field, or why there is no comparison.
+
+    Four outcomes, and the last two exist so that the first two cannot be misread.
+
+    A group smaller than ``MIN_PEERS`` says so instead of printing a share: a comparison against
+    six institutions is a coincidence with a percentage sign on it, which is the bar
+    :func:`peer_context` already applies to the value comparison.
+
+    A field **nobody in the group was asked** renders as words and never as ``0%``. Every peer
+    was suppressed or inapplicable, so the denominator is empty; a zero there would say every
+    comparable institution failed to publish it, which is the opposite claim and the one this
+    project exists to stop being made by accident.
+    """
+    if panel is None:
+        return ""
+    if not panel.usable:
+        return catalog.count("institution.peers.too_few", panel.size)
+    if panel.asked == 0:
+        return catalog.text("institution.peers.none_asked")
+    return catalog.count(
+        "institution.peers.publish",
+        panel.asked,
+        reporting=panel.reporting,
+        share=f"{panel.reporting / panel.asked:.0%}",
+    )
+
+
 def institution_page(
     row: dict[str, Any],
     findings: list[dict[str, Any]],
@@ -284,6 +320,7 @@ def institution_page(
     ask_endpoint: str | None = None,
     catalog: Catalog = ENGLISH,
     receipt: Mapping[str, Any] | None = None,
+    peer_disclosure: Mapping[str, PeerDisclosure] | None = None,
 ) -> Page:
     """One institution: its grade, every field's disclosure state, and any implausible values.
 
@@ -294,6 +331,11 @@ def institution_page(
     beside it and states the command that replays it. Without one the section is absent rather
     than empty: a page that offered a receipt link where no file was written would be publishing
     a broken promise, which is this project's own defect class dressed as a hyperlink.
+
+    With ``peer_disclosure`` the field table gains a column saying what comparable institutions
+    published for each field. Without it the column is absent and the page's bytes are what they
+    were: an institution the report gives no peer group has nothing to be compared against, and a
+    column of dashes would look like an answer.
     """
     name = _name_of(row, catalog)
     letter = row.get("letter")
@@ -301,9 +343,16 @@ def institution_page(
     state = row.get("state")
     summary = catalog.text(f"letter.{letter}.summary" if letter in _LETTERS else "letter.none")
 
+    peers_column = peer_disclosure is not None
+    span = "3" if peers_column else "2"
     rows = []
     for label in sorted(row.get("fields", {})):
         raw_state = row["fields"][label]
+        peer_cell = (
+            f"<td>{html.escape(_peer_cell(peer_disclosure.get(label), catalog))}</td>"
+            if peer_disclosure is not None
+            else ""
+        )
         try:
             disclosure = Disclosure(raw_state)
         except ValueError:
@@ -314,7 +363,7 @@ def institution_page(
             )
             rows.append(
                 f'<tr><th scope="row">{_rationale_link(label, label, depth=2)}</th>'
-                f'<td colspan="2">{unrecognized}</td></tr>'
+                f'<td colspan="{span}">{unrecognized}</td></tr>'
             )
             continue
         title, meaning = _classification_copy(disclosure, catalog)
@@ -322,7 +371,7 @@ def institution_page(
             f'<tr><th scope="row">{_rationale_link(label, label, depth=2)}</th>'
             f'<td><span class="tag tag-{disclosure.value.replace("_", "-")}">'
             f"{html.escape(title)}</span></td>"
-            f"<td>{html.escape(meaning)}</td></tr>"
+            f"<td>{html.escape(meaning)}</td>{peer_cell}</tr>"
         )
 
     findings_html = ""
@@ -366,6 +415,23 @@ def institution_page(
         if row.get("unit_id")
         else catalog.text("institution.unit_id_not_published")
     )
+    peer_header = (
+        f'<th scope="col">{catalog.text("institution.table.peers")}</th>' if peers_column else ""
+    )
+    # The group, named once under the table rather than repeated in every cell. A reader has to
+    # know what "comparable" meant before any of the counts mean anything, and a column heading
+    # cannot carry a sentence that long.
+    peer_note = (
+        '\n<p class="peers">{}</p>'.format(
+            catalog.text(
+                "institution.peers.note",
+                group=html.escape(next(iter(peer_disclosure.values())).description),
+                min_peers=MIN_PEERS,
+            )
+        )
+        if peer_disclosure
+        else ""
+    )
     body = f"""
 <nav aria-label="Breadcrumb"><a href="../../">{catalog.text("nav.all_institutions")}</a> \
 / {state_link}</nav>
@@ -382,9 +448,9 @@ def institution_page(
 <caption>{catalog.text("institution.table.caption")}</caption>
 <thead><tr><th scope="col">{catalog.text("institution.table.field")}</th>\
 <th scope="col">{catalog.text("institution.table.status")}</th>
-<th scope="col">{catalog.text("institution.table.meaning")}</th></tr></thead>
+<th scope="col">{catalog.text("institution.table.meaning")}</th>{peer_header}</tr></thead>
 <tbody>{"".join(rows)}</tbody>
-</table>
+</table>{peer_note}
 {findings_html}
 <p class="caveat">{catalog.text("institution.caveat", methodology="../../methodology/")}</p>
 {_receipt_block(receipt, row, catalog) if receipt is not None else ""}
@@ -695,6 +761,7 @@ def methodology_page(*, catalog: Catalog = ENGLISH) -> Page:
 <p>{catalog.text("methodology.peers.rule")}</p>
 <p>{catalog.text("methodology.peers.against_itself")}</p>
 <p>{catalog.text("methodology.peers.both_counts", min_peers=MIN_PEERS)}</p>
+<p>{catalog.text("methodology.peers.disclosure")}</p>
 
 <h2>{catalog.text("methodology.bands.heading")}</h2>
 <p>{catalog.text("methodology.bands.body", bands=bands)}</p>
@@ -1554,6 +1621,42 @@ def _corpus_pages(
     return pages
 
 
+def peer_panels(report: Mapping[str, Any]) -> dict[str, dict[str, PeerDisclosure]]:
+    """Each institution's peer panel, read out of the report and nowhere else.
+
+    The report publishes one set of counts per peer group; a row names the group it is in, and
+    its own classification is already on the row. So the panel is the group's counts with this
+    institution's own contribution subtracted -- arithmetic over two numbers a reader can check
+    against the published payload, rather than a third number computed here that appears in no
+    artifact.
+
+    An institution with no ``peer_group``, or one naming a group the payload does not carry, gets
+    no panel at all and therefore no column. A dash in a peers column looks like an answer.
+    """
+    published = report.get("peer_disclosure")
+    if not isinstance(published, dict):
+        return {}
+    groups = published.get("groups", {})
+    labels = [str(label) for label in published.get("labels", [])]
+    panels: dict[str, dict[str, PeerDisclosure]] = {}
+    for row in report.get("grades", []):
+        unit_id, key = row.get("unit_id"), row.get("peer_group")
+        group = groups.get(key) if isinstance(key, str) else None
+        if not isinstance(unit_id, str) or not unit_id or not isinstance(group, dict):
+            continue
+        description = str(group.get("description", ""))
+        counts_by_label = group.get("counts", {})
+        panel: dict[str, PeerDisclosure] = {}
+        for label in labels:
+            counts = dict(counts_by_label.get(label, {}))
+            own = row.get("fields", {}).get(label)
+            if own in counts:
+                counts[own] -= 1
+            panel[label] = PeerDisclosure(field_label=label, description=description, counts=counts)
+        panels[unit_id] = panel
+    return panels
+
+
 def _institution_pages(
     grades: list[dict[str, Any]],
     findings_by_id: dict[str, list[dict[str, Any]]],
@@ -1561,6 +1664,7 @@ def _institution_pages(
     ask_endpoint: str | None,
     catalog: Catalog,
     receipts: ReceiptSource | None,
+    panels: Mapping[str, Mapping[str, PeerDisclosure]],
 ) -> tuple[list[Page], list[tuple[str, dict[str, Any]]]]:
     """One page per institution that can be given a stable URL, and the receipts to write beside.
 
@@ -1588,6 +1692,7 @@ def _institution_pages(
                 ask_endpoint=ask_endpoint,
                 catalog=catalog,
                 receipt=receipt,
+                peer_disclosure=panels.get(unit_id),
             )
         )
     return pages, written
@@ -1687,6 +1792,7 @@ def build(
         ask_endpoint=ask_endpoint,
         catalog=catalog,
         receipts=receipts,
+        panels=peer_panels(report),
     )
     pages.extend(institution_pages)
 

@@ -23,7 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Final
@@ -36,6 +36,7 @@ from . import (
     messages,
     national,
     package,
+    peers,
     receipts,
     registry,
     registry_properties,
@@ -161,12 +162,74 @@ def _scorecard_scope(
     )
 
 
+def _peer_disclosure_payload(
+    grades: list[InstitutionGrade], corpus: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Per-peer-group, per-field classification counts, or nothing at all.
+
+    Nothing at all when the corpus and the grades cannot be read in parallel, which is what a
+    replay of a report with no records beside it looks like. Publishing a panel computed from a
+    corpus this run did not have would be the project's own failure mode with a peer group
+    attached.
+    """
+    if len(corpus) != len(grades):
+        return {}
+    labels = [r.field.label for r in grades[0].results] if grades else []
+    graded = [{r.field.label: r.disclosure.value for r in g.results} for g in grades]
+    totals = peers.disclosure_by_group(corpus, graded, labels=labels)
+    described: dict[str, str] = {}
+    for record in corpus:
+        description, key = peers.peer_group_for(record)
+        described.setdefault(peers.group_key(key), description)
+    return {
+        "peer_disclosure": {
+            "min_peers": peers.MIN_PEERS,
+            "labels": labels,
+            "groups": {
+                key: {"description": described[key], "counts": counts}
+                for key, counts in sorted((peers.group_key(k), v) for k, v in totals.items())
+            },
+        }
+    }
+
+
+def _grade_row(grade: InstitutionGrade, by_unit: Mapping[str, dict[str, Any]]) -> dict[str, Any]:
+    """One institution's row, with the peer group it belongs to when there is a record to read it
+    from.
+
+    The key rather than the counts. The counts are identical for every member of a group and are
+    published once, at the top level; repeating them here would be six hundred copies of the same
+    six numbers and six hundred chances for one of them to be different.
+
+    Absent when the run has no record for this institution -- a replay of a report with no corpus
+    beside it. A row naming a group whose counts the payload does not carry would point at
+    nothing, which is a broken link with a JSON key instead of an href.
+    """
+    row: dict[str, Any] = {
+        "unit_id": grade.unit_id,
+        "name": grade.name,
+        "state": grade.state,
+        "score": grade.score,
+        "letter": grade.letter,
+        "fields": {r.field.label: r.disclosure.value for r in grade.results},
+    }
+    record = by_unit.get(grade.unit_id) if grade.unit_id is not None else None
+    if record is not None:
+        row["peer_group"] = peers.group_key(peers.peer_group_for(record)[1])
+    return row
+
+
 def _grade_payload(
     grades: list[InstitutionGrade], corpus: list[dict[str, Any]], *, scope: Scope
 ) -> dict[str, Any]:
     by_state: dict[str, list[InstitutionGrade]] = {}
     for grade in grades:
         by_state.setdefault(grade.state or "unknown", []).append(grade)
+    by_unit: dict[str, dict[str, Any]] = {}
+    for record in corpus:
+        ident = record.get("id")
+        if ident is not None:
+            by_unit.setdefault(str(ident), record)
 
     return {
         "scope": scope.as_dict(),
@@ -181,17 +244,21 @@ def _grade_payload(
             asdict(summarize(rows, label=state)) for state, rows in sorted(by_state.items())
         ],
         "implausible": _implausible_findings(grades, corpus),
-        "grades": [
-            {
-                "unit_id": g.unit_id,
-                "name": g.name,
-                "state": g.state,
-                "score": g.score,
-                "letter": g.letter,
-                "fields": {r.field.label: r.disclosure.value for r in g.results},
-            }
-            for g in grades
-        ],
+        # Peer disclosure, as group totals rather than as a copy per institution.
+        #
+        # The page each institution sees is "of the N other comparable institutions, M publish
+        # this", and the institution's own classification is already in its row, so the panel is
+        # arithmetic over two published numbers rather than a third number nobody can check.
+        # Written per group for the same reason the drift snapshots are written per run and not
+        # per institution: the description and the six counts are identical for every member, and
+        # six hundred copies of them would be six hundred chances for one to be different.
+        #
+        # Absent entirely when the run carries no corpus to compute it from. A report claiming a
+        # peer panel it could not compute would be worse than one that says nothing: the site
+        # renders what the report contains, and an empty panel and an uncomputed one look the
+        # same on a page.
+        **_peer_disclosure_payload(grades, corpus),
+        "grades": [_grade_row(g, by_unit) for g in grades],
     }
 
 
