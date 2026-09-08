@@ -658,8 +658,30 @@ def _render_diff_preamble(diff: ReportDiff) -> None:
             # Counted and said out loud. A grade with no id was excluded from the comparison, and
             # a comparison that silently drops rows reports a smaller population as a stable one.
             print(f"  {count} grades in the {noun} report carry no id and could not be matched")
-    for label in diff.fields_only_in_earlier + diff.fields_only_in_later:
-        print(f"  {label} is graded in only one of the two reports and was not compared")
+    for count, noun in (
+        (diff.unreadable_rows_earlier, "earlier"),
+        (diff.unreadable_rows_later, "later"),
+    ):
+        if count:
+            # A different fact from the line above and it gets a different sentence. "No id" is a
+            # grade this build could not identify; this is an entry it could not read as a grade
+            # at all, which points at the file rather than at the grader.
+            print(f"  {count} entries in the {noun} report are not grades and could not be read")
+    # Two directions, two sentences. A field graded earlier and not later is one this project
+    # stopped grading; a field graded later and not earlier is one it started. Concatenating the
+    # tuples printed the same words for both, so the reader learned that something was
+    # uncompared and never which way it went -- and the second half of that pair had never once
+    # been produced by a test, so nothing would have said if it printed the wrong direction.
+    for label in diff.fields_only_in_earlier:
+        print(
+            f"  {label} was graded in the earlier report and not the later one, so it was not "
+            "compared; this says nothing about whether anyone stopped publishing it"
+        )
+    for label in diff.fields_only_in_later:
+        print(
+            f"  {label} was graded in the later report and not the earlier one, so it was not "
+            "compared; it has no history in this pair"
+        )
 
 
 def _render_frame_moves(diff: ReportDiff) -> None:
