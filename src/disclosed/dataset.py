@@ -31,7 +31,7 @@ from typing import Any, Final
 from .disclosure import Disclosure
 from .fields import FIELDS, Field
 
-__all__ = ["IDENTITY_COLUMNS", "to_csv", "to_schema"]
+__all__ = ["DISPUTED_COLUMN_SUFFIX", "IDENTITY_COLUMNS", "to_csv", "to_schema"]
 
 # Fixed leading columns, in this order. ``gradeable`` sits next to ``disclosure_score`` so that
 # the reason a score cell is empty is always visible in the adjacent column.
@@ -77,7 +77,18 @@ IDENTITY_COLUMNS: Final[tuple[tuple[str, str, str], ...]] = (
 _CLASSIFICATION_VALUES: Final[tuple[str, ...]] = tuple(d.value for d in Disclosure)
 
 
-def _row(record: dict[str, Any], fields: tuple[Field, ...]) -> dict[str, str]:
+#: Appended to a field's column name to make the column stating whether the institution has
+#: filed a dispute about it. A separate column rather than a value inside the classification
+#: column, because a dispute is not a sixth state and must never be read as one: the grade in
+#: that cell is exactly what it was, and this says only that somebody has said so in writing.
+DISPUTED_COLUMN_SUFFIX: Final[str] = "_disputed"
+
+
+def _row(
+    record: dict[str, Any],
+    fields: tuple[Field, ...],
+    disputed: frozenset[tuple[str, str]] = frozenset(),
+) -> dict[str, str]:
     score = record.get("score")
     gradeable = score is not None
     row: dict[str, str] = {
@@ -91,26 +102,47 @@ def _row(record: dict[str, Any], fields: tuple[Field, ...]) -> dict[str, str]:
         "letter": str(record.get("letter") or ""),
     }
     published = record.get("fields", {})
+    unit_id = row["unit_id"]
     for field in fields:
         # Absence of a classification is itself stated as a word. An empty cell here would put the
         # export right back into the ambiguity the whole file is arranged to avoid.
         row[field.column] = str(published.get(field.label) or "not_in_report")
+        # ``false`` and never an empty cell, for the same reason. A blank would mean "no
+        # dispute", "not checked" and "this row predates the column" identically, and this
+        # file exists because those are three different facts.
+        row[field.column + DISPUTED_COLUMN_SUFFIX] = (
+            "true" if (unit_id, field.label) in disputed else "false"
+        )
     return row
 
 
-def to_csv(report: dict[str, Any], *, fields: tuple[Field, ...] = FIELDS) -> str:
+def to_csv(
+    report: dict[str, Any],
+    *,
+    fields: tuple[Field, ...] = FIELDS,
+    disputed: frozenset[tuple[str, str]] = frozenset(),
+) -> str:
     """Render a graded report as CSV.
 
     Rows are sorted by unit id so that regenerating the file from the same report produces the
     same bytes and a diff means the data moved. ``\\r\\n`` line endings are used because RFC 4180
     specifies them and some readers still care.
+
+    Args:
+        report: A payload as written by ``disclosed grade``.
+        fields: The graded fields to export a column pair for.
+        disputed: ``(unit_id, field label)`` pairs an institution has filed a dispute about.
+            The grade in the classification column is unchanged; the dispute column beside it
+            says only that somebody has said in writing that it is wrong.
     """
-    columns = [name for name, _, _ in IDENTITY_COLUMNS] + [f.column for f in fields]
+    columns = [name for name, _, _ in IDENTITY_COLUMNS]
+    for field in fields:
+        columns += [field.column, field.column + DISPUTED_COLUMN_SUFFIX]
     buffer = io.StringIO()
     writer = csv.DictWriter(buffer, fieldnames=columns, lineterminator="\r\n")
     writer.writeheader()
     for record in sorted(report.get("grades", []), key=lambda r: str(r.get("unit_id") or "")):
-        writer.writerow(_row(record, fields))
+        writer.writerow(_row(record, fields, disputed))
     return buffer.getvalue()
 
 
@@ -134,6 +166,20 @@ def to_schema(*, fields: tuple[Field, ...] = FIELDS, path: str = "dataset.csv") 
                 "constraints": {"enum": [*_CLASSIFICATION_VALUES, "not_in_report"]},
                 "source_key": field.key,
                 "weight": field.weight,
+            }
+        )
+        schema_fields.append(
+            {
+                "name": field.column + DISPUTED_COLUMN_SUFFIX,
+                "type": "boolean",
+                "description": (
+                    f"Whether the institution has filed a dispute about how {field.label} "
+                    "was classified, committed under disputes/ and rendered on its page. The "
+                    "classification in the column before this one is unchanged: a dispute is "
+                    "published beside a finding and never folded into one, so this is not a "
+                    "sixth state and must not be read as one. Never empty."
+                ),
+                "constraints": {"enum": ["true", "false"]},
             }
         )
     return {

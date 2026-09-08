@@ -38,6 +38,35 @@ file is the human-readable one.
 
 ### Added
 
+- **A graded institution can now say, on its own page, that we are wrong.** The README's contract
+  is that a scorecard which cannot be disputed line by line is an accusation, and every credible
+  range has carried a written rationale so the finding is arguable. What was missing was the other
+  half: somewhere for the argument to land that a reader of the finding would ever see. The only
+  channel was a GitHub issue, invisible from the page it is about.
+  A dispute is a committed file — `disputes/<unit_id>.json` naming the field, the classification,
+  the institution's own statement, a public URL, the date and who filed it — arriving by pull
+  request through `.github/ISSUE_TEMPLATE/dispute.yml`. It is rendered on that institution's page
+  with the statement quoted **verbatim** and escaped, the evidence linked and never fetched, and
+  the filer and date named. The export gains a `<column>_disputed` cell beside every
+  classification: `true` or `false`, never empty, and never a sixth state.
+  **Filing does not change a grade.** The site is built both ways in a test and exactly one page
+  is required to differ; the classification column, the score and the letter are asserted
+  unchanged. A channel that silently moved a score would be a scoring input wearing a comment's
+  clothes, and the institution best at filing paperwork would score highest.
+  Three refusals, each because it would publish a rebuttal of a finding nobody made: an
+  institution the report does not grade, a field it does not carry, and a classification it does
+  not give — the last is a dispute overtaken by a regrading, which is stale rather than wrong, and
+  rendering it beside a state it does not name would put words in the institution's mouth. The
+  loader refuses a malformed file rather than skipping it, because a dropped dispute leaves an
+  institution believing its statement was published when the page never carried it.
+  `schema/dispute.v1.schema.json` is committed and served; the build now writes **every** schema
+  this repository commits, as a loop rather than two statements, so a third cannot be added and
+  left unpublished the way the first one was.
+  The directory ships **empty**. A fabricated dispute attributed to a real college would be
+  exactly the kind of plausible, unfounded statement this project exists to object to, so the
+  fixtures are in `tests/` and the register is whatever institutions have actually filed.
+
+
 - **The whole corpus is one descriptor now, and it cannot describe a file the repository does
   not hold.** Every artifact here was committed, reproducible and individually documented, and
   nothing said what the *set* was: a reader who found `data/dataset.csv` had no way to learn that

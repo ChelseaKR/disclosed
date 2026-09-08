@@ -207,6 +207,31 @@ def _snapshot_resources(root: Path) -> list[Resource]:
     return resources
 
 
+def _dispute_resources(root: Path) -> list[Resource]:
+    """One resource per committed dispute, so the corpus descriptor names them too.
+
+    None today: the register is empty because no institution has filed one, and a fabricated
+    example committed to make a directory look used would be exactly the kind of plausible,
+    unfounded statement this project objects to. The generator handles them anyway, so the first
+    real dispute arrives in the descriptor rather than being noticed as missing later --
+    ``test_the_committed_descriptor_is_what_the_code_generates`` fails on the pull request that
+    adds one without regenerating, which is when somebody is looking.
+    """
+    return [
+        Resource(
+            name=f"dispute-{path.stem}",
+            path=path.relative_to(root).as_posix(),
+            title=f"Dispute filed by institution {path.stem}",
+            description=(
+                "A graded institution's stated objection to one finding about it, quoted "
+                "verbatim on its page. A dispute is published beside a finding and never folded "
+                "into one: no grade, score or published figure moves because it was filed."
+            ),
+        )
+        for path in sorted((root / "disputes").glob("*.json"))
+    ]
+
+
 def _archive_resources(root: Path) -> list[Resource]:
     """The committed IPEDS archives, which are the only inputs to the national figures.
 
@@ -370,7 +395,12 @@ def build(root: Path) -> dict[str, Any]:
             "the committed capture records no walked_at, so the package has no date it could "
             "carry that is a fact about the data rather than about when a command was run"
         )
-    resources = _core_resources() + _archive_resources(root) + _snapshot_resources(root)
+    resources = (
+        _core_resources()
+        + _archive_resources(root)
+        + _snapshot_resources(root)
+        + _dispute_resources(root)
+    )
     return {
         "profile": "data-package",
         "name": "disclosed",

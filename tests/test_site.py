@@ -450,7 +450,12 @@ class TestTheSourceBacklink:
         for page in sorted(_build(tmp_path).rglob("index.html")):
             text = _text(page)
             assert f'<a href="{site.SOURCE_URL}">' in text, page
-            assert text.index(site.SOURCE_URL) > text.index("<footer>"), page
+            # In the footer, asserted by looking inside it rather than by checking that the
+            # first mention on the page comes after it. The methodology page and any page
+            # carrying a dispute link the repository in their own prose too, and those are
+            # additional mentions rather than a missing footer.
+            footer = text[text.index("<footer>") : text.index("</footer>")]
+            assert f'<a href="{site.SOURCE_URL}">' in footer, page
 
 
 class TestSiteCommand:

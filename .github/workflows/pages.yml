@@ -69,6 +69,7 @@ jobs:
           --receipts-from data/sample.json
           --snapshots-from data/snapshots
           --package datapackage.json
+          --disputes-from disputes
           --out site
           --origin "$SITE_ORIGIN"
           --generated "$(date -u +%F)"

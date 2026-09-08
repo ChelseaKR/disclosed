@@ -575,6 +575,17 @@ msgstr ""
 "disagreement will be with a stated bound, a stated peer group, or the underlying federal "
 "record, and all three can be checked."
 
+msgid "methodology.wrong.dispute"
+msgstr ""
+"And you can say so on your own page. A graded institution can file a dispute — the field, the "
+"classification, its own statement and where the disclosure is — and it is committed to this "
+"project's repository and rendered beside the finding, quoted exactly as filed. Filing does not "
+"change a grade, and that is deliberate: a channel that moved a score would be a scoring input "
+"wearing a comment's clothes, and the institution best at filing paperwork would score highest. "
+"If a finding is actually wrong, the fix is a change to a rule or to the data, in a commit that "
+"says so, and the dispute is the record of how it was asked for. See <code>disputes/</code> at "
+"<a href=\"{source}\">the repository</a>."
+
 msgid "national.heading"
 msgstr "The national picture"
 
@@ -744,6 +755,33 @@ msgstr ""
 #. a run that graded it and could not measure a rate, and a movement that could not be measured
 #. at all -- because the cell a reader would read all three as is "0%", which says every
 #. institution the field reached failed to report it.
+#. The dispute channel. Rendered only on the pages of institutions that have filed one; a
+#. "Disputed" heading reading "none" would invite the reading that the institution was asked and
+#. declined, and nobody asked. The statement itself is never here: it is the institution's own
+#. words, quoted verbatim from the committed file.
+msgid "dispute.heading"
+msgstr "Disputed by this institution"
+
+msgid "dispute.lede"
+msgstr ""
+"This institution has told us, in writing, that one or more findings above are wrong. Its "
+"statement is quoted below exactly as filed, and nothing on this page has been changed because "
+"of it: a dispute is published beside a finding, never folded into one. If a finding is wrong "
+"the fix is a change to the rule or to the data, in a commit that says so."
+
+msgid "dispute.item"
+msgstr ""
+"<strong>{field}</strong>, classified <em>{classification}</em> — filed {filed} by "
+"{filed_by}."
+
+msgid "dispute.evidence"
+msgstr "Where the institution says the disclosure is"
+
+msgid "dispute.how_to_file"
+msgstr ""
+"Any graded institution can file one. The channel, the schema and what happens to a dispute are "
+"described at <a href=\"{source}\">the repository</a>, under <code>disputes/</code>."
+
 msgid "history.heading"
 msgstr "Disclosure history: {source}"
 

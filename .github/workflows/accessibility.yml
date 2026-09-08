@@ -88,6 +88,7 @@ jobs:
             --scorecard-census data/scorecard-census.json \
             --snapshots-from data/snapshots \
             --package datapackage.json \
+            --disputes-from disputes \
             --out site --generated "${GITHUB_SHA}"
 
       - name: Serve it
