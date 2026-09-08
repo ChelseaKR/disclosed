@@ -362,15 +362,44 @@ class TestAPublishedIdentifierResolvesWhereItSaysItDoes:
 
         assert _run(built) == 1
 
+    def test_the_build_publishes_every_schema_this_repository_commits(self, built: Path) -> None:
+        """Two now, and the pair is why the writer is a loop rather than two statements.
+
+        The first one was committed, versioned and unpublished for months. A second added the
+        same way would have been the same defect twice in one directory.
+        """
+        published = {path.name for path in (built / "schema").glob("*.json")}
+        committed = {path.name for path in (_ROOT / "schema").glob("*.json")}
+
+        assert committed
+        assert committed <= published
+
     def test_a_build_that_published_no_identifier_at_all_is_refused(self, built: Path) -> None:
         """A loop over an empty set reports success, which is this project's own defect class.
 
-        Deleting the schema returns the site to exactly the state this class was written about,
-        and a checker that called that state fine would be the thing it replaced.
+        Deleting every published schema returns the site to exactly the state this class was
+        written about, and a checker that called that state fine would be the thing it replaced.
+        Every one of them, not just the first: with two published documents carrying an ``$id``,
+        removing one leaves the other and the check would go on passing over a site that had
+        silently stopped publishing a contract.
+        """
+        for path in sorted((built / "schema").glob("*.json")):
+            path.unlink()
+
+        assert _run(built) == 1
+
+    def test_removing_one_of_two_published_schemas_is_not_what_that_check_catches(
+        self, built: Path
+    ) -> None:
+        """Said out loud, because it is the limit of the check and not a gap in this test.
+
+        Promise 7 asks whether every published ``$id`` resolves where it says it does. It cannot
+        ask whether a document the build stopped writing should still have been written; that is
+        what the test above this one is for.
         """
         (built / rules.SCHEMA_PATH).unlink()
 
-        assert _run(built) == 1
+        assert _run(built) == 0
 
     def test_a_published_json_document_that_is_not_readable_is_refused(self, built: Path) -> None:
         (built / rules.SCHEMA_PATH).write_text("{not json", encoding="utf-8")

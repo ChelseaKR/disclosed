@@ -33,10 +33,10 @@ grade:
 	$(PYTHON) -m disclosed.cli grade --out data/report.json
 
 site:
-	$(PYTHON) -m disclosed.cli site --report data/report.json --national data/national.json --scorecard-census data/scorecard-census.json --receipts-from data/sample.json --snapshots-from data/snapshots --package datapackage.json --out site --generated $(shell date -u +%F)
+	$(PYTHON) -m disclosed.cli site --report data/report.json --national data/national.json --scorecard-census data/scorecard-census.json --receipts-from data/sample.json --snapshots-from data/snapshots --package datapackage.json --disputes-from disputes --out site --generated $(shell date -u +%F)
 
 dataset:
-	$(PYTHON) -m disclosed.cli dataset --report data/report.json --out data/dataset.csv --package datapackage.json --root .
+	$(PYTHON) -m disclosed.cli dataset --report data/report.json --out data/dataset.csv --disputes-from disputes --package datapackage.json --root .
 
 crosscheck:
 	$(PYTHON) -m disclosed.cli crosscheck --cache data/HD2023.zip --characteristics data/IC2023.zip --source data/sample.json --out data/crosscheck.json

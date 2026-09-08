@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chelseakr.github.io/disclosed/schema/dispute.v1.schema.json",
+  "title": "disclosed dispute",
+  "description": "A graded institution's stated objection to one finding about it, committed as disputes/<unit_id>.json and rendered verbatim beside the finding. A dispute never changes a classification; it is published next to one.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit_id",
+    "field",
+    "disputed_classification",
+    "statement",
+    "evidence_url",
+    "filed",
+    "filed_by"
+  ],
+  "properties": {
+    "unit_id": {
+      "description": "IPEDS unit id, as the College Scorecard publishes it, and the same as the file name.",
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "field": {
+      "description": "The graded field label this dispute is about, exactly as the report writes it. A field the report does not carry is refused.",
+      "type": "string",
+      "minLength": 1
+    },
+    "disputed_classification": {
+      "description": "The state the report gives that field. Carried so a dispute that has been overtaken by a regrading is refused as stale rather than rendered beside a finding it does not name.",
+      "type": "string",
+      "enum": [
+        "implausible",
+        "missing",
+        "not_applicable",
+        "reported",
+        "suppressed"
+      ]
+    },
+    "statement": {
+      "description": "The institution's own words. Quoted verbatim on the page and never summarised: paraphrasing would make this project the author of the other side of its own argument.",
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_url": {
+      "description": "Where the institution says the disclosure is. Rendered as a link and never fetched: whether the page says what the statement says is a judgement, and this channel carries the claim rather than adjudicating it.",
+      "type": "string",
+      "pattern": "^https?://"
+    },
+    "filed": {
+      "description": "ISO calendar date the dispute was filed.",
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "filed_by": {
+      "description": "Who filed it, in their own words. An anonymous statement on somebody else's page is not attributable, so this is required.",
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

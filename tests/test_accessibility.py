@@ -27,7 +27,7 @@ from typing import Any, ClassVar
 
 import pytest
 
-from disclosed import history, national, package, receipts, site
+from disclosed import disputes, history, national, package, receipts, site
 
 _REPORT: dict[str, Any] = {
     "scope": {
@@ -186,6 +186,7 @@ def published(tmp_path_factory: pytest.TempPathFactory) -> Path:
         receipts=receipts.load_source(sample, json.loads(sample.read_text(encoding="utf-8")), None),
         histories=history.load(_DATA / "snapshots"),
         package=json.loads((_ROOT / package.PACKAGE_NAME).read_text(encoding="utf-8")),
+        disputes=disputes.load(_ROOT / disputes.DIRECTORY),
     )
     return out
 
