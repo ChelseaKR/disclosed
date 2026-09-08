@@ -251,6 +251,43 @@ class TestWhatThePageSays:
         # published that field. The thing that must never appear is a share over nothing.
         assert not re.search(r"\b\d+ of 0 publish it", text)
 
+    def test_a_field_the_payload_does_not_cover_is_a_blank_cell_and_never_a_ragged_row(
+        self, committed_report: dict[str, Any], tmp_path: Path
+    ) -> None:
+        """A report whose panel covers fewer fields than a row carries.
+
+        No report this code writes is in that state -- ``labels`` and every row's ``fields`` are
+        built from the same graded results -- so this is what a report from another rules version
+        would look like. Two things have to hold. The cell must stay **empty**, because the three
+        sentences the column can say are all claims about a comparison that was made and this one
+        was not. And the row must keep its width: a shared renderer whose cell count can fall
+        below its header count produces a column of headings with nothing under them, which is a
+        broken table for a screen reader and a whole field silently unaccounted for.
+        """
+        report = json.loads(json.dumps(committed_report))
+        dropped = "In-state tuition"
+        report["peer_disclosure"]["labels"] = [
+            label for label in report["peer_disclosure"]["labels"] if label != dropped
+        ]
+        unit_id = next(
+            row["unit_id"] for row in report["grades"] if row["unit_id"] in site.peer_panels(report)
+        )
+        assert dropped not in site.peer_panels(report)[unit_id]
+
+        out = self._build(report, tmp_path)
+        text = (out / "institution" / unit_id / "index.html").read_text(encoding="utf-8")
+
+        table = text[text.index("<table>") : text.index("</table>")]
+        assert table.count('<th scope="col">') == 4
+        for row_html in table.split("<tr>")[2:]:
+            assert row_html.count('<th scope="row">') + row_html.count("<td") == 4, row_html
+
+        # The dropped field's own row carries an empty final cell and no sentence about peers.
+        tuition_row = next(r for r in table.split("<tr>") if f">{dropped}</a>" in r)
+        assert tuition_row.rstrip().endswith("<td></td></tr>"), tuition_row
+        assert "publish it" not in tuition_row
+        assert "too few to compare" not in tuition_row
+
     def test_the_group_is_named_once_under_the_table(
         self, committed_report: dict[str, Any], tmp_path: Path
     ) -> None:

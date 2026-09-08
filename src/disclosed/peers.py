@@ -35,7 +35,6 @@ __all__ = [
     "PeerDisclosure",
     "PeerGroup",
     "disclosure_by_group",
-    "disclosure_for",
     "group_key",
     "peer_context",
     "peer_group_for",
@@ -175,9 +174,6 @@ class PeerDisclosure:
     def reporting(self) -> int:
         return self.counts.get("reported", 0)
 
-    def as_dict(self) -> dict[str, Any]:
-        return {"description": self.description, "counts": dict(self.counts)}
-
 
 def disclosure_by_group(
     corpus: Sequence[Mapping[str, Any]],
@@ -194,8 +190,10 @@ def disclosure_by_group(
     first makes it linear.
 
     The institution under scrutiny is **not** removed here. It cannot be: these are group totals,
-    and there is one per group rather than one per institution. Callers subtract the institution's
-    own classification when they read it, which is what :func:`disclosure_for` does.
+    and there is one per group rather than one per institution. The subtraction happens once, in
+    :func:`disclosed.site.peer_panels`, against the *published* report rather than against these
+    in-memory totals — so the page's arithmetic is over two numbers a reader can find in
+    ``data/report.json``, and there is only one implementation of it to keep honest.
 
     Args:
         corpus: The source records, which is where the peer key lives.
@@ -222,32 +220,6 @@ def disclosure_by_group(
             # report and this code as a gap in what the publisher disclosed, which is the defect
             # one module over already refuses by name.
     return counted
-
-
-def disclosure_for(
-    record: Mapping[str, Any],
-    graded: Mapping[str, str],
-    totals: Mapping[tuple[Any, Any, Any], Mapping[str, Mapping[str, int]]],
-    *,
-    labels: Sequence[str],
-) -> dict[str, PeerDisclosure]:
-    """One institution's peer panel: its group's counts, with its own contribution removed.
-
-    Subtracting rather than recomputing, so the exclusion is exact and costs nothing. An
-    institution whose own classification is a word this build does not know contributed nothing to
-    the totals and has nothing to subtract, which is why the guard is the same one the counter
-    used.
-    """
-    description, key = peer_group_for(dict(record))
-    group = totals.get(key, {})
-    panel: dict[str, PeerDisclosure] = {}
-    for label in labels:
-        counts = dict(group.get(label, dict.fromkeys(sorted(CLASSIFICATIONS), 0)))
-        own = graded.get(label)
-        if own in counts:
-            counts[own] -= 1
-        panel[label] = PeerDisclosure(field_label=label, description=description, counts=counts)
-    return panel
 
 
 def group_key(key: tuple[Any, Any, Any]) -> str:

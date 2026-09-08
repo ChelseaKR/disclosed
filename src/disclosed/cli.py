@@ -166,15 +166,16 @@ def _scorecard_scope(
 def _peer_disclosure_payload(
     grades: list[InstitutionGrade], corpus: list[dict[str, Any]]
 ) -> dict[str, Any]:
-    """Per-peer-group, per-field classification counts, or nothing at all.
+    """Per-peer-group, per-field classification counts.
 
-    Nothing at all when the corpus and the grades cannot be read in parallel, which is what a
-    replay of a report with no records beside it looks like. Publishing a panel computed from a
-    corpus this run did not have would be the project's own failure mode with a peer group
-    attached.
+    There is no "or nothing at all" branch here, deliberately. The one caller builds ``grades``
+    from ``corpus`` in the same expression, so the two are the same length by construction and a
+    mismatch would be a programming error rather than a state a run can be in. A guard that
+    silently returned no panel would be unreachable — a refusal that reads as one in review and
+    can never fire — and it would also be weaker than what already exists: a mismatch is refused
+    outright by :func:`peers.disclosure_by_group`, loudly and with both lengths named, which is
+    the behaviour ``test_a_corpus_and_a_grade_list_of_different_lengths_are_refused`` pins.
     """
-    if len(corpus) != len(grades):
-        return {}
     labels = [r.field.label for r in grades[0].results] if grades else []
     graded = [{r.field.label: r.disclosure.value for r in g.results} for g in grades]
     totals = peers.disclosure_by_group(corpus, graded, labels=labels)
