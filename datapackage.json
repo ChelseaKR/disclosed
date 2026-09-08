@@ -254,11 +254,11 @@
       "title": "The Table Schema for the CSV, published on its own"
     },
     {
-      "bytes": 284642,
+      "bytes": 404293,
       "description": "Every institution's per-field classifications, score and letter, the scope the run covered, the rules version that graded it, and every implausible finding with the peer group behind it.",
       "encoding": "utf-8",
       "format": "json",
-      "hash": "sha256:72003b85528cff64ca9be4f51b4495b4784992ce55eda0c84ddfec95d8cd5948",
+      "hash": "sha256:f78046713fed9d56fdefce9a1f37b06394af62a208fd914a64eafbcd7f6e213d",
       "mediatype": "application/json",
       "name": "report",
       "path": "data/report.json",

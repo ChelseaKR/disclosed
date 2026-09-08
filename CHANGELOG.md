@@ -38,6 +38,30 @@ file is the human-readable one.
 
 ### Added
 
+- **Every field on an institution page now says what comparable institutions published.** The
+  peer groups existed and answered one question only — *did comparable institutions publish this
+  value* — which is the question an implausible finding raises. Five of the six rows on a page
+  therefore had no context at all, and the only comparison anywhere was the national share.
+  "64.5% publish no admission rate" is a fact about the country; a reader of one college's page
+  wants to know whether the colleges most like it manage to publish what it did not.
+  `disclosed grade` now writes `peer_disclosure` — per peer group, per field, how many of that
+  group's institutions landed in each of the five states — and gives every row the key of the
+  group it belongs to. The page's cell is that group's counts **minus the institution's own
+  contribution**: arithmetic over two numbers a reader can find in `data/report.json`, rather
+  than a third number computed at render time that appears in no artifact. The counts are
+  published once per group rather than copied onto six hundred rows, which is six hundred fewer
+  chances for one of them to disagree with the others.
+  **Three things the column will not say.** An institution is never part of the evidence about
+  itself, exactly as in the value comparison. The denominator is the institutions the field
+  actually reached — peers who suppressed it and peers the requirement does not reach leave it,
+  rather than being counted as peers who failed to answer. And a group below `MIN_PEERS`, or a
+  field none of the group was asked, says so in words: a share over an empty denominator would
+  render as `0%` and claim every comparable institution had failed to publish something nobody
+  asked them for, which is the opposite of the truth and the exact defect this project exists to
+  object to.
+  A report carrying no peer payload renders no column at all, and a test asserts the pages are
+  byte-identical to what they were. A column of dashes looks like an answer.
+
 - **A graded institution can now say, on its own page, that we are wrong.** The README's contract
   is that a scorecard which cannot be disputed line by line is an accusation, and every credible
   range has carried a written rationale so the finding is arguable. What was missing was the other
