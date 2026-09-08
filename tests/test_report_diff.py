@@ -214,6 +214,91 @@ class TestAbsenceIsNeverRenderedAsAValue:
         assert diff.fields_only_in_later == ("Pell share",)
         assert diff.fields_only_in_earlier == ()
 
+    def test_a_field_this_project_stopped_grading_is_not_compared_either(self) -> None:
+        """The other direction, which nothing here had ever produced.
+
+        Every assertion about ``fields_only_in_earlier`` in this module compared it against the
+        empty tuple, so the branch in ``_transitions`` that skips a vanished label had never
+        executed and the sentence that reports it had only ever been reached through
+        ``fields_only_in_later``. A field this project stops grading is the more consequential of
+        the two directions: it is the grader going quiet about something, and it must not look
+        like every institution losing it at once.
+        """
+        earlier = _report(
+            [_grade("105525", fields={_FIELD: "reported", "Pell share": "reported"})],
+        )
+        later = _report([_grade("105525", fields={_FIELD: "reported"})])
+
+        diff = compare_reports(earlier, later)
+
+        assert diff.fields_only_in_earlier == ("Pell share",)
+        assert diff.fields_only_in_later == ()
+        assert diff.changed == ()
+        assert diff.matrix == ()
+
+    def test_a_field_that_vanished_is_not_a_transition_for_a_single_institution(self) -> None:
+        """The skip has to hold per institution, not merely in the aggregate.
+
+        Counted as a transition, a field dropped from the graded set would read as every graded
+        institution moving at once -- the loudest wrong finding this verb could produce, and one
+        no reader could distinguish from a real collapse in disclosure.
+        """
+        vanished = "Pell share"
+        earlier = _report(
+            [
+                _grade("105525", fields={_FIELD: "reported", vanished: "reported"}),
+                _grade("125310", fields={_FIELD: "missing", vanished: "suppressed"}),
+            ]
+        )
+        later = _report(
+            [
+                _grade("105525", fields={_FIELD: "reported"}),
+                _grade("125310", fields={_FIELD: "missing"}),
+            ]
+        )
+
+        diff = compare_reports(earlier, later)
+
+        assert diff.compared == 2
+        assert diff.transition_count == 0
+        assert all(vanished not in t.field_label for c in diff.changed for t in c.transitions)
+
+    def test_an_entry_that_is_not_a_grade_is_counted_rather_than_dropped(self) -> None:
+        """A row that is not an object at all: read, refused, and said out loud.
+
+        It used to be skipped in silence, which is the failure this module already refuses one
+        branch over for a grade with no id -- a comparison that quietly drops rows reports a
+        smaller population as a stable one. It is counted apart from the unmatchable tally
+        because the remedies differ: no id is a gap in the grader, an unreadable entry is a
+        damaged or hand-edited file.
+        """
+        earlier: dict[str, Any] = _report([_grade("105525")])
+        earlier["grades"] = [*earlier["grades"], None, "not a grade", 7]
+        later = _report([_grade("105525")])
+
+        diff = compare_reports(earlier, later)
+
+        assert diff.unreadable_rows_earlier == 3
+        assert diff.unreadable_rows_later == 0
+        assert diff.unmatchable_earlier == 0
+        assert diff.compared == 1
+        assert diff.as_dict()["unreadable_rows_earlier"] == 3
+
+    def test_a_fields_block_that_is_not_an_object_yields_no_states(self) -> None:
+        """A grade whose ``fields`` is not a mapping has no classifications to compare.
+
+        The row still carries an id, so it is matched and counted in ``compared``. What it must
+        not do is manufacture transitions, and it must not take the run down either.
+        """
+        earlier = _report([{**_grade("105525"), "fields": "reported"}])
+        later = _report([_grade("105525")])
+
+        diff = compare_reports(earlier, later)
+
+        assert diff.compared == 1
+        assert diff.transition_count == 0
+        assert diff.fields_only_in_later == (_FIELD, _OTHER)
+
     def test_an_institution_that_left_the_frame_did_not_stop_disclosing(self) -> None:
         earlier = _report([_grade("105525"), _grade("125310", name="Closed College")])
         later = _report([_grade("105525"), _grade("999999", name="New College")])
@@ -429,7 +514,54 @@ class TestTheVerb:
 
         out = capsys.readouterr().out
         assert "carry no id" in out
-        assert "Pell share is graded in only one" in out
+        assert "Pell share was graded in the later report and not the earlier one" in out
+
+    def test_the_two_uncompared_directions_are_different_sentences(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """One field started being graded, one stopped, and the reader can tell which is which.
+
+        Both used to print the identical sentence, because the renderer concatenated the two
+        tuples the payload keeps apart. "Graded in only one of the two reports" is true of a
+        field this project added and of one it dropped, and those send a reader to opposite
+        places.
+        """
+        earlier = self._write(
+            tmp_path / "a.json",
+            _report([_grade("105525", fields={_FIELD: "reported", "Retention": "reported"})]),
+        )
+        later = self._write(
+            tmp_path / "b.json",
+            _report([_grade("105525", fields={_FIELD: "reported", "Pell share": "missing"})]),
+        )
+
+        assert cli.main(["diff-report", earlier, later]) == 0
+
+        out = capsys.readouterr().out
+        assert "Retention was graded in the earlier report and not the later one" in out
+        assert "Pell share was graded in the later report and not the earlier one" in out
+        # The disclaimer belongs on the dropped field and only on it: this verb has not shown
+        # that anybody stopped publishing anything it stopped grading.
+        stopped = next(line for line in out.splitlines() if line.strip().startswith("Retention"))
+        started = next(line for line in out.splitlines() if line.strip().startswith("Pell share"))
+        assert "stopped publishing" in stopped
+        assert "stopped publishing" not in started
+
+    def test_entries_that_are_not_grades_are_reported_and_not_confused_with_missing_ids(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        # The malformed row is appended after `_report` has built the payload, because the
+        # helper types its argument as a list of grades and this is deliberately not one.
+        payload = _report([_grade(None), _grade("105525")])
+        payload["grades"] = [*payload["grades"], None]
+        earlier = self._write(tmp_path / "a.json", payload)
+        later = self._write(tmp_path / "b.json", _report([_grade("105525")]))
+
+        assert cli.main(["diff-report", earlier, later]) == 0
+
+        out = capsys.readouterr().out
+        assert "1 grades in the earlier report carry no id" in out
+        assert "1 entries in the earlier report are not grades and could not be read" in out
 
     def test_an_unreadable_word_is_labelled_rather_than_counted(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]

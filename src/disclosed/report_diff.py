@@ -28,7 +28,10 @@ manufactures a transition out of a version gap between the report and the code r
 
 A field graded in one report and not the other is not a transition either. Adding a field to the
 graded set is a change in this project, not in the publisher, and :func:`disclosed.drift.compare`
-skips such fields for exactly this reason.
+skips such fields for exactly this reason. The two directions are skipped alike and **reported
+apart**: a field graded earlier and not later is one this project stopped grading, a field graded
+later and not earlier is one it started, and they send a reader to opposite places. Reported in a
+single sentence, as they were, the sentence was true of both and named neither.
 """
 
 from __future__ import annotations
@@ -201,6 +204,17 @@ class ReportDiff:
 
     fields_only_in_earlier: tuple[str, ...] = ()
     fields_only_in_later: tuple[str, ...] = ()
+    unreadable_rows_earlier: int = 0
+    unreadable_rows_later: int = 0
+    """Entries in ``grades`` that are not objects at all.
+
+    Kept apart from :attr:`unmatchable_earlier`, which counts a *grade* that carries no id. A
+    ``null`` or a bare string in ``grades`` is not a grade this build failed to identify; it is
+    a row it could not read, and the two want different remedies -- the first is a gap in the
+    grader's identity handling, the second is a damaged or hand-edited file. Both are counted,
+    because the alternative is the one this module already refuses two attributes up: a
+    comparison that silently drops rows reports a smaller population as a stable one.
+    """
 
     @property
     def rules_confirmed(self) -> bool:
@@ -241,6 +255,8 @@ class ReportDiff:
             "unmatchable_later": self.unmatchable_later,
             "fields_only_in_earlier": list(self.fields_only_in_earlier),
             "fields_only_in_later": list(self.fields_only_in_later),
+            "unreadable_rows_earlier": self.unreadable_rows_earlier,
+            "unreadable_rows_later": self.unreadable_rows_later,
         }
 
 
@@ -269,25 +285,32 @@ def _score_of(row: Mapping[str, Any]) -> float | None:
     return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
 
 
-def _index(report: Mapping[str, Any]) -> tuple[dict[str, dict[str, Any]], int]:
-    """Grades keyed by unit id, and how many carried no id at all.
+def _index(report: Mapping[str, Any]) -> tuple[dict[str, dict[str, Any]], int, int]:
+    """Grades keyed by unit id, how many carried no id, and how many were not objects.
 
     A grade with no id is excluded from the index rather than keyed on ``""``. Two of them would
     otherwise share a key, so the second would shadow the first and be reported as though the
     first institution's fields had all moved at once.
+
+    A row that is not an object at all is excluded too, and **counted separately**. It used to be
+    dropped in silence, which made a truncated or hand-edited report read as a smaller population
+    that had held perfectly still -- the failure this function's neighbour already names in the
+    line that prints the unmatchable count.
     """
     by_id: dict[str, dict[str, Any]] = {}
     unmatchable = 0
+    unreadable = 0
     rows = report.get("grades")
     for row in rows if isinstance(rows, list) else []:
         if not isinstance(row, dict):
+            unreadable += 1
             continue
         unit_id = _identity(row, "unit_id")
         if unit_id is None:
             unmatchable += 1
             continue
         by_id.setdefault(unit_id, row)
-    return by_id, unmatchable
+    return by_id, unmatchable, unreadable
 
 
 def _states(row: Mapping[str, Any]) -> dict[str, str]:
@@ -367,12 +390,13 @@ def compare_reports(
     earlier_rules, later_rules = read_rules_version(earlier), read_rules_version(later)
     _refuse_mismatched_rules(earlier_rules, later_rules)
 
-    before, unmatchable_earlier = _index(earlier)
-    after, unmatchable_later = _index(later)
+    before, unmatchable_earlier, unreadable_earlier = _index(earlier)
+    after, unmatchable_later, unreadable_later = _index(later)
     if institution is not None:
         before = {k: v for k, v in before.items() if k == institution}
         after = {k: v for k, v in after.items() if k == institution}
         unmatchable_earlier = unmatchable_later = 0
+        unreadable_earlier = unreadable_later = 0
 
     changed: list[InstitutionChange] = []
     for unit_id in sorted(before.keys() & after.keys()):
@@ -404,6 +428,8 @@ def compare_reports(
         unmatchable_later=unmatchable_later,
         fields_only_in_earlier=tuple(sorted(earlier_labels - later_labels)),
         fields_only_in_later=tuple(sorted(later_labels - earlier_labels)),
+        unreadable_rows_earlier=unreadable_earlier,
+        unreadable_rows_later=unreadable_later,
     )
 
 

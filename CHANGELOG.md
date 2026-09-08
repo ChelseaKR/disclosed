@@ -10,6 +10,30 @@ file is the human-readable one.
 
 ### Fixed
 
+- **`diff-report` said a field was "graded in only one of the two reports" without saying
+  which one — and the direction that matters had never been produced by a test.**
+  `ReportDiff` keeps `fields_only_in_earlier` and `fields_only_in_later` apart, and the text
+  renderer concatenated them and printed one sentence for both. A field graded earlier and not
+  later is this project having *stopped* grading something; a field graded later and not
+  earlier is one it started. They send a reader to opposite places, and the merged sentence was
+  true of both while naming neither — the same collapse of two causes into one message this
+  package refuses one line above, where an unmatched grade in the earlier report and one in the
+  later report each get their own noun.
+  Coverage was what found it: `report_diff.py:315`, the branch that skips a label present in
+  the earlier grade and absent from the later one, had never executed. Both tests that touched
+  these tuples asserted `fields_only_in_earlier == ()`, so nothing had ever checked that a field
+  this project drops is excluded from the transition matrix rather than printed as every graded
+  institution losing it at once. It is, and now three tests say so — one of them per institution
+  rather than in the aggregate.
+- **An entry in `grades` that was not an object at all was dropped in silence.**
+  `_index` counted a grade with no `unit_id` as unmatchable and said so, and skipped a `null`,
+  a string or a number without counting it anywhere — so a truncated or hand-edited report read
+  as a smaller population that had held perfectly still, which is precisely what the comment
+  beside the unmatchable tally says must not happen. Such entries are now counted as
+  `unreadable_rows_earlier` / `unreadable_rows_later`, carried in the JSON payload, and printed
+  in their own sentence: "no id" is a gap in the grader, "not a grade" points at the file, and
+  the two want different remedies.
+
 - **A table with a header and no rows was refused as a table missing its columns.**
   `classify_rows` derived the set of present columns from the union of the rows' own keys, so a
   header-only CSV produced *"the input has no column named 'adm_rate'"* about a file whose header
