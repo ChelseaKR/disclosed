@@ -41,3 +41,12 @@ push.
 The README's **Standards Conformance** table is the authoritative declaration of which
 portfolio standards (the `STANDARDS/` set in `ChelseaKR/portfolio-standards`) apply here and
 how each is met. If your change affects a row, update the row.
+
+## Commercial solicitation
+
+Issues here are not open to bids. They are design records — written so a decision is
+reconstructable later — not scope documents for outside quoting, and unsolicited offers to
+implement one for a fee will be declined.
+
+Contributions through the normal fork-and-PR process are welcome, and `good first issue` is the
+place to start.
