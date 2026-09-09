@@ -610,3 +610,141 @@ class TestASystemicDriftIsDelivered:
 
     def test_the_job_may_write_issues(self) -> None:
         assert re.search(r"^\s*issues: write", _WORKFLOW, re.MULTILINE)
+
+
+class TestTheLiveSentinelRebuildsTheSiteThatIsPublished:
+    """The sentinel's whole claim is "the live surface is what this repository publishes", and
+    for two days it was comparing the live pages against a site nobody publishes.
+
+    ``tools/verify_live_site.py`` holds its own copy of the ``disclosed.cli site`` command.
+    Between 2026-08-29, when it was last edited, and 2026-09-09, ``pages.yml`` grew four
+    inputs -- ``--receipts-from`` (#94), ``--snapshots-from`` (#97), ``--package`` (#99),
+    ``--disputes-from`` (#101) -- and that copy grew none of them.
+
+    Measured against the live origin on 2026-09-09, and again unchanged on 2026-09-10,
+    before the flags were restored:
+
+    ===============================================  ======
+    files the publisher writes                        1,225
+    files the sentinel's rebuild wrote                  622
+    of those 622, differing from what is published      602
+    published files never in the comparison at all      603
+    ===============================================  ======
+
+    The 603 are 600 institution ``receipt.json`` files -- the artifact every page invites a
+    reader to check it against -- both history pages, and ``dataset.jsonld``. Nothing fetched
+    one. ``MINIMUM_FILES`` could not see it: 622 clears a floor of 500, so a whole class
+    leaving the comparison set looks exactly like a smaller site.
+
+    And it failed *loudly* -- three consecutive scheduled runs, 2026-09-08 to 2026-09-10,
+    each reporting the same 603 differences -- saying "find out why the deployment is behind
+    the default branch", about a deployment `pages.yml` had published successfully that same
+    morning. A check that names the wrong cause costs more than one that says nothing.
+
+    So the copies are held to each other here, in both directions, rather than to a list
+    written down a third time. Three call sites build this site: the publisher
+    (``pages.yml``), the sentinel, and ``make site``. Adding an input to one of them and not
+    the others fails this class.
+    """
+
+    #: Flags that carry a committed input into the render. ``--out``, ``--origin`` and
+    #: ``--generated`` are deliberately absent: they are per-caller by design (a temporary
+    #: directory here, ``site`` there; today's date in the publisher, the live page's own date
+    #: in the sentinel), and requiring them to match would be requiring the sentinel to stop
+    #: being a sentinel.
+    NOT_AN_INPUT = frozenset({"--out", "--origin", "--generated"})
+
+    @staticmethod
+    def _flags(text: str, *, after: str) -> set[str]:
+        """Every ``--flag`` of the ``disclosed.cli site`` invocation in ``text``.
+
+        The window is the invocation's own line plus every following line that begins with
+        ``--``, which is how both wrapped call sites are written and where both of them stop.
+        A fixed character window was the first version and it was wrong: 2,000 characters of
+        ``pages.yml`` runs past the render into the next step, and the ``--source`` flag of a
+        later command read as an input this render takes.
+        """
+        lines = text.splitlines()
+        start = next(index for index, line in enumerate(lines) if after in line)
+        window = [lines[start]]
+        for line in lines[start + 1 :]:
+            if not line.strip().startswith("--"):
+                break
+            window.append(line)
+        return {
+            flag
+            for flag in re.findall(r"--[a-z][a-z-]+", "\n".join(window))
+            if flag not in TestTheLiveSentinelRebuildsTheSiteThatIsPublished.NOT_AN_INPUT
+        }
+
+    def _publisher(self) -> set[str]:
+        return self._flags(_PAGES, after="disclosed.cli site")
+
+    def _sentinel(self) -> set[str]:
+        source = (_ROOT / "tools" / "verify_live_site.py").read_text(encoding="utf-8")
+        declared = re.search(r"PUBLISHED_INPUTS:[^=]*=\s*\((.*?)\n\)\n", source, re.DOTALL)
+        assert declared, (
+            "tools/verify_live_site.py no longer declares PUBLISHED_INPUTS, so the inputs it "
+            "rebuilds with cannot be compared with the ones the publisher publishes with, "
+            "which is the drift this class exists to catch."
+        )
+        return {flag for flag in re.findall(r'"(--[a-z][a-z-]+)"', declared.group(1))}
+
+    def _make(self) -> set[str]:
+        makefile = (_ROOT / "Makefile").read_text(encoding="utf-8")
+        return self._flags(makefile, after="disclosed.cli site")
+
+    def test_the_three_call_sites_pass_the_same_inputs(self) -> None:
+        publisher, sentinel, make = self._publisher(), self._sentinel(), self._make()
+        assert publisher == sentinel, (
+            "the sentinel rebuilds with a different set of inputs from the one the publisher "
+            f"publishes with, so it is comparing the live site against something else. Only in "
+            f"pages.yml: {sorted(publisher - sentinel)}. Only in verify_live_site.py: "
+            f"{sorted(sentinel - publisher)}."
+        )
+        assert publisher == make, (
+            "`make site` and pages.yml disagree about the inputs, so a local render is not the "
+            f"published render. Only in pages.yml: {sorted(publisher - make)}. Only in the "
+            f"Makefile: {sorted(make - publisher)}."
+        )
+
+    def test_the_scan_found_the_inputs_it_is_comparing(self) -> None:
+        """The floor. Three empty sets are equal, and a regex that stopped matching prints the
+        same green line as one that matched everything."""
+        for name, flags in (
+            ("pages.yml", self._publisher()),
+            ("verify_live_site.py", self._sentinel()),
+            ("Makefile", self._make()),
+        ):
+            assert len(flags) >= 5, (
+                f"{name}: this scan found {sorted(flags)}, which is too few to be the render's "
+                "inputs. A reader that stopped matching reports agreement."
+            )
+
+    def test_the_inputs_the_sentinel_missed_are_among_them(self) -> None:
+        """Named by value, not derived, because these four are the incident. A rule computed
+        from the same source it is checking would have held while they were absent."""
+        missed = {"--receipts-from", "--snapshots-from", "--package", "--disputes-from"}
+        assert missed <= self._sentinel(), (
+            f"the sentinel is missing {sorted(missed - self._sentinel())} again. On 2026-09-09 "
+            "that left 603 published files out of the comparison and turned every scheduled "
+            "run red against a correct deployment."
+        )
+
+    def test_the_sentinel_builds_its_command_from_that_list(self) -> None:
+        """A declared list the command does not use would be documentation."""
+        source = (_ROOT / "tools" / "verify_live_site.py").read_text(encoding="utf-8")
+        build = source[source.index("def build_expected") :]
+        assert "PUBLISHED_INPUTS" in build[: build.index("subprocess.run")], (
+            "build_expected no longer reads PUBLISHED_INPUTS, so the list this class checks is "
+            "not the list the rebuild uses."
+        )
+
+    def test_the_failure_message_does_not_name_one_cause_as_the_cause(self) -> None:
+        """It used to end "find out why the deployment is behind the default branch", which was
+        the one cause that was not what had happened."""
+        source = (_ROOT / "tools" / "verify_live_site.py").read_text(encoding="utf-8")
+        assert "does not publish" in source, (
+            "the failure text no longer names a rebuild of the wrong site as one of the things "
+            "that produces a difference, so the next reader is sent to the deployment again."
+        )
