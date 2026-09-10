@@ -10,6 +10,42 @@ file is the human-readable one.
 
 ### Fixed
 
+- **The live-integrity sentinel was comparing the published site against a site nobody
+  publishes, and blaming the deployment for the difference.**
+  `tools/verify_live_site.py` holds its own copy of the `disclosed.cli site` command. It was
+  last edited on 2026-08-29. Since then `pages.yml` grew four inputs — `--receipts-from`
+  (#94), `--snapshots-from` (#97), `--package` (#99), `--disputes-from` (#101) — and that
+  copy grew none of them.
+
+  Measured against the live origin on 2026-09-09 and again, unchanged, on 2026-09-10, on
+  `origin/master`, before anything here was changed:
+
+  | | |
+  |---|---:|
+  | files the publisher writes | **1,225** |
+  | files the sentinel's rebuild wrote | **622** |
+  | of those 622, differing from what is published | **602** |
+  | published files never in the comparison set at all | **603** |
+
+  The 603 are 600 institution `receipt.json` files, both `history/<source>/` pages, and
+  `dataset.jsonld`. The receipts are the artifact every institution page invites a reader to
+  check it against, and `pages.yml` refuses to publish fewer than 500 of them — and nothing
+  had ever fetched one. `MINIMUM_FILES = 500` cannot see that: 622 clears it, so a whole class
+  of published file leaving the comparison looks exactly like a smaller site.
+
+  It also failed *loudly*, with "find out why the deployment is behind the default branch",
+  about a deployment that was correct: `pages.yml` succeeded each of those mornings and the
+  sentinel failed each afternoon. Three consecutive scheduled runs — 2026-09-08 (34240111314),
+  2026-09-09 (34365526874) and 2026-09-10 (34490891921) — each reporting the same 603
+  differences. A check that names the wrong cause costs more than one that says nothing.
+
+  The rebuild now takes its inputs from one declared list, and `tests/test_workflows.py` holds
+  that list, `pages.yml` and the `Makefile`'s `site` target to the same set of inputs, failing
+  in either direction, so a fifth input cannot reach the publisher alone. Verified against the
+  live origin after the change, on 2026-09-10's tree and 2026-09-10's deployment:
+  *"serves exactly what this checkout builds: 1225 file(s), 8,724,883 bytes"*, exit 0.
+  Before it, on the same tree and the same deployment: 603 differences, exit 1.
+
 - **`diff-report` said a field was "graded in only one of the two reports" without saying
   which one — and the direction that matters had never been produced by a test.**
   `ReportDiff` keeps `fields_only_in_earlier` and `fields_only_in_later` apart, and the text

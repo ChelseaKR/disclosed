@@ -201,6 +201,39 @@ def live_generated_date(origin: Origin, nonce: str) -> tuple[str, bytes]:
     return stamped, response.body
 
 
+#: Every committed input the publisher hands ``disclosed.cli site``, in the
+#: order it hands them, as ``(flag, value)`` pairs.
+#:
+#: This list is the reason the sentinel meant anything and the reason it stopped
+#: meaning anything. It is a **second copy** of the command in
+#: ``.github/workflows/pages.yml``, and between 2026-08-29 and 2026-09-09 the
+#: publisher grew four inputs -- ``--receipts-from`` (#94), ``--snapshots-from``
+#: (#97), ``--package`` (#99), ``--disputes-from`` (#101) -- and this copy grew
+#: none of them. So the sentinel rebuilt a site nobody publishes and compared
+#: the live pages against it.
+#:
+#: Measured on 2026-09-09, and again unchanged on 2026-09-10, against the live
+#: origin, before the flags were restored: the publisher writes **1,225** files,
+#: this rebuild wrote **622**,
+#: and **602 of those 622 differed**. 603 published files -- 600 institution
+#: receipts, both history pages and ``dataset.jsonld`` -- were not in the
+#: comparison set at all, so nothing ever fetched them. ``MINIMUM_FILES``
+#: cannot see that: 622 clears a floor of 500.
+#:
+#: ``tests/test_live_site_sentinel.py`` now holds this list, ``pages.yml`` and
+#: the ``site`` target in the ``Makefile`` to the same set of inputs, failing in
+#: either direction, so a fifth input cannot reach the publisher alone.
+PUBLISHED_INPUTS: tuple[tuple[str, str], ...] = (
+    ("--report", "data/report.json"),
+    ("--national", "data/national.json"),
+    ("--scorecard-census", "data/scorecard-census.json"),
+    ("--receipts-from", "data/sample.json"),
+    ("--snapshots-from", "data/snapshots"),
+    ("--package", "datapackage.json"),
+    ("--disputes-from", "disputes"),
+)
+
+
 def build_expected(generated: str) -> dict[str, bytes]:
     """Render the whole site from this checkout, stamped with the live date."""
     with tempfile.TemporaryDirectory(prefix="live-integrity-") as directory:
@@ -210,12 +243,7 @@ def build_expected(generated: str) -> dict[str, bytes]:
             "-m",
             "disclosed.cli",
             "site",
-            "--report",
-            "data/report.json",
-            "--national",
-            "data/national.json",
-            "--scorecard-census",
-            "data/scorecard-census.json",
+            *(part for pair in PUBLISHED_INPUTS for part in pair),
             "--out",
             str(out),
             "--origin",
@@ -377,7 +405,13 @@ def main(argv: list[str] | None = None) -> int:
         for difference in differences:
             print(f"  {difference}", file=sys.stderr)
         print(
-            "\nRe-run publish-site, or find out why the deployment is behind the default branch.",
+            "\nThree things produce this, and they need different answers. The deployment is "
+            "behind the default branch: re-run publish-site. The deployment is correct and "
+            "the render changed: that is a real regression. Or this check is rebuilding "
+            "something the publisher does not publish, which is what happened between "
+            "2026-08-29 and 2026-09-09, when four inputs reached pages.yml and not "
+            "PUBLISHED_INPUTS. If every page differs by roughly the same number of bytes "
+            "and no deploy is in flight, read that list against the workflow first.",
             file=sys.stderr,
         )
         return EXIT_DIFFERS
