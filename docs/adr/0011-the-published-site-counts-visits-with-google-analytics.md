@@ -40,7 +40,7 @@ all four of these hold:
 
 When it loads, it sets Consent Mode v2 defaults. The three ad signals are denied everywhere.
 `analytics_storage` is denied in the EEA, the UK and Switzerland, where GA sends cookieless pings,
-and granted elsewhere. It also turns off Google signals and ad personalisation, and sends
+and granted elsewhere. It also turns off Google signals and ad personalization, and sends
 `page_location` as the origin and path only.
 
 The privacy page says the plain thing a reader of this site most needs to know: a page's address

@@ -148,7 +148,7 @@ def records_by_unit_id(records: Sequence[Mapping[str, Any]]) -> dict[str, Mappin
 
     Records without an id are excluded rather than keyed on ``""`` or on the string ``"None"``.
     Two unidentified rows sharing a key is not hypothetical here: it is the bug that once served
-    one college its neighbour's peer evidence, and a receipt is a citable artifact, so the same
+    one college its neighbor's peer evidence, and a receipt is a citable artifact, so the same
     collision would publish one institution's grade under another's name.
     """
     indexed: dict[str, Mapping[str, Any]] = {}
@@ -379,7 +379,7 @@ def verify(
 
 
 def dumps(receipt: Mapping[str, Any]) -> str:
-    """Serialise a receipt the one way this project writes JSON: sorted keys, two-space indent.
+    """Serialize a receipt the one way this project writes JSON: sorted keys, two-space indent.
 
     One function rather than a `json.dumps` call at each site, so a receipt written beside a page
     and a receipt written by ``disclosed receipt`` are the same bytes and can be diffed.

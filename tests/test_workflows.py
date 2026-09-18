@@ -398,7 +398,7 @@ class TestTheSecurityScansCanFail:
     were both live here at once:
 
     * **A severity floor above every finding the scan has.** ``--severity=ERROR`` was on the
-      semgrep step, described as rigour. Measured under the pinned semgrep 1.169.0, that flag
+      semgrep step, described as rigor. Measured under the pinned semgrep 1.169.0, that flag
       ran 141 rules and found nothing; without it the same command ran 321 rules and found
       three, all of them ``WARNING`` -- the three ``urllib.request.urlopen`` calls in the two
       adapters, which is the taint-shaped class the job exists for. The floor sat above every
@@ -501,7 +501,7 @@ class TestThePublishedSiteCannotNameAnOriginNobodyConfirmed:
 
     def test_the_build_refuses_an_unconfirmed_deploy_target(self) -> None:
         """An empty base URL must stop the build rather than stamp an empty origin into every
-        canonical link, which would produce 616 pages self-canonicalising to ``/``."""
+        canonical link, which would produce 616 pages self-canonicalizing to ``/``."""
         assert 'if [ -z "$base_url" ]; then' in _PAGES
         assert "Refusing to publish a site that names an origin nobody" in _PAGES
 

@@ -175,7 +175,7 @@ def _peer_disclosure_payload(
     silently returned no panel would be unreachable — a refusal that reads as one in review and
     can never fire — and it would also be weaker than what already exists: a mismatch is refused
     outright by :func:`peers.disclosure_by_group`, loudly and with both lengths named, which is
-    the behaviour ``test_a_corpus_and_a_grade_list_of_different_lengths_are_refused`` pins.
+    the behavior ``test_a_corpus_and_a_grade_list_of_different_lengths_are_refused`` pins.
     """
     labels = [r.field.label for r in grades[0].results] if grades else []
     graded = [{r.field.label: r.disclosure.value for r in g.results} for g in grades]
@@ -560,7 +560,7 @@ def _cmd_snapshot(args: argparse.Namespace) -> int:
                 reported[label] += 1
             elif state == "missing":
                 missing[label] += 1
-    # Taken from the report's own scope rather than from a flag, so a snapshot cannot be labelled
+    # Taken from the report's own scope rather than from a flag, so a snapshot cannot be labeled
     # with a source it did not come from. Reports written before scope existed leave it empty, and
     # an empty source is never treated as matching anything.
     scope = scope_from_payload(report)

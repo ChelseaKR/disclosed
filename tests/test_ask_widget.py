@@ -198,7 +198,7 @@ class TestWithAnEndpoint:
         assert "never how it performs" in text
         assert "Questions about quality, rankings or whether to attend are refused" in text
 
-    def test_the_form_is_labelled_and_the_answer_region_is_live(self, tmp_path: Path) -> None:
+    def test_the_form_is_labeled_and_the_answer_region_is_live(self, tmp_path: Path) -> None:
         with_ = _build(tmp_path, endpoint=_ENDPOINT)
         tags = _tags(_institution_pages(with_)[0])
         labels = [attrs for tag, attrs in tags if tag == "label"]
@@ -273,8 +273,8 @@ class TestTheSiteCommand:
         assert not any("script" in {t for t, _ in _tags(p)} for p in plain.rglob("index.html"))
 
 
-@pytest.mark.parametrize("colour", ["#555", "#a8421f", "#bbb", "#ffab7a", "#e3e3e3", "#333"])
-def test_the_widget_uses_only_colours_the_contrast_suite_already_checks(colour: str) -> None:
-    """The stylesheet's colour list is pinned in test_accessibility.py; the widget adds rules,
-    not colours, so that suite keeps covering every pair on the page."""
-    assert colour in site._STYLE
+@pytest.mark.parametrize("color", ["#555", "#a8421f", "#bbb", "#ffab7a", "#e3e3e3", "#333"])
+def test_the_widget_uses_only_colors_the_contrast_suite_already_checks(color: str) -> None:
+    """The stylesheet's color list is pinned in test_accessibility.py; the widget adds rules,
+    not colors, so that suite keeps covering every pair on the page."""
+    assert color in site._STYLE

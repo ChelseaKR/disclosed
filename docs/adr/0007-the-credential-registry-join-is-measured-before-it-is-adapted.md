@@ -115,10 +115,10 @@ had quoted as a population.
   200 and a zero, so a query-shaped count is evidence about the query. The walk is slower and it
   is evidence about the registry.
 - **Join on institution name.** Rejected without measuring it. Name matching needs a
-  normalization rule, and a normalization rule is a judgement call that would have to be argued
+  normalization rule, and a normalization rule is a judgment call that would have to be argued
   in `fields.py` terms with a written rationale. The web host is a weaker key with a rule that
   fits in one sentence, and it was enough to answer whether the strong key was leaving much on
   the table.
 - **Do not commit the capture.** Rejected. Without it the measurement replays from nothing and
   the 7.9 MB is replaced by a number only its author can check, which is the arrangement this
-  project criticises in other people's data.
+  project criticizes in other people's data.

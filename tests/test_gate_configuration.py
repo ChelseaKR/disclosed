@@ -22,7 +22,7 @@ asserted anywhere.
 
 That is the failure this project exists to name, applied to itself one level up. A rule that
 stopped applying and a rule that is being satisfied look identical from outside, and the badge is
-the same colour either way.
+the same color either way.
 
 Two things are checked here that are not merely restatements of a file:
 

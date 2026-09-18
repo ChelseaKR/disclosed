@@ -20,7 +20,7 @@ transitions under a heading that implies it did.
 
 A grade with no ``unit_id`` cannot be matched to anything. It is counted as unmatchable and named
 in the payload rather than keyed on the empty string, which is how two unidentified records once
-collided one module over and a finding was published carrying its neighbour's peer group.
+collided one module over and a finding was published carrying its neighbor's peer group.
 
 A classification word this build does not know is reported as unreadable rather than guessed at.
 The tempting reading -- an unknown word is not ``reported``, so something must have moved --
@@ -294,7 +294,7 @@ def _index(report: Mapping[str, Any]) -> tuple[dict[str, dict[str, Any]], int, i
 
     A row that is not an object at all is excluded too, and **counted separately**. It used to be
     dropped in silence, which made a truncated or hand-edited report read as a smaller population
-    that had held perfectly still -- the failure this function's neighbour already names in the
+    that had held perfectly still -- the failure this function's neighbor already names in the
     line that prints the unmatchable count.
     """
     by_id: dict[str, dict[str, Any]] = {}

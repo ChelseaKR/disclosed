@@ -1,4 +1,4 @@
-"""What a run covers, travelling with the run rather than being remembered by the reader.
+"""What a run covers, traveling with the run rather than being remembered by the reader.
 
 Every percentage this project publishes is a percentage of something, and the something is not
 always the country. The committed College Scorecard capture is 600 institutions across 13 states
@@ -63,7 +63,7 @@ class Scope:
     """
 
     note: str
-    """Why the coverage is what it is, in the words a sceptical reader deserves."""
+    """Why the coverage is what it is, in the words a skeptical reader deserves."""
 
     @property
     def is_national(self) -> bool:

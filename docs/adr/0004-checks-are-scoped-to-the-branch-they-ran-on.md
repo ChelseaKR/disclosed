@@ -67,7 +67,7 @@ a substitute for it.
 - Neither protection layer on `master` is modified or weakened, and no bypass actor or deploy key
   is introduced. This ADR is about how an already-required check reaches the branch that requires
   it, not about who may skip one.
-- The lesson generalises past this workflow: a GitHub Actions check run does not port across
+- The lesson generalizes past this workflow: a GitHub Actions check run does not port across
   branches by SHA alone, no matter how convenient that would be for exactly this kind of
   stage-then-promote job. Anything in this project that tries the same trick again needs the same
   transcription step, not a repeat of ADR 0003's untested assumption.

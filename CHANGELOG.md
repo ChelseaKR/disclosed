@@ -105,7 +105,7 @@ file is the human-readable one.
   `site.build()` without an ID is byte-for-byte what it was). The loader loads nothing off
   `https://chelseakr.github.io/disclosed/`, under Global Privacy Control or Do Not Track, or
   after the new footer "Opt out of analytics" button (localStorage key
-  `disclosed:analytics-opt-out`). Google signals and ad personalisation are off, the ad consent
+  `disclosed:analytics-opt-out`). Google signals and ad personalization are off, the ad consent
   signals are denied, `analytics_storage` is denied by default in the EEA, the UK and
   Switzerland, and `page_location` is the origin and path only. Every footer says so and links a
   new `privacy/` page, which says plainly that a page's address names the institution being read.
@@ -252,7 +252,7 @@ file is the human-readable one.
   build writes, and refuse a build that wrote too few of them to be the committed report's
   institutions.
   Determinism is measured across three interpreters under three `PYTHONHASHSEED` values rather
-  than twice inside one, and the serialised key order is pinned by name: deleting `sort_keys=True`
+  than twice inside one, and the serialized key order is pinned by name: deleting `sort_keys=True`
   left every other test green, because CPython preserves insertion order and the cross-process
   check sees stable bytes in an order the format no longer promises.
 
@@ -506,7 +506,7 @@ file is the human-readable one.
   and never talks to AWS; a README that says it is not applied and lists the decisions it does
   not make. `tests/test_deploy.py` holds the template to the code it would run.
 - **The opt-in question form on institution pages, off by default.** `disclosed site
-  --ask-endpoint URL` adds, to each institution page, a labelled form and one inline script with
+  --ask-endpoint URL` adds, to each institution page, a labeled form and one inline script with
   no `src` whose only network call is inside the submit handler; without the flag the build is
   byte-for-byte what it was and carries no script. Rendering uses `textContent` only; a failed
   or rate-limited request leaves the page unchanged. `tests/test_ask_widget.py` proves all of
@@ -515,7 +515,7 @@ file is the human-readable one.
   the code: an optional question-answering layer (`disclosed.ask`) in which the model structures
   a question and narrates the project's own classified records, never sees a reported value,
   cites a record for every claim, passes a verifier before display, refuses performance
-  judgement, and never collapses the five classifications. `AGENTS.md` states the working rules.
+  judgment, and never collapses the five classifications. `AGENTS.md` states the working rules.
 - **`corpus/`: the federal definitions the AI layer may quote.** The College Scorecard glossary
   and data dictionary and the IPEDS HD2023/IC2023 dictionaries, kept as fetched (hash and
   retrieval date in `manifest.json`), reduced to 3,545 passages by `disclosed corpus`, replayed
@@ -537,7 +537,7 @@ file is the human-readable one.
   that each cite a record id and for verbatim quotes; `verify` withholds and counts every claim
   it cannot prove against the pack: uncited or foreign citations, a classification word none of
   the cited records is in, an absence rendered as a non-state ("has no", "unavailable"), a number
-  the model was never given, a judgement or recommendation; quotes verify verbatim against the
+  the model was never given, a judgment or recommendation; quotes verify verbatim against the
   corpus or are withheld. `service` runs the path with a per-client hourly limit and a hard
   daily cap before the first model call, labels every answer AI-generated and unofficial, keeps
   no request body, and carries the provenance of every quote; a Lambda Function URL handler and
@@ -560,7 +560,7 @@ file is the human-readable one.
 - **Provenance for every page the Scorecard adapter fetches.** `disclosed fetch` walks the API
   and writes a capture envelope: the records, plus for each page the request URL with the key
   redacted, the fetch time, HTTP status, byte count, SHA-256, attempts, and the rate-limit
-  headers the API returned. `Retry-After` is honoured, consecutive fetches are paused, and a
+  headers the API returned. `Retry-After` is honored, consecutive fetches are paused, and a
   `--cache-dir` lets a rerun touch no network. `grade --source` replays the envelope and labels
   it national only when its own counts prove the walk was exhaustive; the daily job now grades
   from such a capture with no key in the environment, keeps the raw capture as a ninety-day

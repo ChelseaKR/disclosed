@@ -10,7 +10,7 @@ That is the coverage-gate failure in its purest form: not a module scoring badly
 outside the denominator, so the 98% the coverage report prints was 98% of the code it looked at.
 
 Each test below runs the real script over a real rendered site and asserts a specific way it
-must refuse. The three checks it makes can break independently -- a page can self-canonicalise
+must refuse. The three checks it makes can break independently -- a page can self-canonicalize
 elsewhere while the sitemap is fine, a sitemap can list a page that was never built -- so they
 are broken independently here, one at a time, against a site that is otherwise correct.
 """
@@ -128,7 +128,7 @@ class TestASiteThatAgreesWithItsDeployTarget:
 class TestEachCheckCanFail:
     """One broken promise at a time, against a site that is otherwise correct."""
 
-    def test_a_page_that_self_canonicalises_elsewhere_is_refused(self, built: Path) -> None:
+    def test_a_page_that_self_canonicalizes_elsewhere_is_refused(self, built: Path) -> None:
         """Issue #2 itself: a link telling crawlers to index somewhere that is not here."""
         page = built / "institution" / "1" / "index.html"
         page.write_text(
@@ -432,7 +432,7 @@ class TestItRefusesRatherThanCertifyingNothing:
 
     def test_an_empty_deploy_target_is_refused_rather_than_matched(self, built: Path) -> None:
         """Every canonical would compare against ``""``, and a site rendered with an empty origin
-        would agree with it. Passing here would certify a site that self-canonicalises to ``/``."""
+        would agree with it. Passing here would certify a site that self-canonicalizes to ``/``."""
         assert _run(built, "") == 2
         assert _run(built, "/") == 2
 

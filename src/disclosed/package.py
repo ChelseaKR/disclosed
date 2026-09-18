@@ -12,7 +12,7 @@ Two descriptors, because two different readers ask the question:
 * ``datapackage.json`` (Frictionless) is for somebody who wants to *use* the data: it names
   every resource, its media type, its size, its SHA-256, and — for the CSV — the full Table
   Schema, including what an empty cell means.
-* ``dataset.jsonld`` (schema.org ``Dataset``) is for a catalogue harvester, which is the only
+* ``dataset.jsonld`` (schema.org ``Dataset``) is for a catalog harvester, which is the only
   reader that will never read prose.
 
 **The descriptor cannot describe a file the repository does not hold.** Every resource is built
@@ -416,7 +416,7 @@ def build(root: Path) -> dict[str, Any]:
         "homepage": _HOMEPAGE,
         "repository": _REPOSITORY,
         "created": walked_at,
-        "licenses": [dict(licence) for licence in _LICENSES],
+        "licenses": [dict(license) for license in _LICENSES],
         "sources": [dict(source) for source in _SOURCES],
         "keywords": [
             "higher education",

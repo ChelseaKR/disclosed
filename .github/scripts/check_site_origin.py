@@ -9,7 +9,7 @@ with it.
 Seven separate promises are checked, because they can break independently:
 
 1. Every page's ``<link rel="canonical">`` is the deploy target plus that page's own path. A
-   page that self-canonicalises somewhere else tells crawlers to index the other place.
+   page that self-canonicalizes somewhere else tells crawlers to index the other place.
 2. ``og:url`` says the same thing the canonical says. They are two claims about which page
    this is, and a page that answers the question twice must not answer it differently.
 3. No page makes a reference that escapes the site's own path, in either of the two forms it
@@ -101,7 +101,7 @@ def _url_for(site_dir: Path, page: Path, base: str) -> str:
 
 
 def _check_canonicals(site_dir: Path, pages: list[Path], base: str) -> tuple[set[str], list[str]]:
-    """Each page must self-canonicalise to the deploy target. Returns the URLs built."""
+    """Each page must self-canonicalize to the deploy target. Returns the URLs built."""
     expected: set[str] = set()
     problems: list[str] = []
     for page in pages:

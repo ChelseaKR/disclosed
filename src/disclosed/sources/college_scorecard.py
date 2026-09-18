@@ -15,7 +15,7 @@ the records in a :class:`Capture`, which :func:`write_capture` serializes as an 
 can replay without a key. The point is the same one the committed IPEDS archives make: a national
 figure that only its author can regenerate is an assertion, and a capture whose provenance names
 every call is evidence. A walk against api.data.gov is also a walk against someone else's budget,
-so pages are fetched with a pause between them, ``Retry-After`` is honoured when the API sends
+so pages are fetched with a pause between them, ``Retry-After`` is honored when the API sends
 one, and a page cache lets a rerun proceed without touching the network at all.
 """
 
@@ -78,7 +78,7 @@ class ScorecardError(RuntimeError):
 
     A truncated fetch would understate disclosure across every institution that never arrived,
     which would look identical to a real reporting collapse. Failing loudly is the only safe
-    behaviour for a project whose subject is missing data.
+    behavior for a project whose subject is missing data.
     """
 
 
@@ -207,7 +207,7 @@ def _retry_delay(headers: Any, attempt: int) -> float:
     """How long to wait before trying a page again.
 
     The API's own ``Retry-After`` wins when it sends one in seconds and it is not absurd;
-    otherwise exponential backoff from ``_BACKOFF_BASE``. Honouring the header is what
+    otherwise exponential backoff from ``_BACKOFF_BASE``. Honoring the header is what
     "respecting the rate limit" means in practice, rather than guessing at it.
     """
     retry_after = headers.get("Retry-After") if headers is not None else None
@@ -226,7 +226,7 @@ def _fetch_bytes(url: str, *, page: int, attempts: int) -> tuple[bytes, int, Any
     last_status: int | None = None
     for attempt in range(1, attempts + 1):
         try:
-            # Two scanners flag this call for the same reason -- urllib honours `file://`, so a
+            # Two scanners flag this call for the same reason -- urllib honors `file://`, so a
             # caller-controlled URL could read a local path -- and one fact answers both: the
             # scheme and host are fixed in BASE_URL, and everything after the `?` is urlencoded
             # into the query string, so nothing reachable from outside this module can change

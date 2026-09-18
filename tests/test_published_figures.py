@@ -308,7 +308,7 @@ class TestTheDirectoryFiguresTheProseStates:
 class TestTheDriftHistoryTheThresholdIsArguedFrom:
     """The 2% threshold is defended with eight figures from three collection years.
 
-    That defence is the reason a reader is asked to accept the threshold, and it was the least
+    That defense is the reason a reader is asked to accept the threshold, and it was the least
     checkable prose in the project: two of its three years had no committed inputs at all. It is
     now checkable twice, here and by the replay in `tests/test_replay.py`.
     """

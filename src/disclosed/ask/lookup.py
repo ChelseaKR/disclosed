@@ -54,7 +54,7 @@ REFUSALS: Final[dict[str, str]] = {
         "That is outside what this tool knows. It holds one thing: whether each of twelve "
         "federally collected fields was reported, implausible, suppressed, not applicable, or "
         "missing for each institution, in dated snapshots. It has nothing on campus safety, "
-        "housing, cost of living, accreditation, programmes, deadlines, or anyone's rankings, and "
+        "housing, cost of living, accreditation, programs, deadlines, or anyone's rankings, and "
         "it will not guess."
     ),
     "institution_not_named": (
@@ -364,7 +364,7 @@ def _assemble_served(
 
 def assemble(question: Question, evidence: Evidence, corpus: Corpus) -> Pack:
     """Resolve, refuse, or gather. The only function the service calls."""
-    if question.refuses_judgement:
+    if question.refuses_judgment:
         institution, _ = _resolve(question, evidence)
         known = _disclosure_pointers(institution, evidence) if institution else ()
         return Pack(

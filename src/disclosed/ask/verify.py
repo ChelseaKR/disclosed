@@ -21,7 +21,7 @@ fails:
    drift record, or a count of the cited records themselves (how many fields, how many in each
    state). A graduation rate in a claim is a number the model was never given, and this is where
    it is stopped.
-5. **Judgement.** It contains a quality or recommendation word about an institution.
+5. **Judgment.** It contains a quality or recommendation word about an institution.
 
 Quotes are checked verbatim against the corpus passage they name, and only passages in the pack
 count. The reader sees the surviving claims and quotes, the count of each that was withheld, and
@@ -31,9 +31,9 @@ why, so that silence is never mistaken for completeness.
 invites free prose into it -- "if the pack holds nothing that answers the question, leave claims
 empty and say why in could_not_answer" -- and the service prints it to the reader as a paragraph.
 It used to be copied out of the model's reply verbatim, so every screen above could be bypassed
-by moving text one JSON field over: a ranking judgement and two invented numbers reached the
+by moving text one JSON field over: a ranking judgment and two invented numbers reached the
 reader with a withheld count of zero, under a label promising everything shown had been checked
-(issue #68). It now goes through :func:`_check_note`, which applies the judgement, collapse,
+(issue #68). It now goes through :func:`_check_note`, which applies the judgment, collapse,
 classification and stray-number screens against the whole pack, because a note cites nothing and
 so has no cited records to be checked against. A note that fails is replaced with
 :data:`NOTE_WITHHELD` -- fixed text this project wrote -- and counted in ``reasons`` alongside
@@ -52,7 +52,7 @@ from .evidence import ClassificationRecord, ContradictionRecord, DriftRecord
 from .lookup import Pack
 from .narrate import Claim, Narration, Quote
 
-__all__ = ["JUDGEMENT", "NOTE_WITHHELD", "STATE_WORDS", "Verified", "verify"]
+__all__ = ["JUDGMENT", "NOTE_WITHHELD", "STATE_WORDS", "Verified", "verify"]
 
 NOTE_WITHHELD: Final[str] = (
     "The model's explanation of why it could not answer did not pass the checks every other "
@@ -91,7 +91,7 @@ _COLLAPSE: Final[re.Pattern[str]] = re.compile(
     re.IGNORECASE,
 )
 
-JUDGEMENT: Final[re.Pattern[str]] = re.compile(
+JUDGMENT: Final[re.Pattern[str]] = re.compile(
     r"\b(best|better|worse|worst|good (school|college|university|choice|option)|"
     r"bad (school|college|university|choice|option)|recommend(ed|s|ation)?|should (you |they )?"
     r"(apply|attend|go|choose|enrol|enroll|pick|avoid)|worth (it|attending|applying)|"
@@ -246,7 +246,8 @@ def _check_claim(claim: Claim, pack: Pack) -> str | None:
         return classification_reason
     if _COLLAPSE.search(claim.text):
         return "renders an absence as a non-state"
-    if JUDGEMENT.search(claim.text):
+    if JUDGMENT.search(claim.text):
+        # Reason text kept verbatim: it is a key in the committed evals/results files.
         return "contains a judgement of quality or a recommendation"
     noted = {c for c in claim.cites if c.startswith("note:")}
     in_notes: set[float] = set()
@@ -268,7 +269,7 @@ def _check_note(text: str, pack: Pack) -> str | None:
     """The first reason to withhold the model's ``could_not_answer`` note, or ``None``.
 
     This field used to be copied out of the model's reply verbatim, straight past every screen
-    above it, and printed to the reader as a paragraph. A ranking judgement and two invented
+    above it, and printed to the reader as a paragraph. A ranking judgment and two invented
     numbers reached the response body that way with a withheld count of zero, because moving text
     one JSON field over was enough to bypass the claim path entirely (issue #68).
 
@@ -279,7 +280,7 @@ def _check_note(text: str, pack: Pack) -> str | None:
     """
     if not text.strip():
         return None
-    if JUDGEMENT.search(text):
+    if JUDGMENT.search(text):
         return "note contains a judgement of quality or a recommendation"
     if _COLLAPSE.search(text):
         return "note renders an absence as a non-state"

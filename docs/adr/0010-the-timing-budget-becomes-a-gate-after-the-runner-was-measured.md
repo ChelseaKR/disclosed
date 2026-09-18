@@ -99,7 +99,7 @@ Gate the three timing lines in `accessibility.yml`, and keep the budget where it
   templates as the two, and the job would run four more performance audits to learn what the
   bracketing pair already says.
 - **Tighten the budget to just above the measurement**, for example 1,200 ms. Rejected. It reads
-  as rigour and behaves as a tripwire: the first ordinary content change fails the build, and the
+  as rigor and behaves as a tripwire: the first ordinary content change fails the build, and the
   fix under deadline is to widen the number rather than to look at the page. ADR 0008 already
   made widening visible by putting the budget in the README with a test on it; a budget that
   needs widening monthly defeats that.

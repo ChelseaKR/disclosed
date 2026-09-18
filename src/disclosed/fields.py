@@ -1,6 +1,6 @@
 """The fields this project grades, and what makes a value credible in each one.
 
-Every credible range here is a judgement call, so every one carries a ``rationale`` that a graded
+Every credible range here is a judgment call, so every one carries a ``rationale`` that a graded
 institution can argue with. That is the whole contract: a scorecard that cannot be disputed line by
 line is not a scorecard, it is an accusation. The rationales are written for the reader who thinks
 their institution was marked unfairly.
@@ -244,7 +244,7 @@ def _owes_a_net_price_calculator(record: Mapping[str, object]) -> bool:
     """Whether the net price calculator requirement reaches this institution.
 
     20 U.S.C. 1015a(h)(3) requires a net price calculator of institutions that participate in
-    Title IV programs and enrol first-time, full-time undergraduates. Both conditions are checked,
+    Title IV programs and enroll first-time, full-time undergraduates. Both conditions are checked,
     because dropping either one inflates the finding with institutions the statute never touched:
     284 rows offer no undergraduate education at all (UCSF and UC Law SF among them) and several
     hundred more take no federal student aid. They are not out of compliance; the rule does not
@@ -261,15 +261,15 @@ def _has_an_intercollegiate_athletic_program(record: Mapping[str, object]) -> bo
     """Whether the Equity in Athletics disclosure reaches this institution.
 
     20 U.S.C. 1092(g) requires a coeducational institution that participates in Title IV and has
-    an intercollegiate athletic program to prepare an annual report on that programme and make it
-    available. Title IV participation is ``PSET4FLG``; the athletic programme is the institution's
+    an intercollegiate athletic program to prepare an annual report on that program and make it
+    available. Title IV participation is ``PSET4FLG``; the athletic program is the institution's
     own answer to whether it belongs to a national athletic association, which IPEDS collects as
     ``ATHASSOC`` in the characteristics file.
 
     The condition is a positive ``1`` and nothing else. An institution that answered "no", that
     was never asked, or that has no characteristics row at all has not told anyone it fields
     intercollegiate teams, and reading any of those silences as a yes would put four thousand
-    colleges with no athletics programme into a denominator they do not belong in. That is why
+    colleges with no athletics program into a denominator they do not belong in. That is why
     this column went ungraded until the second file arrived: the directory alone shows 4,469 blank
     athletics addresses, and almost every one of them is a school that simply has no team.
 
@@ -291,7 +291,7 @@ def _has_an_intercollegiate_athletic_program(record: Mapping[str, object]) -> bo
 #
 # One obvious candidate is still deliberately absent, and its absence is the point. VETURL, the
 # veterans information page, is blank for 2,377 institutions, and the characteristics file now
-# tells us which institutions run veterans programmes (VET1 through VET9), so the applicability
+# tells us which institutions run veterans programs (VET1 through VET9), so the applicability
 # rule that was missing for the athletics disclosure could be written for this one too. It is
 # still not graded, because applicability was never the obstacle here: there is no universal
 # requirement that an institution publish a veterans page at all, so a rule saying who it applies
@@ -310,7 +310,7 @@ IPEDS_FIELDS: Final[tuple[Field, ...]] = (
         statute="20 U.S.C. 1015a(h)(3)",
         rationale=(
             "A net price calculator is required by 20 U.S.C. 1015a(h)(3) of institutions that "
-            "participate in Title IV and enrol first-time, full-time undergraduates, and IPEDS "
+            "participate in Title IV and enroll first-time, full-time undergraduates, and IPEDS "
             "collects the address of it. What a blank here establishes is that the federal "
             "record carries no calculator, which is not the same claim as the institution "
             "having none: either the calculator does not exist, which 1015a(h)(3) requires, or "

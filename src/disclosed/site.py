@@ -322,7 +322,7 @@ def _peer_cell(panel: PeerDisclosure | None, catalog: Catalog) -> str:
 def _dispute_block(disputes: Sequence[Dispute], catalog: Catalog) -> str:
     """What an institution says about the findings on its own page.
 
-    The statement is escaped and quoted and never summarised: it is somebody else's account of
+    The statement is escaped and quoted and never summarized: it is somebody else's account of
     their own disclosure, and paraphrasing it would make this project the author of the other
     side of its own argument. The evidence is a link and is never fetched.
 
@@ -1121,7 +1121,7 @@ def history_page(series: SnapshotSeries, *, catalog: Catalog = ENGLISH) -> Page:
     # The rate table gains a column on every run, so it is the one table here that will outgrow
     # the page. Scrollable, and focusable so that scrolling it does not require a mouse: a region
     # a keyboard user cannot reach is a table they cannot read the right-hand half of. Named,
-    # because an unlabelled region in a landmark list is one a screen-reader user has to enter to
+    # because an unlabeled region in a landmark list is one a screen-reader user has to enter to
     # identify.
     scroll_label = html.escape(catalog.text("history.rates.scroll_label"))
     rows = "".join(
@@ -1458,7 +1458,7 @@ def home_page(
 <p>{catalog.text("home.how.body", methodology="methodology/")}</p>
 {coverage}
 """
-    # The corpus, as a machine can read it. A catalogue harvester is the one reader that will
+    # The corpus, as a machine can read it. A catalog harvester is the one reader that will
     # never read the prose above, and this project's whole argument rests on committed data that
     # somebody outside the repository can find, validate and cite. The block names the tabular
     # export and the full package descriptor rather than all thirty-eight resources: a head is
@@ -1491,7 +1491,7 @@ def home_page(
 
 #: The footer's analytics opt-out, added to the stylesheet only on a build with a GA4 ID, so a build
 #: without one is byte-for-byte what it was. It changes a setting rather than going anywhere, so
-#: it is a button, drawn like the footer's links in the same two colours; min-height keeps the
+#: it is a button, drawn like the footer's links in the same two colors; min-height keeps the
 #: target at 24px (WCAG 2.2 SC 2.5.8).
 _ANALYTICS_STYLE: Final[str] = """
 .link-button { font: inherit; color: #0b5cad; background: none; border: 0; padding: 0;
@@ -1559,8 +1559,8 @@ a { color: #0b5cad; }
 .skip { position: absolute; left: -9999px; top: 0; background: #fff; color: #0b5cad;
         padding: .6rem 1rem; border: 2px solid currentColor; border-radius: 0 0 4px 0; }
 .skip:focus { left: 0; z-index: 10; }
-/* An explicit focus ring, because the custom link colours make the browser default hard to see
-   in dark mode. Two-colour outline so it stays visible against both backgrounds. */
+/* An explicit focus ring, because the custom link colors make the browser default hard to see
+   in dark mode. Two-color outline so it stays visible against both backgrounds. */
 :focus-visible { outline: 3px solid #0b5cad; outline-offset: 2px; }
 caption { text-align: left; font-size: .9rem; color: #555; padding-bottom: .4rem; }
 nav[aria-label="Breadcrumb"] { font-size: .9rem; margin-bottom: .5rem; }

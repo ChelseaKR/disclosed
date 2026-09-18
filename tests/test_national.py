@@ -177,7 +177,7 @@ class TestNationalArtifact:
         # One reported, one missing, one not applicable, one suppressed.
         assert (calculator.applicable, calculator.reported, calculator.missing) == (2, 1, 1)
         assert calculator.suppressed == 1 and calculator.not_applicable == 1
-        # Two of four institutions had no athletics programme at all.
+        # Two of four institutions had no athletics program at all.
         assert (athletics.applicable, athletics.missing) == (2, 1)
         assert (aid.applicable, aid.reported, aid.missing) == (4, 3, 1)
 

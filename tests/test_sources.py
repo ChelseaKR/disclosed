@@ -155,7 +155,7 @@ class TestFetchPage:
 class TestRetries:
     """What the adapter does when api.data.gov says no, which is the part that meets its limits."""
 
-    def test_retry_after_is_honoured_on_429(
+    def test_retry_after_is_honored_on_429(
         self, monkeypatch: pytest.MonkeyPatch, waits: list[float]
     ) -> None:
         """The API's own number wins over the backoff schedule when it sends one."""

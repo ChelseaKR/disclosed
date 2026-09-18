@@ -296,7 +296,7 @@ class TestTheJsonThePayloadComesFrom:
         assert payload["later"] == "2026-01-02"
         assert payload["systemic_threshold"] == SYSTEMIC_THRESHOLD
 
-    def test_the_same_pair_serialises_identically_twice(self) -> None:
+    def test_the_same_pair_serializes_identically_twice(self) -> None:
         earlier = _snapshot("2026-01-01", reported=900, applicable=1000)
         later = _snapshot("2026-01-02", reported=800, applicable=1000)
         first = json.dumps(_payload(earlier, later), sort_keys=True)
@@ -334,7 +334,7 @@ class TestTheGitHubClient:
         monkeypatch.setattr(filer.urllib.request, "urlopen", fake_urlopen)
         return calls
 
-    def test_open_issues_asks_for_open_drift_labelled_issues(
+    def test_open_issues_asks_for_open_drift_labeled_issues(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         calls = self._stub(monkeypatch, [{"number": 1, "body": "x"}])

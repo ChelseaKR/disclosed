@@ -201,7 +201,7 @@ direction word is read from the rate rather than the count. A field can shed rep
 share reporting it rises; printing "lost" beside a rise of 1.67 points got the count right and the
 finding backwards, which is worse than a wrong number because it comes with a word attached.
 
-The 2-point threshold is a judgement call, and three years of federal data say it is roughly
+The 2-point threshold is a judgment call, and three years of federal data say it is roughly
 right: every year-on-year movement sits under one point except the athletics disclosure, at 1.75
 in a year and 2.26 across two. At 1% the bar reports ordinary churn as policy. At 5% it finds
 nothing in three years, which is not a measurement but a way of never having to say anything.
@@ -221,7 +221,7 @@ resolved: deciding which federal source is correct is not something this project
 to do, and quietly preferring one would throw away the only interesting part of the observation.
 
 IPEDS also carries public disclosures the Scorecard does not. Among institutions that participate
-in Title IV and enrol first-time undergraduates, **the federal record carries no net price
+in Title IV and enroll first-time undergraduates, **the federal record carries no net price
 calculator for 34 of them**, a calculator that
 [20 U.S.C. §1015a(h)(3)](https://www.law.cornell.edu/uscode/text/20/1015a) requires and that
 [§1094(a)(17)](https://www.law.cornell.edu/uscode/text/20/1094) requires them to report. Which of
@@ -236,7 +236,7 @@ statute and leave the denominator instead of being marked down.
 ### The rule is the hard part, not the threshold
 
 The Equity in Athletics disclosure went ungraded in an earlier pass. It is blank for **4,469 of
-6,163** directory rows, and almost every one of those is a college with no athletics programme, so
+6,163** directory rows, and almost every one of those is a college with no athletics program, so
 grading it against the directory alone would have manufactured four thousand violations. What was
 missing was not a better threshold. It was a way to know who the rule applied to.
 
@@ -332,7 +332,7 @@ not the date somebody reran a command. Reading it from the clock would make rege
 a diff every time.
 
 The same corpus is served as a schema.org `Dataset` at `dataset.jsonld`, with a shorter form of
-the same document in the home page's `<head>`, for catalogue harvesters — the one reader that will
+the same document in the home page's `<head>`, for catalog harvesters — the one reader that will
 never read any of the prose above. Every field in it is read out of the package, so the two cannot
 disagree about what the dataset is.
 
@@ -371,7 +371,7 @@ made: an institution this project does not grade, a field it does not check, and
 the report does not give (a dispute overtaken by a regrading is stale, not wrong, and rendering it
 beside a state it does not name would put words in the institution's mouth). `evidence_url` is
 rendered as a link and never fetched: whether the page behind it says what the statement says is a
-judgement, and this channel carries the claim, attributed, rather than settling it.
+judgment, and this channel carries the claim, attributed, rather than settling it.
 
 The schema is [`schema/dispute.v1.schema.json`](schema/dispute.v1.schema.json), served at
 <https://chelseakr.github.io/disclosed/schema/dispute.v1.schema.json>, and the CSV export gains a
@@ -384,12 +384,12 @@ project exists to object to. The fixtures are in `tests/`; the register is their
 
 ## How we grade
 
-Every credible range is a judgement call, so every one carries a written rationale that a graded
+Every credible range is a judgment call, so every one carries a written rationale that a graded
 institution can argue with. That is the whole contract: **a scorecard that cannot be disputed line
 by line is not a scorecard, it is an accusation.** The rationales are written for the reader who
 thinks their institution was marked unfairly.
 
-The 2% threshold that separates "systemic" drift from scattered data entry is likewise a judgement
+The 2% threshold that separates "systemic" drift from scattered data entry is likewise a judgment
 call, stated here so a reader can disagree with it. It is set low because a coordinated
 stop-reporting event is newsworthy well before it touches a majority of institutions.
 
@@ -583,12 +583,12 @@ A run recorded before `scope` existed says so on the page rather than being assu
 A page nobody can read has not disclosed anything, so this is the same argument as the rest of the
 project rather than a separate one. The bar is **100 on Lighthouse accessibility**, and everything
 a static checker can prove runs in `make verify` with no browser: WCAG AA contrast for every
-colour pair the stylesheet puts together in both light and dark, one `<main>` and one `<h1>` per
+color pair the stylesheet puts together in both light and dark, one `<main>` and one `<h1>` per
 page, a skip link with a target that exists, named navigation landmarks, no skipped heading level,
-a caption and row headers on every data table, and no meaning carried by colour alone.
+a caption and row headers on every data table, and no meaning carried by color alone.
 
-One test asserts that every colour in the stylesheet is covered by a case in the contrast table,
-so a new colour fails the build instead of shipping unchecked.
+One test asserts that every color in the stylesheet is covered by a case in the contrast table,
+so a new color fails the build instead of shipping unchecked.
 
 Two fixes worth naming. The ungradeable badge carried its meaning in a `title` attribute, which a
 screen reader may not announce and a keyboard user cannot reach: "n/a" and nothing else is the
@@ -635,7 +635,7 @@ all: a `lighthouse@12` (12.8.2) run against a budget file with every line set to
 scored accessibility 1, and produced no audit whose key even contains the word "budget". Five of
 the six pages that job audits ask only for the accessibility category, which does not collect
 the resource summary either. A gate that cannot fail is worse than no gate, because the badge is
-the same colour. The budget file stays as the declaration of intent; the enforcement is now
+the same color. The budget file stays as the declaration of intent; the enforcement is now
 somewhere it can fail.
 
 ### The budget file is read now, not only cited
@@ -724,8 +724,8 @@ Runtime AI is a separate, optional layer, and a deliberate change of direction r
 question-answering service (`disclosed.ask`) that lets a reader ask what an institution does and
 does not disclose. The model structures the question and narrates the project's own classified
 records; it never sees a reported value, every claim cites a record and is verified before
-display, performance judgement is refused and measured at zero tolerance, and the five
-classifications are never collapsed. Its output is always labelled AI-generated, unofficial, and
+display, performance judgment is refused and measured at zero tolerance, and the five
+classifications are never collapsed. Its output is always labeled AI-generated, unofficial, and
 about disclosure rather than quality. The static site and the dataset are unchanged by it.
 
 ## Ask about disclosure
@@ -759,11 +759,11 @@ How it works, in the order a question travels:
    from `corpus/`, the federal definitions kept as fetched.
 5. **The verifier withholds every claim it cannot prove** against that pack: uncited or foreign
    citations, a classification word none of the cited records is in, an absence rendered as a
-   non-state ("has no", "unavailable"), a number the model was never given, a judgement or
+   non-state ("has no", "unavailable"), a number the model was never given, a judgment or
    recommendation. Quotes verify verbatim or are withheld. The reader sees what survived and the
    count of what did not.
 
-Every answer is labelled AI-generated and unofficial and says that a disclosure grade is not a
+Every answer is labeled AI-generated and unofficial and says that a disclosure grade is not a
 quality grade. Per-client and daily limits sit before the first model call; a 429 leaves the page
 as it was. The service keeps no request body. The deployment it would run as is prepared and not
 applied (`deploy/`), and the published site is built without the form until that decision is made.
@@ -774,7 +774,7 @@ Five suites under `evals/cases/` (167 cases), run by `disclosed evals`, with eve
 carrying provider, model, prompt version, commit and date (`evals/results/`; a test rejects a
 result without them, and the scripted numbers are re-derived in `make verify`). Two scripted
 models frame every live number: an **oracle** that narrates the pack faithfully, to prove the
-scorer accepts a correct system, and an **adversary** that emits judgements, wrong states,
+scorer accepts a correct system, and an **adversary** that emits judgments, wrong states,
 invented numbers, uncited claims and paraphrased quotes on every question, to prove the verifier
 stops them.
 
@@ -797,7 +797,7 @@ Five-way fidelity on the live model, per state (`shown` is what the reader saw a
 Measured 2026-08-22 on Amazon Bedrock, prompt version `2026-08-21.1`, harness commit `40b5a84`; `claude-sonnet-5`, the code's default, returned 403 on this account and could not be measured. Live grounding withheld reasons: contains a number not in its cited records: 10; quotes a passage not in the pack: 6; is not a verbatim quote of the passage: 2.
 
 The committed data contains no `suppressed` value in either source, so the fidelity suite's
-suppressed cases are constructed and labelled as such; the other four states are real records.
+suppressed cases are constructed and labeled as such; the other four states are real records.
 
 ## Standards Conformance
 

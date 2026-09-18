@@ -213,7 +213,7 @@ class TestTheScorecardCensusFigures:
             r"([\d,]+) \(([\d.]+)%\) \|"
         )
         rows = _stated(pattern)
-        assert len(rows) == 3, "expected exactly the three sectors this project recognises"
+        assert len(rows) == 3, "expected exactly the three sectors this project recognizes"
         sector_key = {
             "Public": "public",
             "Private nonprofit": "private nonprofit",
@@ -367,7 +367,7 @@ class TestTheDriftFigures:
         assert abs(self._rate_change(_ATHLETICS, 2021, 2022)) >= 0.01
 
     def test_the_threshold_in_the_prose_is_the_threshold_in_the_code(self) -> None:
-        for (stated,) in _stated(r"The (\d+)-point threshold is a judgement call"):
+        for (stated,) in _stated(r"The (\d+)-point threshold is a judgment call"):
             assert float(stated) / 100 == drift.SYSTEMIC_THRESHOLD
         for (stated,) in _stated(r"The (\d+)% threshold that separates"):
             assert float(stated) / 100 == drift.SYSTEMIC_THRESHOLD
@@ -392,15 +392,15 @@ class TestTheCitationFile:
         assert match.group(1) == f"{graded:,}"
         assert match.group(2) == str(len(states))
 
-    def test_the_licence_is_the_same_one_in_every_file_that_states_it(self) -> None:
-        """The licence is quoted in proposals and read off the repository by people deciding
+    def test_the_license_is_the_same_one_in_every_file_that_states_it(self) -> None:
+        """The license is quoted in proposals and read off the repository by people deciding
         whether they may use this. Three files state it and they have to agree."""
         packaging = tomllib.loads((_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
         assert packaging["project"]["license"] == {"text": "Apache-2.0"}
         assert "license: Apache-2.0" in _CITATION
         assert "## License Apache-2.0." in _PROSE
-        licence = (_ROOT / "LICENSE").read_text(encoding="utf-8")
-        assert "Apache License" in licence and "Version 2.0, January 2004" in licence
+        license = (_ROOT / "LICENSE").read_text(encoding="utf-8")
+        assert "Apache License" in license and "Version 2.0, January 2004" in license
 
 
 class TestTheRawDirectoryFigures:
@@ -410,7 +410,7 @@ class TestTheRawDirectoryFigures:
 
     This class used to carry a ``skipif`` whose reason said ``data/HD2023.zip`` is not committed,
     and called itself "the one gap in this file". The archive was committed in `a94812f`, before
-    the skip was written, so the sentence was untrue the day it was typed. The behaviour was
+    the skip was written, so the sentence was untrue the day it was typed. The behavior was
     fine, the predicate was ``exists()`` and the file exists; what was wrong is that the module
     whose whole job is to make the README's numbers checkable told an auditing reader that two of
     them were not.

@@ -119,7 +119,7 @@ class TestGrade:
         assert "fetch failed, no report written" in err
         assert "short of the API's stated total" in err
 
-    def test_a_national_run_is_labelled_national_with_full_coverage(
+    def test_a_national_run_is_labeled_national_with_full_coverage(
         self, stub_source: None, tmp_path: Path
     ) -> None:
         """Regression guard: a genuinely exhausted walk with no --source and no --limit must keep
@@ -130,7 +130,7 @@ class TestGrade:
         assert scope["kind"] == "national"
         assert scope["coverage"] == 1.0
 
-    def test_a_limited_run_is_labelled_sample_not_national(
+    def test_a_limited_run_is_labeled_sample_not_national(
         self, stub_source: None, tmp_path: Path
     ) -> None:
         """--limit is a deliberate sample and must never be affected by this fix."""
@@ -140,7 +140,7 @@ class TestGrade:
         assert scope["kind"] == "sample"
         assert scope["coverage"] != 1.0
 
-    def test_a_replayed_source_is_labelled_sample_not_national(self, tmp_path: Path) -> None:
+    def test_a_replayed_source_is_labeled_sample_not_national(self, tmp_path: Path) -> None:
         """--source is a replay of a capture and must never be affected by this fix."""
         source = tmp_path / "records.json"
         source.write_text(json.dumps(_RECORDS))

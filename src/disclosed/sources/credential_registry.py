@@ -351,7 +351,7 @@ def _properties(node: dict[str, Any]) -> tuple[str, ...]:
 
     ``@id`` and ``@type`` are dropped because they are on every node by construction and would
     say nothing about what a publisher chose to publish. Everything else is kept as written,
-    including a property this adapter does not understand: a name nobody here recognises is
+    including a property this adapter does not understand: a name nobody here recognizes is
     still something the registry published, and dropping it would make the census a census of
     what this code knows about.
     """

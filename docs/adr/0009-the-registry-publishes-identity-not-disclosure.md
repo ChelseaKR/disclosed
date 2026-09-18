@@ -122,7 +122,7 @@ ADR 0007 measured is real, and what it covers is a copy of one of the two corpor
 - **Measure over the credentials resource type as well** (`resource_type=credential`, 133,346
   records on 2026-08-15). Rejected for this decision, and it is a real limit on it rather than a
   dismissal: a credential is not an institution, and this project grades institutions on
-  institution-level duties. If the project ever grades programmes, the credential type is where
+  institution-level duties. If the project ever grades programs, the credential type is where
   that measurement would start, and it has not been walked.
 - **Say the answer is "not yet" and leave the milestone open.** Rejected. It is the shape of a
   decision that never gets revisited and never gets closed. The measurement is what would have to

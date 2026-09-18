@@ -61,7 +61,7 @@ _LOCALE_NAME: Final[re.Pattern[str]] = re.compile(r"^[a-z]{2}(_[A-Z]{2})?$")
 
 #: Plural rules this implementation actually knows how to apply. A catalog whose ``Plural-Forms``
 #: is not one of these is refused rather than approximated with the English rule: guessing that
-#: some other language pluralises the way English does is exactly the kind of unexamined default
+#: some other language pluralizes the way English does is exactly the kind of unexamined default
 #: that produces "1 institutions" on six published pages, which is the bug this table fixes.
 _PLURAL_RULES: Final[Mapping[str, Callable[[int], int]]] = MappingProxyType(
     {
@@ -272,7 +272,7 @@ def _catalog(locale: str, entries: list[_Entry]) -> Catalog:
         raise CatalogError(
             f"{locale}: Plural-Forms {plural_forms!r} is not a rule this project knows how to "
             "apply. Add it to _PLURAL_RULES with the language it is for, rather than letting the "
-            "catalog load and pluralise by the English rule."
+            "catalog load and pluralize by the English rule."
         )
     singular: dict[str, str] = {}
     plural: dict[str, tuple[str, ...]] = {}

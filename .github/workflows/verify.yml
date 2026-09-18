@@ -21,7 +21,7 @@ permissions:
 # reads `cancelled`, which is not a signal.
 #
 # A second push to a pull request genuinely does supersede the first, so pull requests keep
-# the shared key and keep cancelling. Pushes to a branch get the commit SHA instead, which
+# the shared key and keep canceling. Pushes to a branch get the commit SHA instead, which
 # gives every merge its own group and lets consecutive merges run to completion.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'pull_request' && 'pr' || github.sha }}

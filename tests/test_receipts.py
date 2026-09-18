@@ -127,7 +127,7 @@ class TestAReceiptNeverCarriesAReportedValue:
         )
 
     def test_a_reported_value_does_not_appear_in_the_bytes_of_its_own_receipt(self) -> None:
-        """The structural check above, done again against the serialised file.
+        """The structural check above, done again against the serialized file.
 
         A distinctive value, so a hit cannot be a coincidence with a weight or a schema version.
         """
@@ -478,7 +478,7 @@ class TestTheSameCaptureProducesTheSameBytes:
         assert json.loads(only)["unit_id"] == "100654"
         assert len(json.loads(only)["fields"]) == len(FIELDS)
 
-    def test_the_serialised_key_order_is_pinned_and_not_merely_reproducible(self) -> None:
+    def test_the_serialized_key_order_is_pinned_and_not_merely_reproducible(self) -> None:
         """``sort_keys=True`` is what lets two builds' receipts be diffed line by line.
 
         Measured while writing this file: deleting ``sort_keys=True`` left every other test here

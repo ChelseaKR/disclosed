@@ -26,12 +26,12 @@ institution this project did not grade, or to a field it does not check, would r
 rebuttal of a finding that does not exist. That is an absence rendered as a value with the sign
 flipped, and it fails the build rather than rendering.
 
-**The statement is quoted, never summarised.** It is somebody else's account of their own
+**The statement is quoted, never summarized.** It is somebody else's account of their own
 disclosure. Paraphrasing it here would make this project the author of the other side of its own
 argument.
 
 **Nothing is fetched.** ``evidence_url`` is rendered as a link and never followed. Whether the
-page behind it says what the statement says is a judgement, and this module's job is to carry the
+page behind it says what the statement says is a judgment, and this module's job is to carry the
 claim, attributed, not to adjudicate it.
 """
 
@@ -287,6 +287,7 @@ def schema() -> dict[str, Any]:
                 "enum": sorted(CLASSIFICATIONS),
             },
             "statement": {
+                # "summarised" kept: this text is emitted into the published dispute.v1 schema.
                 "description": (
                     "The institution's own words. Quoted verbatim on the page and never "
                     "summarised: paraphrasing would make this project the author of the other "
@@ -298,7 +299,7 @@ def schema() -> dict[str, Any]:
             "evidence_url": {
                 "description": (
                     "Where the institution says the disclosure is. Rendered as a link and never "
-                    "fetched: whether the page says what the statement says is a judgement, and "
+                    "fetched: whether the page says what the statement says is a judgment, and "
                     "this channel carries the claim rather than adjudicating it."
                 ),
                 "type": "string",
