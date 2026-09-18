@@ -472,7 +472,10 @@ class TestSiteCommand:
             == 0
         )
         assert (out / "index.html").exists()
-        assert "built 6 pages" in capsys.readouterr().out
+        # Six pages from the report, and privacy/, which `disclosed site` writes because it
+        # publishes the committed GA4 ID by default (ADR 0011).
+        assert "built 7 pages" in capsys.readouterr().out
+        assert (out / "privacy" / "index.html").exists()
 
     def test_refuses_to_build_a_site_with_no_institutions_in_it(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
@@ -545,6 +548,7 @@ class TestSiteCommand:
             == 0
         )
         assert (out / "census" / "index.html").exists()
-        assert "built 7 pages" in capsys.readouterr().out
+        # One more than without the census, and privacy/ among them (ADR 0011).
+        assert "built 8 pages" in capsys.readouterr().out
         home = (out / "index.html").read_text(encoding="utf-8")
         assert 'href="census/"' in home

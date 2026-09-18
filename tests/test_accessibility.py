@@ -27,7 +27,7 @@ from typing import Any, ClassVar
 
 import pytest
 
-from disclosed import disputes, history, national, package, receipts, site
+from disclosed import analytics, disputes, history, national, package, receipts, site
 
 _REPORT: dict[str, Any] = {
     "scope": {
@@ -111,6 +111,9 @@ _BUDGET_FILE = _ROOT / "lighthouse-budget.json"
 
 @pytest.fixture
 def built(tmp_path: Path) -> Path:
+    # With the committed GA4 ID, as `disclosed site` renders by default and `pages.yml`
+    # publishes: every page carries the analytics loader and the footer control, and the privacy
+    # page is one of the kinds audited (ADR 0011).
     site.build(
         _REPORT,
         tmp_path,
@@ -118,6 +121,7 @@ def built(tmp_path: Path) -> Path:
         generated="2026-08-05",
         national=national.build(_NATIONAL),
         histories=history.load(_DATA / "snapshots"),
+        ga4_id=analytics.GA4_MEASUREMENT_ID,
     )
     return tmp_path
 
@@ -187,6 +191,9 @@ def published(tmp_path_factory: pytest.TempPathFactory) -> Path:
         histories=history.load(_DATA / "snapshots"),
         package=json.loads((_ROOT / package.PACKAGE_NAME).read_text(encoding="utf-8")),
         disputes=disputes.load(_ROOT / disputes.DIRECTORY),
+        # `disclosed site` passes the committed ID unless told otherwise, and pages.yml does not
+        # tell it otherwise (ADR 0011).
+        ga4_id=analytics.GA4_MEASUREMENT_ID,
     )
     return out
 
@@ -314,6 +321,7 @@ class TestTheSuiteActuallyAuditsSomething:
             "institution/1",
             "institution/2",
             "history/college-scorecard",
+            "privacy",
         } <= relative
 
     def test_at_least_one_data_table_is_audited(self, built: Path) -> None:
@@ -488,6 +496,29 @@ class TestTheResourceBudget:
     # asserts both, because a widened exception is how a gate stops being one.
     _INERT_SCRIPT_TYPES = frozenset({"application/ld+json"})
 
+    # The one executable script a page may carry: the Google Analytics loader, byte for byte as
+    # `disclosed.analytics.loader` renders it for the committed ID, once, in the head (ADR 0011).
+    # It is the owner's decision of 2026-09-17, and it is fenced here the way the data block
+    # above is: exactly those bytes, exactly there, exactly once. A loader with a byte changed,
+    # a second copy, one in the body, or one for another ID is still counted.
+    #
+    # It is not counted because, as built, it fetches nothing. It checks the page's address
+    # first and returns on every host but the published one, which includes 127.0.0.1, where
+    # the Lighthouse job measures the timing lines. On the published host it adds gtag.js (one
+    # third-party script, 154,395 bytes brotli-compressed when measured on 2026-09-17) and GA's
+    # measurement requests. Those are outside lighthouse-budget.json, which states the pages as
+    # this project writes and serves them; ADR 0011 says so and the README repeats it.
+    _ANALYTICS_LOADER = analytics.loader(analytics.GA4_MEASUREMENT_ID, site.ENGLISH)
+
+    @classmethod
+    def _without_the_analytics_loader(cls, markup: str) -> str:
+        """The markup with the one fenced loader taken out, if it is exactly where it may be."""
+        at = markup.find(cls._ANALYTICS_LOADER)
+        head_end = markup.find("</head>")
+        if at == -1 or head_end == -1 or at > head_end:
+            return markup
+        return markup[:at] + markup[at + len(cls._ANALYTICS_LOADER) :]
+
     class _Resources(html.parser.HTMLParser):
         def __init__(
             self,
@@ -527,14 +558,14 @@ class TestTheResourceBudget:
         parser = self._Resources(
             self._FETCHING_TAGS, self._INERT_LINK_RELS, self._INERT_SCRIPT_TYPES
         )
-        parser.feed(page.read_text(encoding="utf-8"))
+        parser.feed(self._without_the_analytics_loader(page.read_text(encoding="utf-8")))
         return parser.requests
 
     def _requests_in(self, markup: str) -> list[str]:
         parser = self._Resources(
             self._FETCHING_TAGS, self._INERT_LINK_RELS, self._INERT_SCRIPT_TYPES
         )
-        parser.feed(markup)
+        parser.feed(self._without_the_analytics_loader(markup))
         return parser.requests
 
     def test_no_page_fetches_anything_but_itself(self, built: Path) -> None:
@@ -602,11 +633,64 @@ class TestAScriptIsStillARequestUnlessItIsInertData:
     def test_the_published_home_page_carries_that_block_and_nothing_else_script_shaped(
         self, published: Path
     ) -> None:
-        """Otherwise the four assertions above are about a case the site does not contain."""
+        """Otherwise the four assertions above are about a case the site does not contain.
+
+        The analytics loader is the one other script, and it is fenced separately, below.
+        """
         home = (published / "index.html").read_text(encoding="utf-8")
         scripts = re.findall(r"<script\b[^>]*>", home)
 
-        assert scripts == ['<script type="application/ld+json">']
+        assert scripts == ['<script id="analytics">', '<script type="application/ld+json">']
+
+
+class TestTheAnalyticsLoaderIsTheOnlyOtherScript:
+    """The analytics loader's exception from the count, fenced on every side (ADR 0011).
+
+    Like the data block above, the exception is worth exactly one thing: the loader's own bytes,
+    for the committed ID, once, in the head. Each assertion here moves one of those and watches
+    the count come back.
+    """
+
+    _LOADER = TestTheResourceBudget._ANALYTICS_LOADER
+    _PAGE = "<html><head><title>t</title>{head}</head><body>{body}</body></html>"
+
+    def _count(self, head: str = "", body: str = "") -> list[str]:
+        return TestTheResourceBudget()._requests_in(self._PAGE.format(head=head, body=body))
+
+    def test_the_loader_in_the_head_is_not_counted(self) -> None:
+        assert self._count(head=self._LOADER) == []
+
+    def test_a_loader_with_one_byte_changed_is_counted(self) -> None:
+        changed = self._LOADER.replace("if (optedOut) return;", "if (optedOut) {}")
+        assert changed != self._LOADER, "the sabotage did not land"
+        assert self._count(head=changed) == ["<script>"]
+
+    def test_a_loader_for_another_id_is_counted(self) -> None:
+        other = analytics.loader("G-OTHER00000", site.ENGLISH)
+        assert other != self._LOADER
+        assert self._count(head=other) == ["<script>"]
+
+    def test_a_second_copy_is_counted(self) -> None:
+        assert self._count(head=self._LOADER + self._LOADER) == ["<script>"]
+
+    def test_a_loader_in_the_body_is_counted(self) -> None:
+        assert self._count(body=self._LOADER) == ["<script>"]
+
+    def test_the_loader_has_no_src_and_names_one_script_to_load(self) -> None:
+        """What makes the exception honest: as written, it fetches nothing by itself."""
+        opening = re.findall(r"<script\b[^>]*>", self._LOADER)
+        assert opening == ['<script id="analytics">']
+        assert re.findall(r"https://[^\"\s]+", self._LOADER) == [
+            "https://www.googletagmanager.com/gtag/js?id="
+        ]
+
+    def test_every_published_page_carries_exactly_one_loader(self, published: Path) -> None:
+        pages = sorted(published.rglob("index.html"))
+        assert pages
+        for page in pages:
+            text = page.read_text(encoding="utf-8")
+            assert text.count(self._LOADER) == 1, page
+            assert text.index(self._LOADER) < text.index("</head>"), page
 
 
 class TestMeaningIsNeverCarriedByColourAlone:

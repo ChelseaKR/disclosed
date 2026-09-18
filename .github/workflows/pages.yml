@@ -5,7 +5,7 @@ name: publish-site
 # this workflow needs no network, no API key, and no secrets, and the published pages are
 # reproducible from the commit they were built at.
 #
-# The origin stamped into the 619 canonical links, the sitemap and robots.txt is taken from the
+# The origin stamped into the 620 canonical links, the sitemap and robots.txt is taken from the
 # deploy target the Pages API reports, not from a constant in the source. Issue #2 was those
 # URLs naming a host that served a 404, and the reason it went unnoticed for so long is that
 # nothing in the build compared the two. `check_site_origin.py` now does, and fails the build
@@ -73,6 +73,9 @@ jobs:
           --out site
           --origin "$SITE_ORIGIN"
           --generated "$(date -u +%F)"
+        # No --ga4-id: `disclosed site` publishes the committed Google Analytics 4 ID
+        # (src/disclosed/analytics.py, docs/adr/0011). Its loader sends nothing anywhere but this
+        # site's published address.
       - name: Fail if the render produced nothing
         run: test -s site/index.html
 

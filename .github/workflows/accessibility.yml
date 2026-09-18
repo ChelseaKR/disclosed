@@ -16,9 +16,9 @@ name: accessibility
 # report contained no audit whose key mentions "budget". Five of the six audits here ask for
 # --only-categories=accessibility, which does not even collect the resource summary.
 #
-# The resource-count budget the README actually argues for -- no scripts, no external
-# stylesheets, no fonts, no images, no third-party requests, because a page about undisclosed
-# information should not be quietly shipping a tracker -- is enforced statically in
+# The resource-count budget the README actually argues for -- no script files, no external
+# stylesheets, no fonts, no images, no third-party requests in what the pages are built with --
+# is enforced statically in
 # `make verify`, by tests/test_accessibility.py. As of docs/adr/0008 the resourceSizes lines are
 # enforced there too, read out of the budget file rather than restated, and every line of that
 # file is now either enforced by a named check or declared unenforceable with a written reason.
@@ -36,8 +36,13 @@ name: accessibility
 # page and the institution pages render around a finding was never parsed by anything. A
 # tracker added to that branch shipped past the suite. TestTheResourceBudgetOverThePublishedSite
 # now renders the committed report and the committed national artifact -- the same bytes
-# pages.yml uploads, all 619 pages -- and parses every one, and that test checks the count above
+# pages.yml uploads, all 620 pages -- and parses every one, and that test checks the count above
 # against the build rather than leaving it as a number in a comment.
+#
+# Google Analytics 4 (docs/adr/0011): every page carries one inline loader, fenced in that test to
+# its own bytes. It returns before doing anything off the published address, which includes the
+# 127.0.0.1 this job serves from, so nothing below ever loads gtag.js or contacts Google, and the
+# timings measured here are the pages' own. The privacy page is audited as one more kind.
 
 on:
   push:
@@ -99,8 +104,8 @@ jobs:
             sleep 1
           done
 
-      # One page of each kind. They share a shell and a stylesheet, so auditing all 619 would be
-      # 619 audits of the same six templates.
+      # One page of each kind. They share a shell and a stylesheet, so auditing all 620 would be
+      # 620 audits of the same few templates.
       - name: Audit
         run: |
           # The URL goes FIRST. Lighthouse takes it as a positional argument, and with it trailing
@@ -117,7 +122,7 @@ jobs:
             --output=json --output-path=/tmp/CA.json --quiet --chrome-flags="--headless" \
             --budget-path=lighthouse-budget.json \
             --only-categories=accessibility,performance
-          for page in methodology national census institution/110468 history/college-scorecard; do
+          for page in methodology national census institution/110468 history/college-scorecard privacy; do
             npx --yes lighthouse@12 "http://127.0.0.1:8000/${page}/" \
               --output=json --output-path="/tmp/$(basename "$page").json" --quiet \
               --chrome-flags="--headless" --budget-path=lighthouse-budget.json \
@@ -145,8 +150,8 @@ jobs:
           # pages had already scored 1. The glob was also the more dangerous shape: had lighthouse
           # written nothing, the loop body would never run and `exit "${fail}"` would exit 0, so a
           # gate that measured zero pages would have reported success.
-          reports="/tmp/home.json /tmp/methodology.json /tmp/national.json /tmp/census.json /tmp/CA.json /tmp/110468.json /tmp/college-scorecard.json"
-          expected=7
+          reports="/tmp/home.json /tmp/methodology.json /tmp/national.json /tmp/census.json /tmp/CA.json /tmp/110468.json /tmp/college-scorecard.json /tmp/privacy.json"
+          expected=8
           found=0
           fail=0
           for report in ${reports}; do
