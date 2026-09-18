@@ -21,7 +21,7 @@ Field-level drift and cross-source contradictions are records too, keyed the sam
 "did anything change" and "do the two federal sources disagree about this school" are questions
 the project already answers with numbers and should answer the same way through a model.
 
-The store is not committed. Serialised it is tens of megabytes, every byte of it derivable from
+The store is not committed. Serialized it is tens of megabytes, every byte of it derivable from
 inputs that are committed and already held to byte-for-byte replay; the test suite pins its
 counts and spot-checks its records against the published artifacts instead.
 """
@@ -193,7 +193,7 @@ _RULE_CONDITIONS: Final[dict[str, tuple[tuple[str, str, str], ...]]] = {
         (
             "ipeds.UGOFFER",
             "1",
-            "the institution offers no undergraduate programme (UGOFFER), so the rule does not "
+            "the institution offers no undergraduate program (UGOFFER), so the rule does not "
             "reach it",
         ),
         ("ipeds.PSET4FLG", "1", _NOT_TITLE_IV),
@@ -338,7 +338,7 @@ class Evidence:
                 self._records[record.id] = record
             for contradiction in institution.contradictions:
                 self._contradictions_by_id[contradiction.id] = contradiction
-            self._by_name.setdefault(_normalise_name(institution.name), []).append(
+            self._by_name.setdefault(_normalize_name(institution.name), []).append(
                 institution.unit_id
             )
         for drift in self.drift:
@@ -354,17 +354,17 @@ class Evidence:
         )
 
     def find(self, text: str) -> list[Institution]:
-        """Institutions matching a unit id or a name, exactly after normalisation.
+        """Institutions matching a unit id or a name, exactly after normalization.
 
-        Exact first: a unit id, then a whole normalised name. Failing both, institutions whose
-        normalised name contains every word of the query, so "Grand Canyon" finds Grand Canyon
+        Exact first: a unit id, then a whole normalized name. Failing both, institutions whose
+        normalized name contains every word of the query, so "Grand Canyon" finds Grand Canyon
         University and "University" alone finds far too many to be an answer -- the caller
         decides what to do with more than one.
         """
         query = text.strip()
         if query in self.institutions:
             return [self.institutions[query]]
-        key = _normalise_name(query)
+        key = _normalize_name(query)
         if key in self._by_name:
             return [self.institutions[u] for u in self._by_name[key]]
         words = key.split()
@@ -373,7 +373,7 @@ class Evidence:
         return [
             inst
             for inst in self.institutions.values()
-            if all(w in _normalise_name(inst.name).split() for w in words)
+            if all(w in _normalize_name(inst.name).split() for w in words)
         ]
 
     def for_institution(
@@ -415,7 +415,7 @@ class Evidence:
         )
 
 
-def _normalise_name(name: str) -> str:
+def _normalize_name(name: str) -> str:
     return re.sub(r"[^a-z0-9 ]+", " ", name.lower().replace("&", " and ")).strip()
 
 

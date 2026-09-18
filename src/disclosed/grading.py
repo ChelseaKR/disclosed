@@ -3,7 +3,7 @@
 The grade answers one question: of the things this institution was in a position to tell the public,
 how much did it actually tell them? It is deliberately not a quality measure. A well-funded
 university with terrible outcomes that reports every field completely scores higher here than a
-good school that reports nothing, and that is the intended behaviour. Outcomes are graded elsewhere,
+good school that reports nothing, and that is the intended behavior. Outcomes are graded elsewhere,
 by other people, using the very data this project is checking the existence of.
 
 Two rules keep the grade honest:
@@ -19,7 +19,7 @@ absence, never rendered as the number zero.
 The same rule applies to the identity fields, and it took a real bug to notice. ``str()`` on a
 missing name yields the four-character string ``"None"``, which is a perfectly good institution
 name as far as any renderer is concerned, and two records with no id both collapsed onto the key
-``"None"`` so one silently shadowed the other and a finding was served its neighbour's peer
+``"None"`` so one silently shadowed the other and a finding was served its neighbor's peer
 evidence. Identity is therefore ``str | None`` for exactly the same reason ``score`` is
 ``float | None``.
 """

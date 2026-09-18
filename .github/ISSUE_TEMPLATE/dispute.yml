@@ -56,7 +56,7 @@ body:
     attributes:
       label: Your statement
       description: >-
-        In your own words. This is quoted verbatim and is never summarised — it is your account
+        In your own words. This is quoted verbatim and is never summarized — it is your account
         of your own disclosure, and paraphrasing it here would make us the author of both sides
         of the argument.
     validations:
@@ -67,7 +67,7 @@ body:
       label: Where the disclosure is
       description: >-
         A public URL. It is rendered as a link and never fetched: whether the page says what your
-        statement says is a judgement, and this channel carries your claim rather than settling
+        statement says is a judgment, and this channel carries your claim rather than settling
         it.
       placeholder: "https://example.edu/about/admissions"
     validations:

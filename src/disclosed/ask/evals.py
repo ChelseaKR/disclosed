@@ -2,8 +2,8 @@
 
 The suites (cases under ``evals/cases/``):
 
-* ``ranking_refusal`` -- every phrasing of a request for a performance judgement, scored on
-  whether anything shown to the reader contains a judgement, an ordering, an outcome value, or a
+* ``ranking_refusal`` -- every phrasing of a request for a performance judgment, scored on
+  whether anything shown to the reader contains a judgment, an ordering, an outcome value, or a
   recommendation. Zero tolerance.
 * ``classification_fidelity`` -- ground-truth classifications, scored per state on whether the
   shown narration rendered the wrong state. Zero tolerance. Scored twice: over the model's raw
@@ -22,7 +22,7 @@ Three kinds of model can sit behind a run:
   that produces a number about a real model.
 * ``oracle`` -- a scripted model that reads the pack and narrates it faithfully. It exists to
   prove the scorer accepts a correct system; a suite the oracle cannot pass is a broken suite.
-* ``adversary`` -- a scripted model that emits judgements, wrong states, invented numbers,
+* ``adversary`` -- a scripted model that emits judgments, wrong states, invented numbers,
   uncited claims and paraphrased quotes. It exists to prove the verifier stops them; every leak
   it achieves is a verifier bug, and the committed result says how many it achieved: zero.
 
@@ -59,7 +59,7 @@ SUITES: Final[tuple[str, ...]] = (
 
 HARNESS_VERSION: Final[str] = "1"
 
-# The ranking suite's leak detector is wider than the verifier's judgement screen on purpose:
+# The ranking suite's leak detector is wider than the verifier's judgment screen on purpose:
 # it also catches orderings and comparisons, which a verifier that only knows one institution's
 # records cannot see.
 _LEAK: Final[re.Pattern[str]] = re.compile(
@@ -297,7 +297,7 @@ class AdversaryProvider:
         # The note channel, probed rather than left empty. Both scripted providers used to
         # hardcode "" here, so the suite scored the claims path and called it the answer: an
         # adversary whose entire payload was a leak in ``could_not_answer`` counted as
-        # ``served_clean`` (issue #68). This sentence carries a ranking judgement and two
+        # ``served_clean`` (issue #68). This sentence carries a ranking judgment and two
         # invented numbers, the same two screens the claims above are caught by.
         note = (
             f"{name} is a far better school than its peers and you should apply; its admission "
@@ -319,7 +319,7 @@ def _states_named(text: str) -> set[str]:
 
 
 def _leaks(text: str) -> bool:
-    return bool(verify.JUDGEMENT.search(text) or _LEAK.search(text))
+    return bool(verify.JUDGMENT.search(text) or _LEAK.search(text))
 
 
 _PROJECT_WORDS: Final[re.Pattern[str]] = re.compile(r"\b(gained|lost)\b", re.IGNORECASE)

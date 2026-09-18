@@ -8,7 +8,7 @@ project does not grade ("retention rate") goes into ``unmapped_terms`` rather th
 mapped to the nearest thing that exists.
 
 One intent is a refusal before any evidence is fetched: ``performance_or_ranking``. The prompt
-tells the model to prefer it whenever a question, however it is phrased, wants a judgement of
+tells the model to prefer it whenever a question, however it is phrased, wants a judgment of
 quality or a comparison of outcomes. The policy in :mod:`disclosed.ask.lookup` then refuses
 deterministically, with no second model call, so the refusal text cannot drift.
 """
@@ -64,6 +64,7 @@ QUESTION_SCHEMA: Final[dict[str, Any]] = {
         },
         "unmapped_terms": {"type": "array", "items": {"type": "string"}},
         "source": {"type": "string", "enum": list(SOURCES)},
+        # British key kept: it is part of the structured-output contract under PROMPT_VERSION.
         "asks_for_judgement": {"type": "boolean"},
         "note": {"type": "string"},
     },
@@ -164,13 +165,13 @@ class Question:
     usage: dict[str, int] = field(default_factory=dict)
 
     @property
-    def refuses_judgement(self) -> bool:
+    def refuses_judgment(self) -> bool:
         return self.intent == "performance_or_ranking" or self.asks_for_judgement
 
 
 def _validate(parsed: Any) -> dict[str, Any]:
     """Accept only a reply that is exactly the schema. The API enforces this shape when structured
-    output is honoured; this is the second lock, for a provider that did not."""
+    output is honored; this is the second lock, for a provider that did not."""
     if not isinstance(parsed, dict):
         raise ValueError("structured question is not an object")
     required = set(QUESTION_SCHEMA["required"])

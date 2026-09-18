@@ -41,7 +41,7 @@ class TestRefusals:
         assert "not how they perform" in lookup.REFUSALS["performance_or_ranking"]
         assert "disclosure grade" in lookup.REFUSALS["performance_or_ranking"]
 
-    def test_judgement_is_refused_with_no_records_but_a_true_pointer(
+    def test_judgment_is_refused_with_no_records_but_a_true_pointer(
         self, evidence: Evidence, corpus: Corpus
     ) -> None:
         pack = lookup.assemble(
@@ -56,7 +56,7 @@ class TestRefusals:
         assert pointer.startswith("Grand Canyon University: of 12 graded fields")
         assert "reported" in pointer
 
-    def test_judgement_embedded_in_a_served_intent_is_still_refused(
+    def test_judgment_embedded_in_a_served_intent_is_still_refused(
         self, evidence: Evidence, corpus: Corpus
     ) -> None:
         pack = lookup.assemble(
@@ -66,7 +66,7 @@ class TestRefusals:
         )
         assert pack.refusal is not None and pack.refusal.code == "performance_or_ranking"
 
-    def test_judgement_about_an_unknown_institution_has_no_pointer(
+    def test_judgment_about_an_unknown_institution_has_no_pointer(
         self, evidence: Evidence, corpus: Corpus
     ) -> None:
         pack = lookup.assemble(
@@ -148,7 +148,7 @@ class TestServedPacks:
         assert len(pack.records) == 12
         assert len(pack.notes) == 3  # two snapshot notes, one "no suppressed" note
 
-    def test_a_source_restriction_is_honoured(self, evidence: Evidence, corpus: Corpus) -> None:
+    def test_a_source_restriction_is_honored(self, evidence: Evidence, corpus: Corpus) -> None:
         pack = lookup.assemble(_q(institution_hint="104717", source=IPEDS), evidence, corpus)
         assert {r.source for r in pack.records} == {IPEDS}
         pack = lookup.assemble(_q(institution_hint="104717", source=SCORECARD), evidence, corpus)

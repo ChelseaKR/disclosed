@@ -25,7 +25,7 @@ Meanwhile the one true movement in the period, the athletics disclosure climbing
 
 So every comparison here divides by the institutions the field applied to in that run. A field's
 denominator moves for its own reasons — institutions close, open, start offering undergraduate
-programmes, stop fielding teams — and a measurement that cannot see that will go on reporting the
+programs, stop fielding teams — and a measurement that cannot see that will go on reporting the
 denominator as though it were the numerator.
 """
 
@@ -49,7 +49,7 @@ __all__ = [
 ]
 
 # A change is called systemic when the share of applicable institutions reporting a field moves by
-# at least this much. A judgement call, stated in the published methodology so a reader can
+# at least this much. A judgment call, stated in the published methodology so a reader can
 # disagree, and set low because a coordinated stop-reporting event is newsworthy well before it
 # touches a majority of institutions.
 #

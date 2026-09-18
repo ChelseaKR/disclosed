@@ -3,14 +3,14 @@
 Instantiates `STANDARDS/RESPONSIBLE-TECH-FRAMEWORK.md`. First recorded pass: 2026-08-07, as
 part of the portfolio standards conformance pass. This is an honest record of what exists,
 not an aspiration: where a control is code, the file and test are named; where a control is a
-judgement, the place it is written down is named; where something is missing, it says so.
+judgment, the place it is written down is named; where something is missing, it says so.
 
 This file is append-only, like the ADR log.
 
 ## Applicability
 
 - **A Ethics:** applies (the grading contract is the ethics artifact; findings below)
-- **B Bias:** applies (credible ranges and peer groups are judgement calls; findings below)
+- **B Bias:** applies (credible ranges and peer groups are judgment calls; findings below)
 - **C Privacy:** applies trivially (no personal data anywhere in the pipeline; inventory below)
 - **D Transparency:** applies (findings below)
 - **E Accessibility:** applies (evidence below, all of it pre-existing and automated)
@@ -89,10 +89,10 @@ All evidence below is pre-existing and automated; nothing here is a new claim ma
 audit. Cited, not invented:
 
 - **Static suite in the merge gate:** `tests/test_accessibility.py` runs in `make verify` with
-  no browser: WCAG AA contrast for every colour pair in both light and dark themes (with a
-  completeness test so a new colour fails the build), one `<main>` and one `<h1>` per page, a
+  no browser: WCAG AA contrast for every color pair in both light and dark themes (with a
+  completeness test so a new color fails the build), one `<main>` and one `<h1>` per page, a
   skip link with an existing target, named landmarks, no skipped heading level, caption and
-  row headers on every data table, no meaning carried by colour alone.
+  row headers on every data table, no meaning carried by color alone.
 - **Browser gate:** `.github/workflows/accessibility.yml` scores five page classes with
   Lighthouse and requires exactly 100 on accessibility for each; a missing report or missing
   category is a failure, and the suite is tested to be unable to pass over zero pages.
@@ -208,7 +208,7 @@ directed that the project add a runtime question-answering layer
   A reader's question is sent to the model provider for the duration of the request, which is a
   subprocessor relationship that a deployment must record before the service is exposed. No
   deployment exists at the time of this addendum.
-- **D Transparency:** every AI answer is labelled AI-generated and unofficial, states that it is
+- **D Transparency:** every AI answer is labeled AI-generated and unofficial, states that it is
   about disclosure and not quality, and shows the count of claims withheld by the verifier.
 - **EU AI Act:** still out of scope while nothing is deployed; to be revisited in the deployment
   decision.
@@ -358,7 +358,7 @@ script, font, image, or third-party request is a build failure". Both are correc
   - a random client ID in first-party `_ga`/`_ga_5SE0M4LS60` cookies (up to two years).
 
   GA4 does not store the IP address. Retention is 14 months, and processing is in the US. Google
-  signals and ad personalisation are off, and the ad consent signals are denied. In the EEA, the
+  signals and ad personalization are off, and the ad consent signals are denied. In the EEA, the
   UK and Switzerland, `analytics_storage` is denied by default and only cookieless pings are sent.
   Nothing loads under Global Privacy Control or Do Not Track, after the footer opt-out (a
   localStorage flag, never sent), or anywhere but the published address. The visitor-facing

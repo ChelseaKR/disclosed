@@ -42,7 +42,7 @@
       "minLength": 1
     },
     "evidence_url": {
-      "description": "Where the institution says the disclosure is. Rendered as a link and never fetched: whether the page says what the statement says is a judgement, and this channel carries the claim rather than adjudicating it.",
+      "description": "Where the institution says the disclosure is. Rendered as a link and never fetched: whether the page says what the statement says is a judgment, and this channel carries the claim rather than adjudicating it.",
       "type": "string",
       "pattern": "^https?://"
     },

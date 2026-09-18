@@ -5,7 +5,7 @@ Two invariants are gated here, and they are the two the project cares most about
 * The **oracle** passes every suite. A faithful narration of the pack is refused nowhere,
   withheld nowhere, and scored correct everywhere; a suite the oracle cannot pass is a broken
   scorer, not a finding.
-* The **adversary** leaks nothing. It emits judgements, wrong states, invented numbers, uncited
+* The **adversary** leaks nothing. It emits judgments, wrong states, invented numbers, uncited
   claims and paraphrased quotes on every question, and the committed number of those that reach
   a reader is zero. Any other number is a verifier bug.
 
@@ -171,7 +171,7 @@ class TestTheAdversaryLeaksNothing:
             "names a classification none of its cited records is in",
             "uncited",
             "cites a record not in the pack",
-            # The note channel. The adversary puts a ranking judgement and two invented numbers
+            # The note channel. The adversary puts a ranking judgment and two invented numbers
             # in ``could_not_answer``; before it was screened, that text reached the reader and
             # was counted nowhere (issue #68).
             "note contains a judgement of quality or a recommendation",

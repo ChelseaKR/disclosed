@@ -22,7 +22,7 @@ Two files are read, not one. The directory (``HD``) says who exists and what the
 institutional characteristics file (``IC``) says what kind of institution they are, and that is
 what decides which disclosures they owe. The athletics disclosure was left ungraded in an earlier
 pass for exactly this reason: 4,469 of 6,163 directory rows have no athletics address and almost
-all of them are colleges with no athletics programme, so grading the column against the directory
+all of them are colleges with no athletics program, so grading the column against the directory
 alone would have manufactured four thousand violations. The characteristics file carries the
 institution's own answer about whether it belongs to a national athletic association, which turns
 an ungradeable column into a denominator of 1,998.

@@ -14,7 +14,7 @@ fixes land there and nowhere else.
 
 Please use GitHub's private vulnerability reporting on this repository ("Report a
 vulnerability" under the Security tab) rather than a public issue. You will get an
-acknowledgement within 72 hours.
+acknowledgment within 72 hours.
 
 ## What counts as a vulnerability here
 

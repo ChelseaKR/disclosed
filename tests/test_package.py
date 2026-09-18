@@ -262,7 +262,7 @@ class TestTheDescriptorIsAValidDataPackage:
     This is **not** ``frictionless validate``. Adding the ``frictionless`` package as a dev
     dependency would pull a large transitive tree into a repository whose runtime dependency
     list is empty, for the sake of one file; the trade the issue left open is taken here in
-    favour of no new dependency, and this class is the cost of that choice written down. It
+    favor of no new dependency, and this class is the cost of that choice written down. It
     checks the Data Package v1 requirements that can be checked structurally: the required keys,
     resource names that the spec's own tooling will accept, unique names, and paths that are
     relative and do not escape the package. It does **not** check the profile's full JSON Schema,

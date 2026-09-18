@@ -324,7 +324,7 @@ class TestTheBuild:
             f"<code>_ga_{MEASUREMENT_ID.removeprefix('G-')}</code>",
             f"<code>{OPT_OUT_KEY}</code>",
             "Global Privacy Control or Do Not Track",
-            "Google signals and ad personalisation are off",
+            "Google signals and ad personalization are off",
             "European Economic Area, the UK and Switzerland",
             "cookieless ping",
             "14 months",
@@ -477,7 +477,7 @@ def test_a_click_is_remembered_and_a_second_click_undoes_it(script: str, tmp_pat
     assert twice["status"]["text"] == "Analytics is back on from the next page you open."
 
 
-def test_blocked_storage_still_honours_a_click_for_this_page(script: str, tmp_path: Path) -> None:
+def test_blocked_storage_still_honors_a_click_for_this_page(script: str, tmp_path: Path) -> None:
     result = run(script, tmp_path, storageBlocked=True, clicks=1)
     assert not loaded_nothing(result), "blocked storage is not an opt-out"
     assert result["gaDisable"] is True
@@ -526,7 +526,7 @@ def test_turning_google_signals_on_is_caught(script: str, tmp_path: Path) -> Non
 # -- the claims around it ----------------------------------------------------------------------
 
 #: Claims that were true before the site had analytics and are false with it. Each is matched
-#: case-insensitively against whitespace-normalised text.
+#: case-insensitively against whitespace-normalized text.
 FALSE_NOW = (
     "there are no scripts",
     "the site ships no script",

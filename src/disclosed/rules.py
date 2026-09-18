@@ -11,7 +11,7 @@ until now the only way to get it was to copy :func:`~disclosed.disclosure.classi
 arguments into a new call site and hope nobody forgot ``sentinels``. Forgetting it is not a
 hypothetical: it is precisely how ``-1`` becomes a measurement of minus one.
 
-So a rule file states the rules as data, this module refuses the ones it cannot honour, and
+So a rule file states the rules as data, this module refuses the ones it cannot honor, and
 ``disclosed classify-csv`` writes a state column beside every value column it was given rules for.
 
 Two refusals here are the whole point of the module and are worth reading before changing them.
@@ -265,7 +265,7 @@ def _rule_from_payload(raw: object, seen: set[str]) -> Rule:
 
 
 def rules_from_payload(payload: object) -> tuple[Rule, ...]:
-    """Parse a rule file, refusing anything this build cannot honour exactly as written.
+    """Parse a rule file, refusing anything this build cannot honor exactly as written.
 
     Raises:
         RuleFileError: With a message naming what was wrong and, where a permissive reading

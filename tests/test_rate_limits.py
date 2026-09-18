@@ -1,4 +1,4 @@
-"""Retry behaviour: which failures are worth waiting out, and which are ours to fix."""
+"""Retry behavior: which failures are worth waiting out, and which are ours to fix."""
 
 from __future__ import annotations
 

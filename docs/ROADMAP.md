@@ -61,7 +61,7 @@ milestones, in order:
    defensible rule does (README).
 3. **Grounded disclosure Q&A (ADR 0006).** An optional runtime layer, `disclosed.ask`, that
    answers "what does this institution not disclose, and why does that matter" from the
-   project's own classified records, refuses performance judgement, never collapses the five
+   project's own classified records, refuses performance judgment, never collapses the five
    states, and is measured on both. Built in stages: corpus of federal definitions, evidence
    store and question structuring, grounded narration with a verifier, evaluation suites,
    front-end opt-in, and an unapplied deployment template (`deploy/`, tested against the code
@@ -148,7 +148,7 @@ and the parts are listed here so that "blocked" names something specific:
   catalog (`src/disclosed/locales/`), rendered through `disclosed.messages`, with the five
   classification tokens kept as machine keys in the CSV export and translated only at the
   presentation layer. What is *not* done is the part that needs a person: there is one catalog and
-  it is English, so the project is not internationalised, and `docs/I18N.md` lists what remains -
+  it is English, so the project is not internationalized, and `docs/I18N.md` lists what remains -
   a reviewed second locale, locale-aware number formatting, and the `disclosed.ask` layer, which
   answers in English because its prompts, its verifier and the definitions it quotes are English.
   Shipping a machine translation as though it had been reviewed would be the same defect this
@@ -210,7 +210,7 @@ Per QUALITY-AND-METRICS-STANDARD's ledger shape. Values as measured 2026-08-07.
 | Resource transfer sizes | every page inside the `resourceSizes` lines of `lighthouse-budget.json` (80 KiB document, 80 KiB total, zero for every other type) | `tests/test_accessibility.py::TestTheTransferSizeBudget` in `make verify`, over one page of each kind and again over all 620 pages of the committed build, reading the numbers out of the budget file rather than restating them; the largest published page (70.6 KiB) is a README figure recomputed from the build (ADR 0008) | AUTO |
 | Lighthouse timings (`largest-contentful-paint`, `cumulative-layout-shift`, `total-blocking-time`) | as stated in `lighthouse-budget.json` | `.github/scripts/check_lighthouse_timings.py`, run by `.github/workflows/accessibility.yml` over the home page and the largest page, both audited with the performance category. It fails on a metric over budget, on a metric a report does not carry (lighthouse collects timings only when that category is asked for, which is how this gate would otherwise stop applying), and on a report that was never written. Gated only after the runner was measured rather than assumed: run 33129896655 reported LCP 751.7 ms on the home page and 1052.4 ms on state/CA against a 1500 ms line, within a millisecond of the laptop figures in ADR 0008, because lighthouse throttles by simulation (ADR 0010). `total-blocking-time` was left at the 0 that run reported and failed at 34 ms on a shared runner the next time; it is 200 ms now, Lighthouse's own boundary for good, per the ADR's 2026-09-01 amendment | AUTO |
 | Every budget line is in one register or the other | no line of `lighthouse-budget.json` enforced by nobody and unnamed | `tests/test_accessibility.py::TestEveryBudgetLineIsAccountedFor`; a new line that is neither enforced by a named check nor declared unenforceable with a reason fails `make verify`, and a register entry for a line the file no longer carries fails too | AUTO |
-| Static WCAG checks | zero violations | `tests/test_accessibility.py` (contrast both themes, landmarks, headings, table semantics, colour-independence) in `make verify` | AUTO |
+| Static WCAG checks | zero violations | `tests/test_accessibility.py` (contrast both themes, landmarks, headings, table semantics, color-independence) in `make verify` | AUTO |
 | Committed artifacts match their generators | byte-for-byte | tests tying `data/dataset.csv` / `data/national.json` to the code that writes them | AUTO |
 | SHA-pinned `uses:` | 100% | full 40-char SHAs in all workflows; Dependabot keeps them current | AUTO |
 | Secret / SAST / dependency scan | zero unwaived findings | `.github/workflows/security.yml` (gitleaks, semgrep, pip-audit), blocking, with no severity floor on semgrep and no `.semgrepignore` exclusions; the three waived findings carry an inline `nosemgrep` and a reason | AUTO |

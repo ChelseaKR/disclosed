@@ -223,7 +223,7 @@ class TestAthleticsApplicability:
         grade = grade_institution(record, fields=IPEDS_FIELDS)
         return next(r.disclosure for r in grade.results if r.field.key == "ipeds.ATHURL")
 
-    def test_a_college_with_no_athletics_programme_owes_nothing(self) -> None:
+    def test_a_college_with_no_athletics_program_owes_nothing(self) -> None:
         """ATHASSOC 2 is a stated "no". It leaves the denominator rather than being marked down."""
         record = _joined(self._NO_REPORT, ("100654,2,2,2,2,2",))[0]
         assert self._athletics(record) is Disclosure.NOT_APPLICABLE
@@ -440,7 +440,7 @@ class TestCaching:
         assert ipeds.load_directory(cache=cache)[0]["id"] == "100654"
         assert cache.read_bytes() == payload
 
-    def test_the_iterator_honours_a_limit(self, tmp_path: Path) -> None:
+    def test_the_iterator_honors_a_limit(self, tmp_path: Path) -> None:
         cache = tmp_path / "HD2023.zip"
         cache.write_bytes(_archive(_CAMPUS, _SYSTEM_OFFICE, _GRADUATE_ONLY))
         assert len(list(ipeds.iter_institutions(cache=cache, limit=2))) == 2

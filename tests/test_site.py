@@ -242,7 +242,7 @@ class TestFindingsLinkToTheirReasoning:
     def test_the_methodology_states_the_rule_behind_a_withheld_peer_comparison(
         self, tmp_path: Path
     ) -> None:
-        """ "Too few to draw a conclusion" is a judgement, and every judgement here is published.
+        """ "Too few to draw a conclusion" is a judgment, and every judgment here is published.
 
         A reader who follows a finding's link expecting to find why no peer comparison was made
         used to find nothing: the page described the peer group in full and never mentioned that

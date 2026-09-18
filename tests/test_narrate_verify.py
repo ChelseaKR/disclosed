@@ -178,7 +178,7 @@ class TestVerifyClaims:
             "I recommend it.",
         ],
     )
-    def test_a_judgement_is_withheld(self, pack: lookup.Pack, corpus: Corpus, text: str) -> None:
+    def test_a_judgment_is_withheld(self, pack: lookup.Pack, corpus: Corpus, text: str) -> None:
         out = self._verify(pack, corpus, {"text": text, "cites": [pack.records[0].id]})
         assert out.claims == ()
         assert out.withheld_claims[0].reason == (

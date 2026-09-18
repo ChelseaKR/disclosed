@@ -103,10 +103,10 @@ class TestReadingPropertiesOffAnEnvelope:
     def test_a_property_this_adapter_does_not_understand_is_still_counted(self) -> None:
         """A census of what a publisher published, not of what this code knows about."""
         organization = credential_registry.reduce_record(
-            self._envelope({"ceterms:ctid": "ce-2", "ceterms:somethingNobodyModelledHere": 1})
+            self._envelope({"ceterms:ctid": "ce-2", "ceterms:somethingNobodyModeledHere": 1})
         )
         assert organization is not None
-        assert "ceterms:somethingNobodyModelledHere" in organization.properties
+        assert "ceterms:somethingNobodyModeledHere" in organization.properties
 
     def test_identifier_type_names_are_read_as_the_free_text_they_are(self) -> None:
         """ADR 0007 refuses to read anything here as a federal identifier. Nothing here does."""

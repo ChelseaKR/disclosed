@@ -6,7 +6,7 @@
 
 ## Context
 
-This project makes judgement calls that a reader is invited to dispute: credible ranges, the 2%
+This project makes judgment calls that a reader is invited to dispute: credible ranges, the 2%
 drift threshold, the decision to never resolve the Grand Canyon University sector disagreement.
 The code and README carry those. Decisions about the *shape* of the project (toolchain floors,
 what is released, what is declared out of scope) need the same disputable, dated record, and a

@@ -8,7 +8,7 @@
 # repository computes, and nothing here could tell.
 #
 # These pages grade real colleges by name, so a stale one misinforms somebody
-# choosing where to enrol. That is worth a daily check rather than a note.
+# choosing where to enroll. That is worth a daily check rather than a note.
 #
 # This is the check for the deployment: read the deploy's own generated-on date off
 # the live front page, rebuild all of it from the checkout stamped with that date,
@@ -37,7 +37,7 @@ permissions:
   contents: read
 
 concurrency:
-  # Deduplicate reads without ever cancelling or queueing behind a deploy.
+  # Deduplicate reads without ever canceling or queueing behind a deploy.
   group: live-integrity
   cancel-in-progress: false
 

@@ -10,7 +10,7 @@ published data and must not be able to say anything the data does not contain. S
 reduces the national run to two things: the per-field counts behind every percentage, and the
 institutions named in the findings.
 
-Which institutions get named is a rule, not a judgement call made per finding. A field with a
+Which institutions get named is a rule, not a judgment call made per finding. A field with a
 statute behind it (:attr:`disclosed.fields.Field.statute`) is one an institution can be measured
 against a requirement somebody else enacted, and those institutions are named. A field without one
 is this project's opinion about what a college ought to publish, and those institutions are
@@ -108,7 +108,7 @@ def coverage_for(
     not told us that the institution failed it, and inventing a classification here would be the
     null-versus-zero bug arriving through the back door.
 
-    A classification word this code does not recognise is treated the same way, and for the same
+    A classification word this code does not recognize is treated the same way, and for the same
     reason. Reports outlive the versions that wrote them, so a word from a newer vintage will
     eventually arrive here; counted as anything, it lands in ``applicable`` without landing in
     ``reported``, which quietly lowers the published reporting rate for that field. That is this
@@ -186,7 +186,7 @@ def build(report: dict[str, Any], *, fields: tuple[Field, ...] = IPEDS_FIELDS) -
         ValueError: If the payload is not a national run. Reducing a sample through here would
             produce a file called ``national.json`` whose numbers describe 600 institutions in 13
             states, and every downstream reader of that file would be entitled to believe
-            otherwise. Refusing is the only safe behaviour; there is no correct way to relabel a
+            otherwise. Refusing is the only safe behavior; there is no correct way to relabel a
             sample.
     """
     scope: Scope | None = scope_from_payload(report)

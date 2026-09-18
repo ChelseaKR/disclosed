@@ -141,13 +141,13 @@ class TestAsk:
         """The channel that bypassed all four claim screens by moving text one JSON field over.
 
         ``could_not_answer`` was copied out of the model's reply verbatim into the response body
-        and printed to the reader as a paragraph. A ranking judgement and two invented numbers
+        and printed to the reader as a paragraph. A ranking judgment and two invented numbers
         reached it byte-identically with a withheld count of zero -- while the same string, sent
-        as a claim, was caught by the judgement screen. Both of the screens it would have hit as
-        a claim are asserted here to still recognise it, so this test fails if the sentence stops
+        as a claim, was caught by the judgment screen. Both of the screens it would have hit as
+        a claim are asserted here to still recognize it, so this test fails if the sentence stops
         being hostile rather than if the fix stops working.
         """
-        assert service.verify.JUDGEMENT.search(_HOSTILE_NOTE)
+        assert service.verify.JUDGMENT.search(_HOSTILE_NOTE)
         assert service.verify._numbers_in(_HOSTILE_NOTE) == {3.0, 95000.0}
 
         svc = _service(evidence, corpus, _STRUCTURED_WHY, _narration_with_only_a_hostile_note)

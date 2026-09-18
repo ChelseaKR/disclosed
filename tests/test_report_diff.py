@@ -563,7 +563,7 @@ class TestTheVerb:
         assert "1 grades in the earlier report carry no id" in out
         assert "1 entries in the earlier report are not grades and could not be read" in out
 
-    def test_an_unreadable_word_is_labelled_rather_than_counted(
+    def test_an_unreadable_word_is_labeled_rather_than_counted(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         earlier = self._write(

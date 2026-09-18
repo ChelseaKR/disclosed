@@ -29,7 +29,7 @@ push. Stage explicit paths; never `git add -A`.
 - Committed artifacts replay byte-for-byte from the committed inputs (`tests/test_replay.py`,
   `tests/test_census_replay.py`). If you change a generator, regenerate the artifact in the same
   commit and let the diff show what moved.
-- Every payload carries a `scope` block. A sample is never relabelled as national; the code
+- Every payload carries a `scope` block. A sample is never relabeled as national; the code
   refuses rather than guesses (`disclosed national`, `disclosed census-report`).
 - Every figure the README prints is re-derived by `tests/test_doc_counts.py` and
   `tests/test_published_figures.py`. Change a number in prose and the test tells you whether
@@ -52,7 +52,7 @@ the tests that enforce them are the ones to read first.
 - **Every claim cites a record and is verified before display.** Unverifiable claims are
   withheld and counted; they are never shown with a softer word. A claim whose classification
   word disagrees with the cited record is wrong in exactly the way this project names.
-- **Performance judgement is refused.** "Which is better", "rank these", "should I go", "what
+- **Performance judgment is refused.** "Which is better", "rank these", "should I go", "what
   is their real rate" — refused, redirected to disclosure, and measured by
   `evals/ranking_refusal` at zero tolerance. A disclosure grade is not a quality grade.
 - **The five states are never collapsed.** "They have no graduation rate" over a

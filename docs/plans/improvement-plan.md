@@ -25,7 +25,7 @@ quoted here are under `/private/tmp/disclosed-audit/`.
 | # | Title (short) | Classification | Action taken |
 |---|---|---|---|
 | 36 | Admission rate vs the open-admissions glossary sentence | **Real defect in the grading contract; owner decision** | Not changed. Citation verified verbatim against `corpus/passages.json`. |
-| 37 | `ATHURL` labelled EADA, IPEDS titles it Student-Right-to-Know | **Real mislabel; owner decision** | Not changed. Citation verified verbatim against `corpus/passages.json`. |
+| 37 | `ATHURL` labeled EADA, IPEDS titles it Student-Right-to-Know | **Real mislabel; owner decision** | Not changed. Citation verified verbatim against `corpus/passages.json`. |
 | 39 | `_COLLAPSE` misses "does not report" | **Real defect** | Reproduced against the real types. **Fixed in open PR #46**; not duplicated. |
 | 40 | Fidelity check skipped on a drift-only citation | **Real defect** | Reproduced against the real types. **Fixed in open PR #46**; not duplicated. |
 | 41 | `direction` says "lost" at `rate_change == 0.0` | **Real defect** | Reproduced against the real types. **Fixed in open PR #46**; not duplicated. |

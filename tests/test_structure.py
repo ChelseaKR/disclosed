@@ -66,15 +66,15 @@ class TestStructuring:
         assert question.unmapped_terms == ("yield",)
         assert question.institution_hint == "110468"
         assert question.text == "Is the 0% real?"
-        assert not question.refuses_judgement
+        assert not question.refuses_judgment
         sent = json.loads(fake.calls[0]["user"])
         assert sent == {"question": "Is the 0% real?", "institution_known_from_page": True}
         assert fake.calls[0]["system"] == s.STRUCTURE_SYSTEM
         assert fake.calls[0]["schema"] == s.QUESTION_SCHEMA
 
-    def test_judgement_is_refused_by_intent_or_by_flag(self) -> None:
-        assert _structured({**_BASE, "intent": "performance_or_ranking"}).refuses_judgement
-        assert _structured({**_BASE, "asks_for_judgement": True}).refuses_judgement
+    def test_judgment_is_refused_by_intent_or_by_flag(self) -> None:
+        assert _structured({**_BASE, "intent": "performance_or_ranking"}).refuses_judgment
+        assert _structured({**_BASE, "asks_for_judgement": True}).refuses_judgment
 
     @pytest.mark.parametrize(
         "reply",

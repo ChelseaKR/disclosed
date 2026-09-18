@@ -458,7 +458,7 @@ class Corpus:
         """Whether ``quote`` appears verbatim in the passage, up to whitespace.
 
         Whitespace is collapsed on both sides because a model wraps lines and a spreadsheet
-        cell does not; nothing else is normalised. A quote with a changed word is not a quote.
+        cell does not; nothing else is normalized. A quote with a changed word is not a quote.
         """
         passage = self.passages.get(passage_id)
         if passage is None:

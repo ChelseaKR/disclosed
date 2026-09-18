@@ -10,7 +10,7 @@ grade for a named institution differed from the one this repository computes,
 and nothing here could tell.
 
 That is worth a daily check rather than a note. These pages grade real colleges
-by name, and a stale one misinforms somebody choosing where to enrol.
+by name, and a stale one misinforms somebody choosing where to enroll.
 
 This is the check for the deployment. It reads the deploy's own generated-on
 date off the live front page, rebuilds every page from the checkout stamped with

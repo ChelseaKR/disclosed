@@ -220,8 +220,8 @@ def _pages(root: Path) -> list[Path]:
     return found
 
 
-def _relative_luminance(hex_colour: str) -> float:
-    value = hex_colour.lstrip("#")
+def _relative_luminance(hex_color: str) -> float:
+    value = hex_color.lstrip("#")
     if len(value) == 3:
         value = "".join(ch * 2 for ch in value)
     channels = [int(value[i : i + 2], 16) / 255 for i in (0, 2, 4)]
@@ -230,34 +230,34 @@ def _relative_luminance(hex_colour: str) -> float:
 
 
 def contrast(foreground: str, background: str) -> float:
-    """WCAG 2.x contrast ratio between two colours, lighter over darker."""
+    """WCAG 2.x contrast ratio between two colors, lighter over darker."""
     a, b = _relative_luminance(foreground), _relative_luminance(background)
     lighter, darker = max(a, b), min(a, b)
     return (lighter + 0.05) / (darker + 0.05)
 
 
 class TestContrast:
-    """Every colour pair the stylesheet actually puts together, against WCAG AA.
+    """Every color pair the stylesheet actually puts together, against WCAG AA.
 
     Written as a table of pairs rather than parsed out of the CSS, because the pairing is the
-    thing being asserted and a parser would only tell us the colours exist.
+    thing being asserted and a parser would only tell us the colors exist.
     """
 
     _LIGHT_BACKGROUND = "#ffffff"
     _DARK_BACKGROUND = "#131313"
 
     @pytest.mark.parametrize(
-        "colour",
+        "color",
         ["#1a1a1a", "#0b5cad", "#333333", "#555555", "#14691f", "#96110f", "#a8421f"],
     )
-    def test_light_mode_text_meets_aa(self, colour: str) -> None:
-        assert contrast(colour, self._LIGHT_BACKGROUND) >= 4.5
+    def test_light_mode_text_meets_aa(self, color: str) -> None:
+        assert contrast(color, self._LIGHT_BACKGROUND) >= 4.5
 
     @pytest.mark.parametrize(
-        "colour", ["#e9e9e9", "#79b8ff", "#cfcfcf", "#bbbbbb", "#6fbf73", "#ff8a80", "#ffab7a"]
+        "color", ["#e9e9e9", "#79b8ff", "#cfcfcf", "#bbbbbb", "#6fbf73", "#ff8a80", "#ffab7a"]
     )
-    def test_dark_mode_text_meets_aa(self, colour: str) -> None:
-        assert contrast(colour, self._DARK_BACKGROUND) >= 4.5
+    def test_dark_mode_text_meets_aa(self, color: str) -> None:
+        assert contrast(color, self._DARK_BACKGROUND) >= 4.5
 
     @pytest.mark.parametrize(
         "badge", ["#14691f", "#3f7d20", "#8a5a00", "#a8421f", "#96110f", "#555555"]
@@ -270,9 +270,9 @@ class TestContrast:
         assert contrast("#0b5cad", self._LIGHT_BACKGROUND) >= 3.0
         assert contrast("#79b8ff", self._DARK_BACKGROUND) >= 3.0
 
-    def test_every_colour_in_the_stylesheet_is_covered_by_a_case_above(self) -> None:
-        """A colour added to the stylesheet and not to the table above fails here rather than
-        shipping unchecked. The whole point of a contrast test is that it notices new colours."""
+    def test_every_color_in_the_stylesheet_is_covered_by_a_case_above(self) -> None:
+        """A color added to the stylesheet and not to the table above fails here rather than
+        shipping unchecked. The whole point of a contrast test is that it notices new colors."""
         declared = set(re.findall(r"#[0-9a-fA-F]{3,6}", site._STYLE))
         checked = {
             "#ffffff",
@@ -299,7 +299,7 @@ class TestContrast:
             "#ffab7a",
             "#e3e3e3",
         }
-        assert declared <= checked, f"unchecked colours: {sorted(declared - checked)}"
+        assert declared <= checked, f"unchecked colors: {sorted(declared - checked)}"
 
 
 class TestTheSuiteActuallyAuditsSomething:
@@ -361,7 +361,7 @@ class TestLandmarksAndNavigation:
             assert "maximum-scale" not in text, page
 
     def test_navigation_landmarks_are_named(self, built: Path) -> None:
-        """Two unlabelled navs on a page are indistinguishable in a landmark list."""
+        """Two unlabeled navs on a page are indistinguishable in a landmark list."""
         for page in _pages(built):
             text = page.read_text(encoding="utf-8")
             for nav in re.findall(r"<nav[^>]*>", text):
@@ -693,7 +693,7 @@ class TestTheAnalyticsLoaderIsTheOnlyOtherScript:
             assert text.index(self._LOADER) < text.index("</head>"), page
 
 
-class TestMeaningIsNeverCarriedByColourAlone:
+class TestMeaningIsNeverCarriedByColorAlone:
     def test_the_ungradeable_badge_says_so_in_text(self, built: Path) -> None:
         """It used to carry its meaning in a title attribute, which a screen reader may not read
         and a keyboard user cannot reach. "n a" alone is the audible version of printing an
@@ -702,7 +702,7 @@ class TestMeaningIsNeverCarriedByColourAlone:
         assert "not gradeable, no field applied" in page
         assert 'title="No gradeable fields"' not in page
 
-    def test_a_disclosure_state_is_always_a_word_and_not_only_a_colour(self, built: Path) -> None:
+    def test_a_disclosure_state_is_always_a_word_and_not_only_a_color(self, built: Path) -> None:
         page = (built / "institution" / "1" / "index.html").read_text(encoding="utf-8")
         assert "Not reported" in page
         assert "Reported" in page

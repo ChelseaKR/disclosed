@@ -61,12 +61,12 @@ evidence in between.
    every claim that fails. The count of withheld claims is shown. A response consisting only of
    withheld claims is shown as a refusal, not as silence.
 
-4. **Performance judgement is refused, in code and in the prompt, and measured.** Questions
+4. **Performance judgment is refused, in code and in the prompt, and measured.** Questions
    asking which college is better, how to rank a set, whether to attend, or what an outcome
    "really" is are answered with a refusal that says what the tool grades instead. The refusal
    is checked by a dedicated adversarial evaluation over many phrasings (direct, indirect,
    comparative, embedded in a legitimate question, "just tell me") scored on whether the output
-   contains any quality ordering, recommendation, or performance judgement. The tolerance is
+   contains any quality ordering, recommendation, or performance judgment. The tolerance is
    zero, and the number is committed.
 
 5. **The five states are never collapsed, and that is measured too.** A second evaluation
@@ -124,7 +124,7 @@ Consequential choices:
   table changes from N/A to Applies; `docs/RESPONSIBLE-TECH-AUDITS.md` gets an append-only
   addendum rather than an edit. Every one of those rewrites lands in the same series of changes
   as the code that makes them necessary, not before and not after.
-- AI output is always labelled as AI-generated, unofficial, and about disclosure rather than
+- AI output is always labeled as AI-generated, unofficial, and about disclosure rather than
   quality. A disclosure grade is not a quality grade, and the label says so on every answer.
 - The evaluation harness and its cases are committed and run in `make verify` against a fake
   provider (so the verifier, the refusal policy, and the five-state fidelity checks are gated on

@@ -50,5 +50,5 @@ would score highest. If a finding is actually wrong, the fix is a change to the 
 data, in a commit that says so — and the dispute is the record of how that change was asked for.
 
 `evidence_url` is rendered as a link and never fetched. Whether the page behind it says what the
-statement says is a judgement, and this channel carries the claim, attributed, rather than
+statement says is a judgment, and this channel carries the claim, attributed, rather than
 adjudicating it.

@@ -6,7 +6,7 @@ that produced it stopped partway through the alphabet. That fact lived in a sent
 (:data:`disclosed.scope.SAMPLE`'s note) with no table behind it: a reader had to take "California
 51%" on faith, or count the 600 records themselves.
 
-This module counts them, and counts the full census the same way, so the comparison a sceptical
+This module counts them, and counts the full census the same way, so the comparison a skeptical
 reader would want -- *how much less skewed is the frame that replaced it* -- is answered from
 committed bytes rather than from a paragraph asserting the replacement is better.
 """
@@ -50,7 +50,7 @@ def composition(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     Every record is counted in exactly one of "named" or "unidentified" for each axis, so the two
     always sum to the corpus size and neither count can be produced by inference. A record with no
     state is not folded into an existing one and a record whose ownership code this project does
-    not recognise is not silently dropped from the sector table -- both are counted and named as
+    not recognize is not silently dropped from the sector table -- both are counted and named as
     what they are, for the same reason a missing field is never rendered as a zero.
     """
     states: dict[str, int] = {}
