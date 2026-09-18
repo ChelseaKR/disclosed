@@ -139,6 +139,126 @@ msgstr ""
 "Every rule behind these grades, the data they are computed from, and the code that applies "
 "them are public: <a href=\"{source}\">github.com/ChelseaKR/disclosed</a>."
 
+#. Rendered only when the build has a GA4 measurement ID (ADR 0011).
+msgid "shell.footer.analytics"
+msgstr ""
+"This site counts visits with Google Analytics 4. <a href=\"{privacy}\">What it records, and how "
+"to opt out</a>."
+
+#. The footer's opt-out button and the status line beside it. Shown only on the published site.
+msgid "analytics.opt_out"
+msgstr "Opt out of analytics"
+
+msgid "analytics.opt_in"
+msgstr "Opt back in"
+
+msgid "analytics.signal"
+msgstr "Analytics is off: your browser sends Global Privacy Control or Do Not Track."
+
+msgid "analytics.off"
+msgstr "Analytics is off on this device."
+
+msgid "analytics.back_on"
+msgstr "Analytics is back on from the next page you open."
+
+msgid "analytics.not_saved"
+msgstr "Your browser would not save this choice, so it lasts only until you leave this page."
+
+#. The privacy page. Written only when the build has a GA4 measurement ID (ADR 0011).
+msgid "privacy.title"
+msgstr "Privacy: what this site sends to Google Analytics"
+
+msgid "privacy.description"
+msgstr ""
+"What disclosed sends to Google Analytics 4 when you read it, what it does not send, when "
+"nothing is sent at all, and how to opt out on your device."
+
+msgid "privacy.heading"
+msgstr "Privacy"
+
+msgid "privacy.lede"
+msgstr ""
+"This site has no accounts and asks you for nothing. It counts visits with Google Analytics 4 "
+"(GA4), which Google runs for the site's author. This page says what that sends, and when it "
+"sends nothing."
+
+msgid "privacy.receives.heading"
+msgstr "What Google Analytics receives"
+
+msgid "privacy.receives.intro"
+msgstr "For each page you open, GA4 receives:"
+
+msgid "privacy.receives.page"
+msgstr ""
+"the page's address, without anything after a <code>#</code> or <code>?</code>. On this site "
+"the address names the institution, state or report you are reading, so Google learns which "
+"ones were looked at"
+
+msgid "privacy.receives.referrer"
+msgstr "the address of the page that linked you here, if your browser sends it"
+
+msgid "privacy.receives.device"
+msgstr ""
+"your browser, operating system, screen size and language, and a rough location that Google "
+"works out from your IP address (GA4 does not store the IP address itself)"
+
+msgid "privacy.receives.events"
+msgstr ""
+"when you scroll to the bottom of a page, follow a link to another site, or download a file"
+
+msgid "privacy.receives.cookies"
+msgstr ""
+"a random ID kept in two first-party cookies, <code>_ga</code> and <code>{cookie}</code>, for "
+"up to two years, so that a return visit can be told apart from a new one. <code>_ga</code> is "
+"shared by every site under chelseakr.github.io"
+
+msgid "privacy.not_used"
+msgstr ""
+"Google signals and ad personalisation are off, and the advertising consent signals are denied, "
+"so nothing here is used for advertising. No name, email address or account is involved."
+
+msgid "privacy.regions"
+msgstr ""
+"In the European Economic Area, the UK and Switzerland, analytics cookies are off by default, so "
+"GA4 does not set its cookies there. Google still receives a cookieless ping for each page view, "
+"with no ID that links one visit to another."
+
+msgid "privacy.retention"
+msgstr ""
+"Google keeps this data for 14 months and then deletes it. Google processes it in the United "
+"States, as described in <a href=\"https://policies.google.com/technologies/partner-sites\">How "
+"Google uses information from sites that use its services</a>."
+
+msgid "privacy.not_loaded.heading"
+msgstr "When nothing is sent"
+
+msgid "privacy.not_loaded.body"
+msgstr ""
+"No request goes to Google, and no Google cookie is set, when your browser sends Global Privacy "
+"Control or Do Not Track, when you have opted out on this device, or when JavaScript is off."
+
+msgid "privacy.opt_out.heading"
+msgstr "Opting out on this device"
+
+msgid "privacy.opt_out.body"
+msgstr ""
+"The \"Opt out of analytics\" button at the foot of every page stores <code>{key}</code> in this "
+"browser's local storage. That is not a cookie, and it is never sent anywhere. \"Opt back in\" "
+"removes it, and so does clearing this site's data. Opting out does not delete <code>_ga</code> "
+"cookies you already have, because other chelseakr.github.io sites share them. They expire on "
+"their own, and this site sends nothing to Google while you are opted out. Google also offers a "
+"<a href=\"https://tools.google.com/dlpage/gaoptout\">browser add-on</a> that turns Google "
+"Analytics off everywhere."
+
+msgid "privacy.hosting.heading"
+msgstr "Hosting"
+
+msgid "privacy.hosting.body"
+msgstr ""
+"GitHub Pages hosts this site, and GitHub may log visitors' IP addresses; see the <a "
+"href=\"https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement\">"
+"GitHub General Privacy Statement</a>."
+
 #. An institution the federal source did not name. Never the word "None": that is a
 #. four-character institution name in every downstream reader.
 msgid "institution.unnamed_with_unit_id"

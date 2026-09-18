@@ -98,6 +98,22 @@ file is the human-readable one.
 
 ### Added
 
+- **The published site counts visits with Google Analytics 4**, by the owner's decision of
+  2026-09-17 ([ADR 0011](docs/adr/0011-the-published-site-counts-visits-with-google-analytics.md)).
+  `src/disclosed/analytics.py` holds the ID, `G-5SE0M4LS60`, and renders one inline loader that
+  `disclosed site` puts in the head of every page by default (`--ga4-id ""` turns it off;
+  `site.build()` without an ID is byte-for-byte what it was). The loader loads nothing off
+  `https://chelseakr.github.io/disclosed/`, under Global Privacy Control or Do Not Track, or
+  after the new footer "Opt out of analytics" button (localStorage key
+  `disclosed:analytics-opt-out`). Google signals and ad personalisation are off, the ad consent
+  signals are denied, `analytics_storage` is denied by default in the EEA, the UK and
+  Switzerland, and `page_location` is the origin and path only. Every footer says so and links a
+  new `privacy/` page, which says plainly that a page's address names the institution being read.
+  The site grows from 619 to 620 pages. The budget test fences the loader to its own bytes, once,
+  in the head; `tests/test_analytics.py` runs it under Node with negative controls. The README,
+  the roadmap, `AGENTS.md` and the workflows no longer say the site has no script, and
+  `docs/RESPONSIBLE-TECH-AUDITS.md` carries a dated addendum.
+
 - **Every field on an institution page now says what comparable institutions published.** The
   peer groups existed and answered one question only — *did comparable institutions publish this
   value* — which is the question an implausible finding raises. Five of the six rows on a page

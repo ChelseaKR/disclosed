@@ -338,3 +338,47 @@ that paragraph.
 - **No new data, no new secret, no new network path.** The job already ran Lighthouse against a
   locally served build of committed artifacts. One more page now collects the performance
   category.
+
+## Addendum 2026-09-17: the published site counts visits with Google Analytics 4 (ADR 0011)
+
+Appended rather than edited. Two things recorded above are no longer the whole truth. C said
+privacy "applies trivially (no personal data anywhere in the pipeline)". E's budget line said "a
+script, font, image, or third-party request is a build failure". Both are corrected here.
+
+- **Owner's decision.** On 2026-09-17 the owner decided that every public site gets Google
+  Analytics 4, with privacy pages and claims updated to match. This site is one of them.
+- **C Privacy, no longer trivial for the site.** The grading pipeline, the committed data, the
+  dataset and the CSV export are unchanged and still hold no personal data. The published pages
+  now send data about readers to Google, which acts as the site's analytics processor. Google
+  receives:
+  - the page path, which names the institution, state or report being read;
+  - the referrer, browser, device, language and a coarse location Google derives from the IP
+    address;
+  - scroll, outbound-click and download events;
+  - a random client ID in first-party `_ga`/`_ga_5SE0M4LS60` cookies (up to two years).
+
+  GA4 does not store the IP address. Retention is 14 months, and processing is in the US. Google
+  signals and ad personalisation are off, and the ad consent signals are denied. In the EEA, the
+  UK and Switzerland, `analytics_storage` is denied by default and only cookieless pings are sent.
+  Nothing loads under Global Privacy Control or Do Not Track, after the footer opt-out (a
+  localStorage flag, never sent), or anywhere but the published address. The visitor-facing
+  account is the site's `privacy/` page, linked from every footer. Inventory rows, in the table's
+  terms:
+
+  | Data | Source | Personal? | Retention |
+  | --- | --- | --- | --- |
+  | Page views and events on the published site | GA4 loader on every page (`src/disclosed/analytics.py`) | Pseudonymous: client ID cookie, coarse location, device | 14 months, in the GA4 property |
+  | Opt-out flag `disclosed:analytics-opt-out` | the reader's own click | No; stays in the reader's browser | Until the reader clears it |
+
+- **E Accessibility, budgets.** The count still refuses every request the built pages make, with
+  one fenced exception: the analytics loader, which counts only as its exact bytes, once, in the
+  head. As built it fetches nothing, and it returns before doing anything on 127.0.0.1, where the
+  Lighthouse job measures. On the published address it adds gtag.js (154,395 bytes
+  brotli-compressed, measured 2026-09-17) and GA's requests. Those are outside
+  `lighthouse-budget.json` by decision, recorded in ADR 0011. The footer's opt-out control is a
+  real `<button>` with a 24px target. The privacy page is one more kind the static suite and the
+  Lighthouse job audit.
+- **Tests.** `tests/test_analytics.py` executes the loader under Node for every guard, with
+  negative controls that assert their sabotage landed. `tests/test_accessibility.py` fences the
+  exception, and asserts that a changed, duplicated, misplaced or foreign-ID loader is still
+  counted.

@@ -35,7 +35,10 @@ push. Stage explicit paths; never `git add -A`.
   `tests/test_published_figures.py`. Change a number in prose and the test tells you whether
   the data agrees.
 - The site ships no subresource of any kind, enforced over every page from the built bytes.
-  Adding one is a visible decision made in the test and the budget file together.
+  Adding one is a visible decision made in the test and the budget file together. The one
+  exception is the Google Analytics loader (ADR 0011): an inline script, fenced in
+  `tests/test_accessibility.py` to its own bytes, that fetches gtag.js on the published address
+  only. Any page copy about analytics lives on `privacy/` and in the footer; keep them true.
 
 ## The AI layer (ADR 0006)
 

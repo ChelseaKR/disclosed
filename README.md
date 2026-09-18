@@ -596,9 +596,25 @@ audible version of printing an absence as a bare number. And every table row now
 `<th scope="row">`, because without one a screen reader reading the third cell of the four
 hundredth row announces a classification with nothing attached to say whose it is.
 
-There are no scripts, no external stylesheets, no fonts, no images and no third-party requests,
-and adding one is a build failure rather than a decision nobody noticed. One deliberate
-exception exists and is off by default: built with `--ask-endpoint`, each institution page
+No page asks the browser for a second file: no script file, no external stylesheet, no font,
+no image. Adding one is a build failure rather than a decision nobody noticed. Two deliberate
+exceptions exist, and both are inline scripts with no `src`.
+
+The first is Google Analytics 4, by the owner's decision of 2026-09-17
+([ADR 0011](docs/adr/0011-the-published-site-counts-visits-with-google-analytics.md)). Every
+page carries one loader in its head. On the published address, and only there, it fetches
+Google's gtag.js and sends page views to Google Analytics. That is a third-party script and
+third-party requests. It sends nothing if the browser sends Global Privacy Control or Do Not
+Track, or if the reader has opted out with the footer's "Opt out of analytics" button. Every
+page's footer says the site counts visits, and the
+[privacy page](https://chelseakr.github.io/disclosed/privacy/) says what Google receives:
+including, plainly, which institution, state or report pages were opened. Off the published
+address, including any local build and the Lighthouse job on 127.0.0.1, the loader fetches
+nothing. `tests/test_analytics.py` runs it under Node for each of those cases, and
+`tests/test_accessibility.py` fences it to its own bytes, once, in the head.
+`disclosed site --ga4-id ""` builds a site without it.
+
+The second is off by default: built with `--ask-endpoint`, each institution page
 carries the opt-in question form for the AI layer (ADR 0006) and one inline script behind it,
 with no `src`, whose only network call sits inside the form's submit handler, so nothing leaves
 the page until a reader presses Ask; `tests/test_ask_widget.py` proves both from the built
@@ -606,7 +622,7 @@ bytes. The published site is built without it until the service is deployed, whi
 separate decision. That is enforced in
 `make verify`, by parsing the built HTML for anything that would make a browser fetch a second
 file: once over a fixture holding one page of every kind, and once over the whole published
-site, all 619 pages of it, rendered from `data/report.json`, `data/national.json` and
+site, all 620 pages of it, rendered from `data/report.json`, `data/national.json` and
 `data/scorecard-census.json`. The second pass exists because the fixture's report carries no
 implausible finding, so the markup both the
 home page and the institution pages render around a finding was never parsed by anything, and a
@@ -628,10 +644,10 @@ Moving the counts out of that file fixed one line and left the rest of it in the
 file had been in. The `resourceSizes` lines went on being cited here, in the workflow and in the
 metrics ledger, and went on being enforced by nothing; the ledger said so in as many words, which
 is honest and is not the same as a gate. They are enforced now, in `make verify`, over the
-six-page fixture and again over all 619 published pages: **80 KiB** for the document and **80 KiB**
+six-page fixture and again over all 620 published pages: **80 KiB** for the document and **80 KiB**
 for the page in total, read out of `lighthouse-budget.json` rather than copied out of it, so
 widening the budget widens the test and has to be argued for here. The largest page the committed
-report renders is California's state page at **66.9 KiB**, and that figure is in this sentence
+report renders is California's state page at **70.6 KiB** (66.9 KiB before the analytics loader and footer of ADR 0011), and that figure is in this sentence
 because a budget with a hundredfold of slack passes for the same reason a gate that cannot fail
 does; a test recomputes it from the build, so the day a template change eats the headroom this
 paragraph has to say so.
@@ -670,11 +686,12 @@ instead of investigated.
 
 That rule was applied to the paint time and not to the other two lines, and the gate caught it on
 its next run: `total-blocking-time is 34 against a budget of 0`, on a tree whose only change was
-the gate itself. The site ships no script, so 34 ms is a shared runner's main thread rather than
-this document. The line is **200 ms** now, where Lighthouse's own scoring stops calling blocking
+the gate itself. The pages ran no script then, and the one they carry now, the analytics loader,
+returns before doing anything on the 127.0.0.1 the job audits, so 34 ms is a shared runner's main
+thread rather than this document. The line is **200 ms** now, where Lighthouse's own scoring stops calling blocking
 time good — a published boundary rather than a reading off this project's runner. The layout
-shift line stays at 0, because with no script, image, stylesheet or font on any page there is
-nothing on it that can shift. The amendment to ADR 0010 records both.
+shift line stays at 0, because with no image, stylesheet or font on any page, and a loader that
+changes nothing on the audited host, there is nothing on it that can shift. The amendment to ADR 0010 records both.
 
 Every line of `lighthouse-budget.json` is now enforced by something named, and a line that is in
 neither register fails the build.
@@ -796,13 +813,13 @@ skips.
 | Security & Supply-Chain | Applies - gitleaks, semgrep, and pip-audit as blocking CI gates (`.github/workflows/security.yml`), with no severity floor and no `.semgrepignore` exclusions, both of which had been quietly making the SAST pass unfailable; all actions SHA-pinned; Dependabot for deps and action pins; ASVS L1 declared in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | CI/CD | Applies - `verify.yml` runs `make verify` verbatim (local/CI parity) with `uv lock --check` as the lockfile-drift check and `uv sync --locked` as the install; workflows are permission-scoped. Branch protection is a GitHub settings action, recorded as open in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | Observability | Applies - Tier C for the CLI and static build (no hosted runtime); the optional `disclosed.ask` service is not deployed, and the prepared deployment shape records the observability it would need (`docs/ROADMAP.md`) |
-| Accessibility | Applies - static WCAG suite in `make verify` (`tests/test_accessibility.py`), including the zero-subresource budget on every generated page; Lighthouse accessibility == 100 on all six page classes (`.github/workflows/accessibility.yml`). Human walkthrough and ACR remain open, recorded honestly in `docs/RESPONSIBLE-TECH-AUDITS.md` |
+| Accessibility | Applies - static WCAG suite in `make verify` (`tests/test_accessibility.py`), including the zero-subresource budget on every generated page (the analytics loader is the one fenced exception, ADR 0011); Lighthouse accessibility == 100 on all six page classes (`.github/workflows/accessibility.yml`). Human walkthrough and ACR remain open, recorded honestly in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | Internationalization | Applies - the seam is built and English is the only language, and the difference is stated rather than blurred (`docs/I18N.md`). Every page string is looked up from a gettext catalog (`src/disclosed/locales/`, no new dependency); a catalog that is incomplete, has leftovers, drops a placeholder or declares an unknown plural rule is refused at load rather than falling back to English. The five classification tokens stay machine keys in the CSV export and are translated only at the presentation layer, enforced against a pseudolocale in `tests/test_i18n.py`. Translations, locale-aware number formatting and the `disclosed.ask` layer's own English remain open, listed in `docs/I18N.md` |
 | AI Evaluation | Applies - as of ADR 0006 an optional runtime Q&A layer (`disclosed.ask`) exists; the grading pipeline and the static site remain deterministic. Evaluation suites (ranking refusal, five-way fidelity, citation grounding, drift direction, question structuring) are committed under `evals/` with provenance-pinned results; see the ADR for the contract |
 | Documentation | Applies - `CHANGELOG.md`, `CITATION.cff`, `SECURITY.md`, `CONTRIBUTING.md`, ADR log (`docs/adr/`), roadmap and metrics ledger (`docs/ROADMAP.md`) |
 | Quality & Metrics | Applies - metrics ledger with AUTO/REVIEW gates in `docs/ROADMAP.md` |
 | Release & Versioning | N/A - nothing versioned is released; committed data plus a rebuildable static site, no downstream consumers (`docs/adr/0001-no-versioned-release.md`) |
-| Performance | Applies - every line of `lighthouse-budget.json` is enforced by something named. Zero non-document subresources **and** the transfer-size budget in `make verify` over one page of every kind and again over all 619 pages of the committed build (`tests/test_accessibility.py`), with the numbers read out of the budget file rather than copied from it; the three timing lines by `.github/scripts/check_lighthouse_timings.py` in the Lighthouse job, gated only after the runner itself was measured ([ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md), then [ADR 0010](docs/adr/0010-the-timing-budget-becomes-a-gate-after-the-runner-was-measured.md)). A budget line in neither register fails the build. No server-side surface to load-test |
+| Performance | Applies - every line of `lighthouse-budget.json` is enforced by something named. Zero non-document subresources **and** the transfer-size budget in `make verify` over one page of every kind and again over all 620 pages of the committed build (`tests/test_accessibility.py`), with the numbers read out of the budget file rather than copied from it; the three timing lines by `.github/scripts/check_lighthouse_timings.py` in the Lighthouse job, gated only after the runner itself was measured ([ADR 0008](docs/adr/0008-the-budget-file-is-read-where-a-static-checker-can-read-it.md), then [ADR 0010](docs/adr/0010-the-timing-budget-becomes-a-gate-after-the-runner-was-measured.md)). A budget line in neither register fails the build. No server-side surface to load-test |
 | Incident Response | Applies - no incidents to date; postmortems will live in `docs/incidents/` |
 | Data Governance | Applies - public federal datasets only, each payload names its source and coverage in its `scope` block; data inventory in `docs/RESPONSIBLE-TECH-AUDITS.md` |
 | AI Development Measurement | Applies - declared in `docs/ROADMAP.md` metrics ledger |

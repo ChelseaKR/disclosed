@@ -30,6 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
+from . import analytics
 from .disclosure import Disclosure
 from .disputes import SCHEMA_PATH as DISPUTE_SCHEMA_PATH
 from .disputes import Dispute, by_institution
@@ -82,6 +83,9 @@ _OG_CARD_SOURCE: Final[Path] = Path(__file__).resolve().parent / "assets" / "og-
 OG_CARD_NAME: Final[str] = "og-card.png"
 OG_CARD_WIDTH: Final[int] = 1200
 OG_CARD_HEIGHT: Final[int] = 630
+
+#: Where the privacy page is written, when the build has a GA4 measurement ID (ADR 0011).
+PRIVACY_PATH: Final[str] = "privacy"
 
 
 #: Every letter a grade can be, read off the bands that decide them rather than typed here. The
@@ -1485,6 +1489,61 @@ def home_page(
     )
 
 
+#: The footer's analytics opt-out, added to the stylesheet only on a build with a GA4 ID, so a build
+#: without one is byte-for-byte what it was. It changes a setting rather than going anywhere, so
+#: it is a button, drawn like the footer's links in the same two colours; min-height keeps the
+#: target at 24px (WCAG 2.2 SC 2.5.8).
+_ANALYTICS_STYLE: Final[str] = """
+.link-button { font: inherit; color: #0b5cad; background: none; border: 0; padding: 0;
+               min-height: 24px; text-decoration: underline; cursor: pointer; }
+@media (prefers-color-scheme: dark) { .link-button { color: #79b8ff; } }
+"""
+
+
+def privacy_page(measurement_id: str, *, catalog: Catalog = ENGLISH) -> Page:
+    """What a visit sends to Google Analytics, and when it sends nothing (ADR 0011).
+
+    Written only when the build has a measurement ID, so a build without one carries no page that
+    describes analytics it does not run. The cookie name and the opt-out key are read off the
+    same constants the script uses rather than typed into the catalog, so the page cannot name a
+    cookie or a key the script does not.
+    """
+    cookie = "_ga_" + measurement_id.removeprefix("G-")
+    items = "".join(
+        f"<li>{catalog.text(f'privacy.receives.{item}', cookie=html.escape(cookie))}</li>"
+        if item == "cookies"
+        else f"<li>{catalog.text(f'privacy.receives.{item}')}</li>"
+        for item in ("page", "referrer", "device", "events", "cookies")
+    )
+    body = f"""
+<nav aria-label="Breadcrumb"><a href="../">{catalog.text("nav.all_institutions")}</a></nav>
+<h1>{catalog.text("privacy.heading")}</h1>
+<p class="lede">{catalog.text("privacy.lede")}</p>
+
+<h2>{catalog.text("privacy.receives.heading")}</h2>
+<p>{catalog.text("privacy.receives.intro")}</p>
+<ul>{items}</ul>
+<p>{catalog.text("privacy.not_used")}</p>
+<p>{catalog.text("privacy.regions")}</p>
+<p>{catalog.text("privacy.retention")}</p>
+
+<h2>{catalog.text("privacy.not_loaded.heading")}</h2>
+<p>{catalog.text("privacy.not_loaded.body")}</p>
+
+<h2>{catalog.text("privacy.opt_out.heading")}</h2>
+<p>{catalog.text("privacy.opt_out.body", key=html.escape(analytics.OPT_OUT_KEY))}</p>
+
+<h2>{catalog.text("privacy.hosting.heading")}</h2>
+<p>{catalog.text("privacy.hosting.body")}</p>
+"""
+    return Page(
+        path=PRIVACY_PATH,
+        title=catalog.text("privacy.title"),
+        description=catalog.text("privacy.description"),
+        body=body,
+    )
+
+
 _STYLE: Final[str] = """
 :root { color-scheme: light dark; }
 body { font-family: system-ui, -apple-system, sans-serif; max-width: 52rem; margin: 0 auto;
@@ -1567,7 +1626,13 @@ footer { margin-top: 3rem; font-size: .9rem; color: #555; }
 
 
 def _shell(
-    page: Page, *, canonical: str, origin: str, generated: str, catalog: Catalog = ENGLISH
+    page: Page,
+    *,
+    canonical: str,
+    origin: str,
+    generated: str,
+    catalog: Catalog = ENGLISH,
+    ga4_id: str | None = None,
 ) -> str:
     """One page, including what a search result and a link preview will say about it.
 
@@ -1599,12 +1664,26 @@ def _shell(
         generated=html.escape(generated),
         methodology=f"{root}methodology/",
     )
+    # Google Analytics 4 (ADR 0011): the guarded loader in the head, and in the footer the
+    # sentence that says so, the link to the privacy page and the opt-out control the loader
+    # reveals. All three or none: without an ID the page is byte-for-byte what it was.
+    head_analytics = ""
+    footer_analytics = ""
+    if ga4_id is not None:
+        head_analytics = analytics.loader(ga4_id, catalog)
+        footer_analytics = (
+            f"<p>{catalog.text('shell.footer.analytics', privacy=f'{root}{PRIVACY_PATH}/')}"
+            '\n<span id="analytics-choice" hidden> \u00b7 '
+            '<button type="button" id="analytics-opt-out" class="link-button" hidden>'
+            f"{catalog.text('analytics.opt_out')}</button> "
+            '<span id="analytics-status" role="status"></span></span></p>\n'
+        )
     return f"""<!DOCTYPE html>
 <html lang="{catalog.html_lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{catalog.text("shell.title", title=html.escape(page.title))}</title>
+{head_analytics}<title>{catalog.text("shell.title", title=html.escape(page.title))}</title>
 <meta name="description" content="{html.escape(page.description)}">
 <link rel="canonical" href="{html.escape(canonical)}">
 <meta property="og:title" content="{html.escape(page.title)}">
@@ -1623,7 +1702,7 @@ def _shell(
 <meta name="twitter:description" content="{html.escape(page.description)}">
 <meta name="twitter:image" content="{card}">
 <meta name="twitter:image:alt" content="{alt}">
-<style>{_STYLE}</style>
+<style>{_STYLE}{_ANALYTICS_STYLE if ga4_id is not None else ""}</style>
 {page.head}</head>
 <body>
 <a class="skip" href="#content">{catalog.text("shell.skip_link")}</a>
@@ -1633,7 +1712,7 @@ def _shell(
 <footer>
 <p>{footer_generated}</p>
 <p>{catalog.text("shell.footer.source", source=html.escape(SOURCE_URL))}</p>
-</footer>
+{footer_analytics}</footer>
 </body>
 </html>
 """
@@ -1647,6 +1726,7 @@ def _corpus_pages(
     histories: Sequence[SnapshotSeries],
     dataset_jsonld: dict[str, Any] | None,
     catalog: Catalog,
+    ga4_id: str | None = None,
 ) -> list[Page]:
     """The pages that describe a corpus as a whole, rather than one institution or state.
 
@@ -1670,6 +1750,8 @@ def _corpus_pages(
     if national is not None:
         pages.append(national_page(national, catalog=catalog))
     pages.extend(history_page(series, catalog=catalog) for series in histories)
+    if ga4_id is not None:
+        pages.append(privacy_page(ga4_id, catalog=catalog))
     return pages
 
 
@@ -1766,6 +1848,7 @@ def build(
     histories: Sequence[SnapshotSeries] = (),
     package: dict[str, Any] | None = None,
     disputes: Sequence[Dispute] = (),
+    ga4_id: str | None = None,
 ) -> list[Page]:
     """Render the whole site from a graded report.
 
@@ -1786,7 +1869,8 @@ def build(
             assertion" default as ``national``.
         ask_endpoint: The URL of a running ``disclosed.ask`` service, or ``None``. With it,
             every institution page carries the opt-in question form and one inline script;
-            without it the build is byte-for-byte what it was, with no script anywhere.
+            without it the build is byte-for-byte what it was, with no question form and no
+            script of its own.
         locale: Which message catalog the pages are rendered from. Only catalogs that exist and
             are complete can be named; :func:`disclosed.messages.load` refuses the rest rather
             than filling the gaps with English, so a locale either renders a whole site or none
@@ -1807,6 +1891,12 @@ def build(
             one, which is the same "absence over assertion" default as ``national``: a build that
             was never shown the snapshots must not render a heading implying it looked and found
             nothing. Without them the build is byte-for-byte what it was.
+        ga4_id: A GA4 measurement ID, or ``None``. With it, every page carries the guarded
+            analytics loader in its head and the opt-out control in its footer, and a privacy
+            page is written (ADR 0011); the loader sends nothing anywhere but the published
+            address. Without it the build is byte-for-byte what it was, with no script, no
+            privacy page and no analytics sentence. ``disclosed site`` passes
+            :data:`disclosed.analytics.GA4_MEASUREMENT_ID` unless told otherwise.
 
     Returns:
         Every page written, in the order written. Callers use it to assert page counts without
@@ -1814,8 +1904,10 @@ def build(
 
     Raises:
         CatalogError: If ``locale`` names no catalog, or one that is incomplete.
+        ValueError: If ``ga4_id`` is not a well-formed GA4 measurement ID.
     """
     catalog = load(locale)
+    ga4_id = analytics.measurement_id_or_none(ga4_id)
     grades: list[dict[str, Any]] = list(report.get("grades", []))
     findings_by_id: dict[str, list[dict[str, Any]]] = {}
     for finding in report.get("implausible", []):
@@ -1833,6 +1925,7 @@ def build(
         histories=histories,
         dataset_jsonld=dataset_jsonld,
         catalog=catalog,
+        ga4_id=ga4_id,
     )
 
     by_state: dict[str, list[dict[str, Any]]] = {}
@@ -1869,6 +1962,7 @@ def build(
                 origin=origin,
                 generated=generated,
                 catalog=catalog,
+                ga4_id=ga4_id,
             ),
             encoding="utf-8",
         )

@@ -252,9 +252,21 @@ class TestTheSiteCommand:
         )
         assert all("ask-form" in p.read_text("utf-8") for p in _institution_pages(out))
         plain = tmp_path / "plain"
+        # Without the analytics loader too (`--ga4-id ""`, ADR 0011), so "no script" here still
+        # means what it meant: without --ask-endpoint the form brings no script of its own.
         assert (
             main(
-                ["site", "--report", str(report), "--out", str(plain), "--generated", "2026-08-05"]
+                [
+                    "site",
+                    "--report",
+                    str(report),
+                    "--out",
+                    str(plain),
+                    "--generated",
+                    "2026-08-05",
+                    "--ga4-id",
+                    "",
+                ]
             )
             == 0
         )

@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from . import (
+    analytics,
     crosswalk,
     dataset,
     disputes,
@@ -1194,6 +1195,7 @@ def _cmd_site(args: argparse.Namespace) -> int:
             histories=histories,
             package=package_payload,
             disputes=filed,
+            ga4_id=args.ga4_id,
         )
     except site.ReceiptMismatch as exc:
         # The report and the receipt source disagree about a classification, so the page and the
@@ -1203,6 +1205,18 @@ def _cmd_site(args: argparse.Namespace) -> int:
         return 1
     print(f"built {len(pages)} pages -> {out}")
     return 0
+
+
+def _ga4_id(value: str) -> str | None:
+    """``--ga4-id``, refused at parse time when it is malformed and ``None`` when it is empty.
+
+    Refused before anything is read or written: a tag for an ID GA would not accept records
+    nothing, and a site carrying it would describe analytics that never happen.
+    """
+    try:
+        return analytics.measurement_id_or_none(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
 
 
 def _cmd_corpus(args: argparse.Namespace) -> int:
@@ -1561,7 +1575,18 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help=(
             "URL of a running disclosed.ask service. With it, institution pages carry the opt-in "
-            "question form and one inline script; without it the site has no script at all"
+            "question form and one inline script; without it no page carries the form or its script"
+        ),
+    )
+    p_site.add_argument(
+        "--ga4-id",
+        type=_ga4_id,
+        default=analytics.GA4_MEASUREMENT_ID,
+        help=(
+            "Google Analytics 4 measurement ID (ADR 0011). Defaults to the committed one, which "
+            "is what pages.yml publishes; its loader sends nothing anywhere but the published "
+            "address. Pass an empty string for a build with no analytics, no script and no "
+            "privacy page"
         ),
     )
     p_site.add_argument(
