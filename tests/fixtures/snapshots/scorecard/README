@@ -1,0 +1,4 @@
+# Dated snapshots of the College Scorecard run land here, one per day, written by the
+# daily-snapshot workflow. Kept apart from data/snapshots/ipeds/ because the two are different
+# populations with different field sets, and a drift comparison across them is a category error
+# rather than a finding.

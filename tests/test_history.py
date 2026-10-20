@@ -27,7 +27,8 @@ from disclosed.drift import Snapshot, compare
 from disclosed.fields import FIELDS
 
 _ROOT = Path(__file__).resolve().parent.parent
-_SNAPSHOTS = _ROOT / "data" / "snapshots"
+# Frozen copy, not the live data/snapshots: see FIXTURE_SNAPSHOTS in conftest.py.
+_SNAPSHOTS = _ROOT / "tests" / "fixtures" / "snapshots"
 
 _REPORT: dict[str, Any] = {
     "scope": {
