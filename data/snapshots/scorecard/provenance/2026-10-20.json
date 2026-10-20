@@ -1,10 +1,10 @@
 {
   "calls": 63,
   "capture_bytes": 2612830,
-  "capture_sha256": "616b61df4f7c755d100e3017a8e1de563d8c1d2605a0f3fe39b14a109fcaff40",
+  "capture_sha256": "bade0cb1d42ddafc01214cbe84579a331065b7906b6a1ac5a2af1cf72dd36ad9",
   "demo_key": false,
   "exhausted": true,
-  "finished_at": "2026-10-20T04:01:57Z",
+  "finished_at": "2026-10-20T09:51:04Z",
   "pages": [
     {
       "bytes": 40273,
@@ -390,5 +390,5 @@
   "records": 6278,
   "total_stated": 6278,
   "url_template": "https://api.data.gov/ed/collegescorecard/v1/schools?api_key=REDACTED&per_page=100&page=N&fields=id%2Cschool.name%2Cschool.state%2Cschool.ownership%2Cschool.degrees_awarded.predominant%2Clatest.earnings.10_yrs_after_entry.median%2Clatest.completion.completion_rate_4yr_150nt%2Clatest.admissions.admission_rate.overall%2Clatest.aid.median_debt.completers.overall%2Clatest.cost.tuition.in_state%2Clatest.student.size",
-  "walked_at": "2026-10-20T04:00:16Z"
+  "walked_at": "2026-10-20T09:49:26Z"
 }
