@@ -1170,6 +1170,17 @@
       "name": "snapshot-scorecard-2026-10-30",
       "path": "data/snapshots/scorecard/2026-10-30.json",
       "title": "Per-field disclosure counts, scorecard, 2026-10-30"
+    },
+    {
+      "bytes": 806,
+      "description": "One run reduced to per-field counts: how many institutions each field reached, how many reported it, and how many did not. The denominator is recorded rather than derived, because it moves for its own reasons and a rate computed against a remembered one is a rate about a different population.",
+      "encoding": "utf-8",
+      "format": "json",
+      "hash": "sha256:316550cf71af84ee64c6e8738eb902ebc4d4ee9cf875239cf7a7c490a97b8f5a",
+      "mediatype": "application/json",
+      "name": "snapshot-scorecard-2026-10-31",
+      "path": "data/snapshots/scorecard/2026-10-31.json",
+      "title": "Per-field disclosure counts, scorecard, 2026-10-31"
     }
   ],
   "sources": [
