@@ -454,16 +454,18 @@ def methodology_page() -> Page:
                 "Graded on whether an address was published, not on what is behind it; no page "
                 "is ever fetched."
             )
-            if field.applies_when is not None:
-                terms += (
-                    " Institutions the requirement does not reach leave the denominator entirely "
-                    "rather than being marked down."
-                )
         else:
             zero = "a credible measurement" if field.zero_is_credible else "treated as an artifact"
             terms = (
                 f"Credible range: {_bound(field.credible_min, upper=False)} to "
                 f"{_bound(field.credible_max, upper=True)}. An exact zero is {zero}."
+            )
+        # Stated for every field that has a rule, numeric or not. The admission rate acquired one
+        # (#36) and a reader of its bounds is entitled to the same sentence the URL fields carry.
+        if field.applies_when is not None:
+            terms += (
+                " Institutions the requirement does not reach leave the denominator entirely "
+                "rather than being marked down."
             )
         return (
             f'<section id="{field.anchor}">'

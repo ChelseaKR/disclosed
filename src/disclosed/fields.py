@@ -19,6 +19,7 @@ from typing import Final
 from .disclosure import Disclosure, classify
 
 __all__ = [
+    "APPLICABILITY_FIELDS",
     "FIELDS",
     "IPEDS_FIELDS",
     "IPEDS_SENTINELS",
@@ -126,6 +127,43 @@ class Field:
         )
 
 
+def _code(record: Mapping[str, object], key: str) -> str:
+    return str(record.get(key, "")).strip()
+
+
+# The College Scorecard's ``school.open_admissions_policy`` (``OPENADMP`` in its data dictionary,
+# sourced from IPEDS): 1 is an open admissions policy, 2 is not, and 3 is an institution that
+# does not enroll first-time students. Both values that end the question are listed here by the
+# dictionary's own labels so the rule below reads as the dictionary does.
+_OPEN_ADMISSIONS: Final[str] = "1"
+_NO_FIRST_TIME_STUDENTS: Final[str] = "3"
+
+
+def _reports_an_admission_rate(record: Mapping[str, object]) -> bool:
+    """Whether the College Scorecard expects an admission rate of this institution at all.
+
+    The Scorecard's own glossary says, under "Acceptance Rate": *Institutions that have an open
+    admissions policy do not report on their acceptance rate.* The API then returns ``null`` for
+    them, which is indistinguishable on the wire from an institution that was asked and did not
+    answer. Without this rule every open-admissions college was graded ``missing``, the one state
+    that counts against a publisher, for not publishing a figure the source says it does not
+    collect from them; the first headline this project published counted them (#36), and the
+    census page now states how many there were. The rate is also defined over first-time students,
+    so an institution the dictionary marks as enrolling none (value 3) has no rate to report
+    either; it is excluded for the same reason, and the two counts are stated separately on the
+    census page so neither hides inside the other.
+
+    A flag that is absent or null is read as *the rate applies*. An institution that did not say
+    whether its door is open has not said it is, and excusing one absence with another is the
+    error this rule exists to stop, not a second instance of it to add. It also means a capture
+    taken before the flag was fetched grades exactly as it did, rather than quietly better.
+    """
+    return _code(record, "school.open_admissions_policy") not in (
+        _OPEN_ADMISSIONS,
+        _NO_FIRST_TIME_STUDENTS,
+    )
+
+
 # Ordered roughly by how much a prospective student loses when the field is absent.
 FIELDS: Final[tuple[Field, ...]] = (
     Field(
@@ -162,12 +200,18 @@ FIELDS: Final[tuple[Field, ...]] = (
         credible_min=0.0,
         credible_max=1.0,
         zero_is_credible=False,
+        applies_when=_reports_an_admission_rate,
         rationale=(
             "Same proportion bounds as completion. An exact zero would mean the institution "
-            "admitted no applicant at all, which is an artifact rather than a policy. Note that "
-            "open-enrollment institutions legitimately have no admission rate; those are expected "
-            "to arrive as an explicit not-applicable rather than as a zero, and are excluded from "
-            "the denominator when they do."
+            "admitted no applicant at all, which is an artifact rather than a policy. The "
+            "Scorecard's glossary states that institutions with an open admissions policy do "
+            "not report an acceptance rate, and the API sends null for them rather than an "
+            "explicit not-applicable, so applicability is read from the Scorecard's own "
+            "school.open_admissions_policy flag, fetched beside the graded fields: an "
+            "institution that says its admissions are open (1), or that it enrolls no first-time "
+            "students (3, and the rate is defined over first-time students), has no rate to "
+            "publish and leaves the denominator. An institution whose flag is absent is graded "
+            "as though the rate applies, because one absence is not allowed to excuse another."
         ),
     ),
     Field(
@@ -216,11 +260,17 @@ IDENTITY_FIELDS: Final[tuple[str, ...]] = (
     "school.degrees_awarded.predominant",
 )
 
-SCORECARD_API_FIELDS: Final[tuple[str, ...]] = IDENTITY_FIELDS + tuple(f.key for f in FIELDS)
+# Fields fetched alongside the graded ones because an applicability rule reads them. Never
+# graded and never shown as a value: the open-admissions flag decides whether the admission rate
+# is a question the Scorecard asks of an institution, the way the IPEDS characteristics file
+# decides who owes a net price calculator. Kept apart from the identity fields because a reader
+# of a capture's provenance is entitled to see which fields were fetched to label and which to
+# decide, and a single list would not say.
+APPLICABILITY_FIELDS: Final[tuple[str, ...]] = ("school.open_admissions_policy",)
 
-
-def _code(record: Mapping[str, object], key: str) -> str:
-    return str(record.get(key, "")).strip()
+SCORECARD_API_FIELDS: Final[tuple[str, ...]] = (
+    IDENTITY_FIELDS + APPLICABILITY_FIELDS + tuple(f.key for f in FIELDS)
+)
 
 
 def _is_an_institution(record: Mapping[str, object]) -> bool:

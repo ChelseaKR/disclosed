@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from disclosed.disclosure import Disclosure
 from disclosed.drift import Snapshot, compare, snapshot
-from disclosed.fields import FIELDS
+from disclosed.fields import APPLICABILITY_FIELDS, FIELDS, SCORECARD_API_FIELDS, field_by_label
 from disclosed.grading import grade_institution, summarize
 
 _COMPLETE: dict[str, object] = {
@@ -76,6 +77,87 @@ class TestInstitutionGrade:
         grade = grade_institution(record)
         assert grade.score is None
         assert grade.letter is None
+
+
+class TestOpenAdmissionsLeavesTheDenominator:
+    """The Scorecard's glossary: institutions with an open admissions policy do not report an
+    acceptance rate. The API sends null for them, and until #36 every one was graded ``missing``,
+    the state that counts against a publisher, for a figure the source never collected."""
+
+    _FLAG = "school.open_admissions_policy"
+    _RATE = "latest.admissions.admission_rate.overall"
+
+    def _admission(self, record: dict[str, object]) -> Disclosure:
+        grade = grade_institution(record)
+        return next(r.disclosure for r in grade.results if r.field.label == "Admission rate")
+
+    def test_an_open_admissions_institution_with_no_rate_is_not_applicable_not_missing(
+        self,
+    ) -> None:
+        record = _with(**{self._FLAG: 1, self._RATE: None})
+        assert self._admission(record) is Disclosure.NOT_APPLICABLE
+        # And it costs the institution nothing: the field has left the denominator.
+        assert grade_institution(record).score == 1.0
+        assert grade_institution(record).failures == ()
+
+    def test_an_institution_enrolling_no_first_time_students_has_no_rate_to_publish(
+        self,
+    ) -> None:
+        """Dictionary value 3, "Does not enroll first-time students". The rate is defined over
+        first-time applicants, so there is nothing for such an institution to report."""
+        assert self._admission(_with(**{self._FLAG: 3, self._RATE: None})) is (
+            Disclosure.NOT_APPLICABLE
+        )
+
+    def test_a_selective_institution_with_no_rate_is_still_missing(self) -> None:
+        """Value 2, "No": the rate applies, and not publishing it counts."""
+        assert self._admission(_with(**{self._FLAG: 2, self._RATE: None})) is Disclosure.MISSING
+
+    @pytest.mark.parametrize("flag", [None, "", " ", 0, 4, "yes", True])
+    def test_an_absent_or_unrecognised_flag_does_not_excuse_the_absence_of_the_rate(
+        self, flag: object
+    ) -> None:
+        """One absence must not excuse another. A record that never said whether its door is
+        open has not said that it is, and a capture taken before the flag was fetched has to
+        grade exactly as it did rather than quietly better."""
+        assert self._admission(_with(**{self._FLAG: flag, self._RATE: None})) is (
+            Disclosure.MISSING
+        )
+
+    def test_a_record_without_the_flag_key_at_all_grades_as_before(self) -> None:
+        record = _with(**{self._RATE: None})
+        assert self._FLAG not in record
+        assert self._admission(record) is Disclosure.MISSING
+
+    def test_the_flag_is_read_as_the_dictionary_codes_it_whatever_the_wire_type(self) -> None:
+        """The API sends an integer; a CSV round trip sends ``"1"``. Both are the same answer."""
+        assert self._admission(_with(**{self._FLAG: "1", self._RATE: None})) is (
+            Disclosure.NOT_APPLICABLE
+        )
+
+    def test_an_open_admissions_institution_that_publishes_a_rate_anyway_is_not_graded_on_it(
+        self,
+    ) -> None:
+        """Applicability is decided before the value is read, the same way it is for the IPEDS
+        fields: the question is whether the Scorecard asks, not whether something arrived. A
+        rate that arrives from an open-admissions institution is the Scorecard's "considered
+        100%" convenience, not a measurement, and it must not count as one either way."""
+        assert self._admission(_with(**{self._FLAG: 1, self._RATE: 1.0})) is (
+            Disclosure.NOT_APPLICABLE
+        )
+
+    def test_the_flag_is_fetched_beside_the_graded_fields_and_is_never_one_of_them(
+        self,
+    ) -> None:
+        assert self._FLAG in APPLICABILITY_FIELDS
+        assert self._FLAG in SCORECARD_API_FIELDS
+        assert self._FLAG not in {f.key for f in FIELDS}
+
+    def test_the_rule_is_the_fields_own_and_the_rationale_names_the_flag(self) -> None:
+        field = field_by_label("Admission rate")
+        assert field is not None
+        assert field.applies_when is not None
+        assert self._FLAG in field.rationale
 
 
 class TestIdentityIsNotRenderedAsAValue:
