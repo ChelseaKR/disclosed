@@ -38,6 +38,8 @@ from . import (
     national,
     package,
     peers,
+    reachability,
+    reachability_fetch,
     receipts,
     registry,
     registry_properties,
@@ -46,7 +48,7 @@ from . import (
 )
 from .disclosure import CLASSIFICATIONS
 from .drift import Snapshot, as_payload, compare
-from .fields import ALL_FIELDS, FIELDS, IPEDS_FIELDS
+from .fields import ALL_FIELDS, FIELDS, IPEDS_FIELDS, Field, field_by_key
 from .grading import RULES_VERSION, InstitutionGrade, grade_institution, summarize
 from .peers import peer_context
 from .report_diff import NOT_GRADEABLE, InstitutionChange, ReportDiff, compare_reports
@@ -1015,6 +1017,147 @@ def _cmd_census_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def _reachability_fields(named: str) -> tuple[Field, ...]:
+    """The graded fields a capture was asked to visit, refusing any that is not a URL column.
+
+    Refused rather than skipped. A run told to check reachability of median earnings has been
+    misconfigured, and quietly visiting nothing would produce a capture that looks like a clean
+    result for a field nobody checked -- the absence rendered as a value, in the shape of an
+    empty bucket.
+    """
+    wanted = [name.strip() for name in named.split(",") if name.strip()]
+    chosen: list[Field] = []
+    for name in wanted:
+        field = field_by_key(name)
+        if not field.text_is_a_value:
+            raise KeyError(name)
+        chosen.append(field)
+    return tuple(chosen)
+
+
+def _cmd_reachability_capture(args: argparse.Namespace) -> int:
+    """Visit the addresses the federal record publishes, and write down what happened.
+
+    The one command in this project that touches the live web, and the only one that cannot be
+    replayed: ``docs/adr/0011`` records why it exists and what it is not allowed to claim. It
+    writes a dated capture and nothing else -- the reduction to published figures is
+    ``reachability-report``, offline, from the committed capture, so that the numbers the site
+    prints are regenerable by a reader who never opens a socket.
+    """
+    try:
+        fields = _reachability_fields(args.fields)
+    except KeyError as exc:
+        print(f"not a published-address field: {exc}", file=sys.stderr)
+        return 1
+    try:
+        directory = ipeds.load_institutions(
+            year=args.year,
+            cache=Path(args.cache) if args.cache else None,
+            characteristics_cache=Path(args.characteristics) if args.characteristics else None,
+        )
+    except ipeds.IpedsError as exc:
+        print(f"IPEDS unreadable, nothing written: {exc}", file=sys.stderr)
+        return 1
+
+    records = _reachability_cohort(directory, args.cohort_source)
+    targets = reachability_fetch.targets_from_records(records, fields=fields)
+    if args.limit:
+        targets = targets[: args.limit]
+    budget = reachability_fetch.Budget(requests=args.budget)
+    session = reachability_fetch.Session(budget=budget)
+    print(
+        f"{len(targets)} published addresses to visit, budget {args.budget} requests, "
+        f"{reachability_fetch.PER_HOST_INTERVAL}s per host, "
+        f"{reachability_fetch.MAX_BODY_BYTES:,} bytes read per response"
+    )
+
+    def progress(index: int, observation: reachability.Observation) -> None:
+        if index % 25 == 0 or index == len(targets):
+            print(f"  {index}/{len(targets)}  {budget.spent} requests spent", file=sys.stderr)
+
+    seen = reachability_fetch.capture(targets, session=session, on_progress=progress)
+    payload = {
+        "capture_format_version": reachability.CAPTURE_FORMAT_VERSION,
+        "captured_on": args.captured_on,
+        "cohort": args.cohort,
+        "politeness": {
+            "agent_token": reachability_fetch.AGENT_TOKEN,
+            "user_agent": reachability_fetch.USER_AGENT,
+            "attempts_before_a_negative_verdict": reachability_fetch.ATTEMPTS,
+            "seconds_between_requests_to_one_host": reachability_fetch.PER_HOST_INTERVAL,
+            "bytes_read_per_response": reachability_fetch.MAX_BODY_BYTES,
+            "robots_txt": "obeyed; unreadable robots.txt treated as fully disallowed",
+            "request_budget": budget.requests,
+            "requests_spent": budget.spent,
+        },
+        "observations": [observation.as_dict() for observation in seen],
+    }
+    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+    Path(args.out).write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    counts: dict[str, int] = {}
+    for observation in seen:
+        word = reachability.classify(observation).value
+        counts[word] = counts.get(word, 0) + 1
+    print(f"visited {len(seen)} addresses in {budget.spent} requests -> {args.out}")
+    for word in sorted(counts):
+        print(f"  {word:16} {counts[word]:>5}")
+    return 0
+
+
+def _reachability_cohort(
+    directory: list[dict[str, Any]], source: str | None
+) -> list[dict[str, Any]]:
+    """Narrow the directory to the institutions a capture was asked to cover.
+
+    ``None`` means the whole population. A path means the unit ids in that College Scorecard
+    capture, which is how a run is held to a cohort that is itself committed: the capture file
+    names the cohort in words and the reader can reproduce the set from the file it names.
+    """
+    if not source:
+        return directory
+    raw = json.loads(Path(source).read_text(encoding="utf-8"))
+    records, _ = college_scorecard.read_capture(raw)
+    wanted = {str(record.get("id") or "").strip() for record in records}
+    return [row for row in directory if str(row.get("id") or "").strip() in wanted]
+
+
+def _cmd_reachability_report(args: argparse.Namespace) -> int:
+    """Reduce a committed capture to the two numbers the site is allowed to print.
+
+    Offline and keyless, the same contract ``national`` and ``census-report`` hold. The
+    denominator comes from the graded artifact rather than from the capture, so that a capture
+    covering a cohort cannot shrink the population it is measured against.
+    """
+    capture = json.loads(Path(args.capture).read_text(encoding="utf-8"))
+    graded = json.loads(Path(args.national).read_text(encoding="utf-8"))
+    published = {
+        str(row.get("key")): int(row.get("reported", 0))
+        for row in graded.get("fields", [])
+        if isinstance(row, dict)
+    }
+    payload = reachability.build_report(
+        capture,
+        published=published,
+        labels={field.key: field.label for field in IPEDS_FIELDS},
+        statutes={field.key: field.statute for field in IPEDS_FIELDS},
+    )
+    Path(args.out).write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    print(f"reachability as of {payload['captured_on']} -> {args.out}")
+    print(
+        f"  {payload['verified_retrievable_total']:,} of {payload['published_total']:,} "
+        f"published addresses verified retrievable "
+        f"({payload['attempted_total']:,} attempted)"
+    )
+    for row in payload["fields"]:
+        share = row["share_verified"]
+        rendered = "no published addresses" if share is None else f"{share:.1%} verified"
+        print(
+            f"  {row['label']:34} {row['verified_retrievable']:>5} of {row['published']:>5} "
+            f"published, {rendered}"
+        )
+    return 0
+
+
 def _receipt_source(path_text: str) -> receipts.ReceiptSource | None:
     """Read a Scorecard source file into the records receipts are issued from.
 
@@ -1179,6 +1322,11 @@ def _cmd_site(args: argparse.Namespace) -> int:
     package_payload = (
         json.loads(Path(args.package).read_text(encoding="utf-8")) if args.package else None
     )
+    reachability_payload = (
+        json.loads(Path(args.reachability).read_text(encoding="utf-8"))
+        if args.reachability
+        else None
+    )
     out = Path(args.out)
     try:
         pages = site.build(
@@ -1194,6 +1342,7 @@ def _cmd_site(args: argparse.Namespace) -> int:
             histories=histories,
             package=package_payload,
             disputes=filed,
+            reachability=reachability_payload,
         )
     except site.ReceiptMismatch as exc:
         # The report and the receipt source disagree about a classification, so the page and the
@@ -1538,6 +1687,47 @@ def main(argv: list[str] | None = None) -> int:
     p_census.add_argument("--out", default="data/scorecard-census.json")
     p_census.set_defaults(func=_cmd_census_report)
 
+    p_reach = sub.add_parser(
+        "reachability-capture",
+        help="visit the addresses the federal record publishes and record what happened",
+    )
+    p_reach.add_argument("--year", type=int, default=ipeds.DEFAULT_YEAR)
+    p_reach.add_argument("--cache", default="data/HD2023.zip")
+    p_reach.add_argument("--characteristics", default="data/IC2023.zip")
+    p_reach.add_argument(
+        "--fields",
+        default="ipeds.NPRICURL,ipeds.ATHURL",
+        help="comma-separated published-address fields to visit",
+    )
+    p_reach.add_argument(
+        "--cohort-source",
+        default=None,
+        help="a College Scorecard capture whose unit ids define the cohort; omit for everybody",
+    )
+    p_reach.add_argument(
+        "--cohort", required=True, help="the cohort in words, written into the capture"
+    )
+    p_reach.add_argument("--captured-on", required=True, help="the date of the capture, ISO 8601")
+    p_reach.add_argument(
+        "--budget", type=int, default=2000, help="hard ceiling on requests, robots probes included"
+    )
+    p_reach.add_argument("--limit", type=int, default=None)
+    p_reach.add_argument("--out", required=True)
+    p_reach.set_defaults(func=_cmd_reachability_capture)
+
+    p_reach_report = sub.add_parser(
+        "reachability-report",
+        help="reduce a committed reachability capture to verified-against-published counts",
+    )
+    p_reach_report.add_argument("--capture", required=True)
+    p_reach_report.add_argument(
+        "--national",
+        default="data/national.json",
+        help="the graded artifact the published denominator is read from",
+    )
+    p_reach_report.add_argument("--out", default="data/reachability-report.json")
+    p_reach_report.set_defaults(func=_cmd_reachability_report)
+
     p_site = sub.add_parser("site", help="render a report as static HTML")
     p_site.add_argument("--report", default="data/report.json")
     p_site.add_argument(
@@ -1625,6 +1815,14 @@ def main(argv: list[str] | None = None) -> int:
         help=(
             "run identifier shown in the footer, typically a date. Taken from the caller rather "
             "than the clock so that rebuilding the same report is byte-identical"
+        ),
+    )
+    p_site.add_argument(
+        "--reachability",
+        default=None,
+        help=(
+            "a reachability report from `reachability-report`; without it the site makes no "
+            "claim about a live page anywhere"
         ),
     )
     p_site.set_defaults(func=_cmd_site)

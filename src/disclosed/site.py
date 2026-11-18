@@ -42,6 +42,7 @@ from .messages import SOURCE_LOCALE, Catalog, load
 from .package import DATASET_JSONLD_NAME, to_jsonld
 from .package import dumps as package_dumps
 from .peers import MIN_PEERS, PeerDisclosure
+from .reachability import REACHABILITIES
 from .receipts import ReceiptSource
 from .receipts import dumps as dump_receipt
 from .rules import SCHEMA_PATH
@@ -55,6 +56,7 @@ __all__ = [
     "history_page",
     "history_path",
     "peer_panels",
+    "reachability_by_institution",
     "slug",
 ]
 
@@ -366,6 +368,7 @@ def institution_page(
     receipt: Mapping[str, Any] | None = None,
     peer_disclosure: Mapping[str, PeerDisclosure] | None = None,
     disputes: Sequence[Dispute] = (),
+    reachability: Sequence[Mapping[str, Any]] = (),
 ) -> Page:
     """One institution: its grade, every field's disclosure state, and any implausible values.
 
@@ -385,6 +388,12 @@ def institution_page(
     verbatim. Without any it carries nothing rather than an empty heading, because a "Disputed"
     section reading "none" would invite the reading that the institution was asked and declined,
     and nobody asked.
+
+    With ``reachability`` it carries what happened when the addresses in this institution's own
+    record were requested, every verdict beside the day it was taken. Without any it carries
+    nothing rather than an empty section: an institution outside the capture's cohort has not
+    been shown to have working pages or broken ones, and a section reading "none" would be read
+    as the second.
     """
     name = _name_of(row, catalog)
     letter = row.get("letter")
@@ -482,6 +491,7 @@ def institution_page(
         else ""
     )
     disputed = _dispute_block(disputes, catalog)
+    reachability_block = _reachability_block(reachability, catalog)
     receipt_block = _receipt_block(receipt, row, catalog) if receipt is not None else ""
     body = f"""
 <nav aria-label="Breadcrumb"><a href="../../">{catalog.text("nav.all_institutions")}</a> \
@@ -504,7 +514,7 @@ def institution_page(
 </table>{peer_note}
 {findings_html}
 <p class="caveat">{catalog.text("institution.caveat", methodology="../../methodology/")}</p>
-{disputed}{receipt_block}
+{reachability_block}{disputed}{receipt_block}
 {_ask_widget(str(row.get("unit_id")), ask_endpoint, catalog) if ask_endpoint else ""}
 """
     # The name alone does not identify an institution, and this project of all
@@ -613,6 +623,52 @@ _ASK_SCRIPT: Final[str] = """(function () {
     });
   });
 })();"""
+
+
+def _reachability_block(verdicts: Sequence[Mapping[str, Any]], catalog: Catalog = ENGLISH) -> str:
+    """What happened when this institution's published addresses were requested, and when.
+
+    Every row carries its own capture date, read out of the artifact rather than out of a
+    variable held once at the top of the page. A link check is true on the day it ran and a
+    verdict rendered without its date is a claim about the past printed as the present, so the
+    date travels with the verdict all the way from the capture to the cell.
+
+    A word this renderer does not recognise is said to be unrecognised rather than dropped, for
+    the reason an unknown classification is: a page built from a newer artifact than the code
+    reading it must not silently render a verdict as a blank.
+    """
+    if not verdicts:
+        return ""
+    rows = []
+    for verdict in sorted(verdicts, key=lambda v: str(v.get("label", ""))):
+        word = str(verdict.get("verdict", ""))
+        known = word in REACHABILITIES
+        meaning = (
+            catalog.text(f"reachability.{word}.meaning")
+            if known
+            else catalog.text("reachability.unrecognized", verdict=html.escape(word))
+        )
+        title = catalog.text(f"reachability.{word}.label") if known else html.escape(word)
+        label = str(verdict.get("label", ""))
+        rows.append(
+            f'<tr><th scope="row">{_rationale_link(label, label, depth=2)}</th>'
+            f'<td><span class="tag tag-reach-{html.escape(word)}">{title}</span></td>'
+            f"<td>{html.escape(str(verdict.get('captured_on', '')))}</td>"
+            f"<td>{meaning}</td></tr>"
+        )
+    return f"""
+<h2>{catalog.text("reachability.heading")}</h2>
+<p>{catalog.text("reachability.intro")}</p>
+<table>
+<caption>{catalog.text("reachability.table.caption")}</caption>
+<thead><tr><th scope="col">{catalog.text("institution.table.field")}</th>\
+<th scope="col">{catalog.text("reachability.table.verdict")}</th>
+<th scope="col">{catalog.text("reachability.table.captured_on")}</th>\
+<th scope="col">{catalog.text("institution.table.meaning")}</th></tr></thead>
+<tbody>{"".join(rows)}</tbody>
+</table>
+<p class="caveat">{catalog.text("reachability.caveat")}</p>
+"""
 
 
 def _ask_widget(unit_id: str, endpoint: str, catalog: Catalog = ENGLISH) -> str:
@@ -882,7 +938,65 @@ def _share(numerator: int, denominator: int, catalog: Catalog = ENGLISH) -> str:
     return f"{numerator / denominator:.0%}"
 
 
-def national_page(payload: dict[str, Any], *, catalog: Catalog = ENGLISH) -> Page:
+def _reachability_section(report: dict[str, Any] | None, catalog: Catalog = ENGLISH) -> str:
+    """The two numbers, side by side, or nothing at all.
+
+    ``published`` is how many institutions the federal record gives an address for.
+    ``verified_retrievable`` is how many of those addresses served a document on the capture
+    date. They are different claims about different things and the table prints both in every
+    row, because a page that printed only the first has said the record carries an address and
+    let the reader hear that the disclosure is there.
+
+    Everything between the two is unverified, and the row says so with the count it attempted
+    rather than by leaving the gap to be inferred. A reader who sees 312 verified out of 5,501
+    published should be able to tell at a glance that the other 5,189 were not checked rather
+    than checked and found wanting.
+    """
+    if report is None:
+        return ""
+    rows = []
+    for field in report.get("fields", []):
+        share = field.get("share_verified")
+        rendered = (
+            catalog.text("reachability.no_published_addresses")
+            if share is None
+            else f"{float(share):.1%}"
+        )
+        label = str(field.get("label", ""))
+        rows.append(
+            f'<tr><th scope="row">{_rationale_link(label, label, depth=1)}</th>'
+            f"<td>{int(field.get('published', 0)):,}</td>"
+            f"<td>{int(field.get('attempted', 0)):,}</td>"
+            f"<td>{int(field.get('verified_retrievable', 0)):,}</td>"
+            f"<td>{rendered}</td></tr>"
+        )
+    if not rows:
+        return ""
+    captured_on = html.escape(str(report.get("captured_on", "")))
+    cohort = html.escape(str(report.get("cohort", "")))
+    return f"""
+<h2>{catalog.text("reachability.national.heading")}</h2>
+<p>{catalog.text("reachability.national.intro", captured_on=captured_on)}</p>
+<table>
+<caption>{catalog.text("reachability.national.caption", captured_on=captured_on)}</caption>
+<thead><tr><th scope="col">{catalog.text("national.table.disclosure")}</th>\
+<th scope="col">{catalog.text("reachability.table.published")}</th>
+<th scope="col">{catalog.text("reachability.table.attempted")}</th>\
+<th scope="col">{catalog.text("reachability.table.verified")}</th>
+<th scope="col">{catalog.text("reachability.table.share")}</th></tr></thead>
+<tbody>{"".join(rows)}</tbody>
+</table>
+<p>{catalog.text("reachability.national.cohort", cohort=cohort)}</p>
+<p class="caveat">{catalog.text("reachability.national.caveat")}</p>
+"""
+
+
+def national_page(
+    payload: dict[str, Any],
+    *,
+    reachability: dict[str, Any] | None = None,
+    catalog: Catalog = ENGLISH,
+) -> Page:
     """The one page whose percentages describe the country rather than a slice of it.
 
     Kept as its own page rather than merged into the home page, because the two rest on different
@@ -893,6 +1007,14 @@ def national_page(payload: dict[str, Any], *, catalog: Catalog = ENGLISH) -> Pag
 
     The scope sentence and the statute names are the artifact's own words and stay in whatever
     language the run recorded them in. Translating a citation of a statute would be inventing one.
+
+    With ``reachability`` the page also states, for every address column, how many of the
+    published addresses were verified retrievable and on what day. Two numbers rather than one,
+    always: a populated address cell is a report about a disclosure and a retrieved page is the
+    disclosure, and this page is where the difference between them either shows or disappears.
+    Without the artifact the section is absent and the page says nothing about live pages at all,
+    which is the honest default -- an unmeasured share printed as anything would be the substitution
+    the section exists to name.
     """
     scope = scope_from_payload(payload)
     fields: list[dict[str, Any]] = list(payload.get("fields", []))
@@ -979,6 +1101,7 @@ def national_page(payload: dict[str, Any], *, catalog: Catalog = ENGLISH) -> Pag
 
 <h2>{catalog.text("national.named_findings.heading")}</h2>
 {named}
+{_reachability_section(reachability, catalog)}
 
 <p class="caveat">{catalog.text("national.caveat", methodology="../methodology/")}</p>
 """
@@ -1518,6 +1641,13 @@ h2 { margin-top: 2rem; }
 .tag-reported { color: #14691f; } .tag-implausible { color: #96110f; }
 .tag-missing { color: #a8421f; } .tag-suppressed { color: #555; }
 .tag-not-applicable { color: #555; }
+/* The reachability axis, deliberately reusing the palette the five states already use rather
+   than introducing a sixth colour: these are not a sixth state and a new colour would say they
+   were. Blue for "answered somewhere else" is the one that is not borrowed from a grade, because
+   a move is a fact about the record and not a failure by anybody. */
+.tag-reach-readable { color: #14691f; } .tag-reach-moved { color: #0b5cad; }
+.tag-reach-gone { color: #96110f; } .tag-reach-indeterminate { color: #a8421f; }
+.tag-reach-unchecked { color: #555; }
 table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
 /* A table that gains a column per run overflows eventually. width:auto is what lets it, since a
    table at width:100% shrinks to the container instead of scrolling inside it. */
@@ -1562,6 +1692,9 @@ footer { margin-top: 3rem; font-size: .9rem; color: #555; }
   .tag-reported { color: #6fbf73; } .tag-implausible { color: #ff8a80; }
   .tag-missing { color: #ffab7a; } .tag-suppressed { color: #bbb; }
   .tag-not-applicable { color: #bbb; }
+  .tag-reach-readable { color: #6fbf73; } .tag-reach-moved { color: #79b8ff; }
+  .tag-reach-gone { color: #ff8a80; } .tag-reach-indeterminate { color: #ffab7a; }
+  .tag-reach-unchecked { color: #bbb; }
 }
 """
 
@@ -1646,6 +1779,7 @@ def _corpus_pages(
     scorecard_census: dict[str, Any] | None,
     histories: Sequence[SnapshotSeries],
     dataset_jsonld: dict[str, Any] | None,
+    reachability: dict[str, Any] | None,
     catalog: Catalog,
 ) -> list[Page]:
     """The pages that describe a corpus as a whole, rather than one institution or state.
@@ -1668,7 +1802,7 @@ def _corpus_pages(
     if scorecard_census is not None:
         pages.append(scorecard_census_page(scorecard_census, catalog=catalog))
     if national is not None:
-        pages.append(national_page(national, catalog=catalog))
+        pages.append(national_page(national, reachability=reachability, catalog=catalog))
     pages.extend(history_page(series, catalog=catalog) for series in histories)
     return pages
 
@@ -1709,6 +1843,32 @@ def peer_panels(report: Mapping[str, Any]) -> dict[str, dict[str, PeerDisclosure
     return panels
 
 
+def reachability_by_institution(
+    report: Mapping[str, Any] | None,
+) -> dict[str, list[dict[str, Any]]]:
+    """The published verdicts, grouped by the institution they were observed for.
+
+    Read out of the committed artifact and never recomputed here, exactly as
+    :func:`peer_panels` reads the peer counts out of the report: the site renders what the
+    published data already says, so a page cannot carry a verdict that no artifact carries.
+
+    A verdict with no unit id is dropped rather than grouped under a placeholder. An observation
+    this project cannot trace to a federal record is not publishable beside an institution's
+    name, and inventing a key for it would put one there.
+    """
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    if report is None:
+        return grouped
+    for verdict in report.get("verdicts", []):
+        if not isinstance(verdict, Mapping):
+            continue
+        unit_id = verdict.get("unit_id")
+        if not isinstance(unit_id, str) or not unit_id:
+            continue
+        grouped.setdefault(unit_id, []).append(dict(verdict))
+    return grouped
+
+
 def _institution_pages(
     grades: list[dict[str, Any]],
     findings_by_id: dict[str, list[dict[str, Any]]],
@@ -1718,6 +1878,7 @@ def _institution_pages(
     receipts: ReceiptSource | None,
     panels: Mapping[str, Mapping[str, PeerDisclosure]],
     disputes_by_id: Mapping[str, Sequence[Dispute]],
+    reachability_by_id: Mapping[str, Sequence[Mapping[str, Any]]],
 ) -> tuple[list[Page], list[tuple[str, dict[str, Any]]]]:
     """One page per institution that can be given a stable URL, and the receipts to write beside.
 
@@ -1747,6 +1908,7 @@ def _institution_pages(
                 receipt=receipt,
                 peer_disclosure=panels.get(unit_id),
                 disputes=disputes_by_id.get(unit_id, ()),
+                reachability=reachability_by_id.get(unit_id, ()),
             )
         )
     return pages, written
@@ -1766,6 +1928,7 @@ def build(
     histories: Sequence[SnapshotSeries] = (),
     package: dict[str, Any] | None = None,
     disputes: Sequence[Dispute] = (),
+    reachability: dict[str, Any] | None = None,
 ) -> list[Page]:
     """Render the whole site from a graded report.
 
@@ -1802,6 +1965,13 @@ def build(
             a finding and never folded into one; a channel that silently changed a grade would be
             a scoring input wearing a comment's clothes, and the institution best at filing
             paperwork would score highest.
+        reachability: A payload as written by ``disclosed reachability-report``, or ``None``.
+            With it the national page states, per address column, how many published addresses
+            were verified retrievable and on what day, and every institution the capture covered
+            carries its own verdicts with the capture date beside each one. Without it no page
+            says anything about a live page and the build is byte-for-byte what it was, which is
+            the right default: this is the project's only dated claim, and a site that made it
+            from no capture would be asserting it.
         histories: The committed snapshot series, as :func:`disclosed.history.load` returns them,
             or empty. Empty means no history page is written and the home page carries no link to
             one, which is the same "absence over assertion" default as ``national``: a build that
@@ -1832,6 +2002,7 @@ def build(
         scorecard_census=scorecard_census,
         histories=histories,
         dataset_jsonld=dataset_jsonld,
+        reachability=reachability,
         catalog=catalog,
     )
 
@@ -1855,6 +2026,7 @@ def build(
         receipts=receipts,
         panels=peer_panels(report),
         disputes_by_id=by_institution(disputes),
+        reachability_by_id=reachability_by_institution(reachability),
     )
     pages.extend(institution_pages)
 

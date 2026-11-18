@@ -3,7 +3,7 @@ PYTHON ?= .venv/bin/python
 .PHONY: verify lint typecheck test fetch grade site dataset crosscheck national census-report \
         snapshot replay census-replay scorecard-snapshot-replay ipeds-snapshots registry-fetch \
         registry-join registry-replay registry-properties registry-property-report \
-        registry-property-replay
+        registry-property-replay reachability-capture reachability-report reachability-replay
 
 verify: lint typecheck test
 
@@ -33,7 +33,7 @@ grade:
 	$(PYTHON) -m disclosed.cli grade --out data/report.json
 
 site:
-	$(PYTHON) -m disclosed.cli site --report data/report.json --national data/national.json --scorecard-census data/scorecard-census.json --receipts-from data/sample.json --snapshots-from data/snapshots --package datapackage.json --disputes-from disputes --out site --generated $(shell date -u +%F)
+	$(PYTHON) -m disclosed.cli site --report data/report.json --national data/national.json --scorecard-census data/scorecard-census.json --receipts-from data/sample.json --snapshots-from data/snapshots --package datapackage.json --disputes-from disputes --reachability data/reachability-report.json --out site --generated $(shell date -u +%F)
 
 dataset:
 	$(PYTHON) -m disclosed.cli dataset --report data/report.json --out data/dataset.csv --disputes-from disputes --package datapackage.json --root .
@@ -120,6 +120,28 @@ registry-property-report:
 registry-property-replay:
 	$(PYTHON) -m disclosed.cli registry-property-report --census data/registry/properties.json --out /tmp/registry-properties.json
 	diff -u data/registry-properties.json /tmp/registry-properties.json && echo "data/registry-properties.json replays exactly"
+
+# The one target in this file that touches a page this project did not publish, and the only one
+# that cannot be replayed. It visits the addresses the federal record declares, obeys robots.txt,
+# makes one request per host at a time with 1.5s between them, reads at most 64 KiB per response,
+# asks a second time before writing down anything other than a document, and stops dead at its
+# request budget. docs/adr/0011 records the decision and the conditions; CAPTURED_ON is required
+# rather than defaulted to today, because the date is part of the claim and a date read off the
+# clock is a date nobody chose.
+reachability-capture:
+	$(PYTHON) -m disclosed.cli reachability-capture --cache data/HD2023.zip --characteristics data/IC2023.zip --cohort-source data/sample.json --cohort "$(COHORT)" --captured-on $(CAPTURED_ON) --budget $(or $(BUDGET),2200) --out data/reachability/$(CAPTURED_ON).json
+
+# Reduce the committed capture to the two numbers the site prints. Offline and keyless, the same
+# contract `national` and `census-report` hold: the denominator comes from the graded national
+# artifact, so a capture that covered a cohort cannot shrink the population it is measured against.
+reachability-report:
+	$(PYTHON) -m disclosed.cli reachability-report --capture data/reachability/$(CAPTURED_ON).json --national data/national.json --out data/reachability-report.json
+
+# Same contract as `replay`. `tests/test_reachability.py::TestTheCommittedCapture` is the pytest
+# form and is what gates `make verify`; this is what you run to see the diff when it fails.
+reachability-replay:
+	$(PYTHON) -m disclosed.cli reachability-report --capture data/reachability/$(CAPTURED_ON).json --national data/national.json --out /tmp/reachability-report.json
+	diff -u data/reachability-report.json /tmp/reachability-report.json && echo "data/reachability-report.json replays exactly"
 
 # The three-year IPEDS history the systemic threshold is argued from. Same contract as `replay`.
 ipeds-snapshots:

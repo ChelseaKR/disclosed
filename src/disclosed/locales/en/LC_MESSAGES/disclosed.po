@@ -1114,3 +1114,112 @@ msgstr ""
 "The <a href=\"{census}\">Scorecard census page</a> asks the same questions of every institution "
 "the College Scorecard publishes, not this sample, and states both frames' composition side by "
 "side."
+
+#. The reachability axis. A separate vocabulary from the five classifications on purpose, with
+#. no word in common: these describe what happened when an address was requested on one day, and
+#. nothing here is ever a mark against an institution. The capture date appears in every message
+#. that carries a verdict, because a link check is true only on the day it ran.
+msgid "reachability.heading"
+msgstr "Do the published addresses answer?"
+
+msgid "reachability.intro"
+msgstr ""
+"The federal record carries an address for each of these disclosures. That is a report about a "
+"disclosure, not the disclosure itself. Here is what happened when the address in this "
+"institution's own record was requested, on the day it was requested. None of it changes a "
+"grade, and none of it is held against the institution."
+
+msgid "reachability.table.caption"
+msgstr "What happened when each published address was requested."
+
+msgid "reachability.table.verdict"
+msgstr "Result"
+
+msgid "reachability.table.captured_on"
+msgstr "Checked on"
+
+msgid "reachability.caveat"
+msgstr ""
+"A result is true on the day beside it and no other day. Nothing here says whether the page "
+"behind an address is a compliant disclosure; that is a judgement this project does not make."
+
+msgid "reachability.unrecognized"
+msgstr ""
+"Result \"{verdict}\" was recorded by a newer version of this project than the one that built "
+"this page, so it is shown as written rather than guessed at."
+
+msgid "reachability.readable.label"
+msgstr "Answered"
+
+msgid "reachability.readable.meaning"
+msgstr "A document came back from the host the record names."
+
+msgid "reachability.moved.label"
+msgstr "Answered elsewhere"
+
+msgid "reachability.moved.meaning"
+msgstr ""
+"A document came back, from a different host than the record names. Reported and not resolved: "
+"whether the institution moved the page or the record is stale is not something a redirect says."
+
+msgid "reachability.gone.label"
+msgstr "Not there"
+
+msgid "reachability.gone.meaning"
+msgstr ""
+"The server said the address holds nothing, and said it on more than one attempt. It does not "
+"follow that the institution has no such disclosure, only that this address does not reach one."
+
+msgid "reachability.unchecked.label"
+msgstr "Not checked"
+
+msgid "reachability.unchecked.meaning"
+msgstr ""
+"Nobody looked, or nobody was allowed to: excluded by the host's robots.txt, refused by the "
+"host, or never reached. This says something about the check, not about the institution."
+
+msgid "reachability.indeterminate.label"
+msgstr "Settles nothing"
+
+msgid "reachability.indeterminate.meaning"
+msgstr ""
+"Something answered and it establishes neither that the address works nor that it is gone: an "
+"error page served with a success code, a server fault, or a redirect that did not end."
+
+msgid "reachability.no_published_addresses"
+msgstr "no published addresses"
+
+msgid "reachability.national.heading"
+msgstr "A published address is not a retrieved page"
+
+msgid "reachability.national.intro"
+msgstr ""
+"The column above counts institutions whose federal record carries an address. This one counts "
+"the addresses that actually served a document when they were requested, on {captured_on}. The "
+"difference between the two numbers is the part nobody checks, and the reason it is printed "
+"beside the first is that the first is routinely read as the second."
+
+msgid "reachability.national.caption"
+msgstr "Published addresses, addresses requested, and addresses that answered, as of {captured_on}."
+
+msgid "reachability.table.published"
+msgstr "Addresses published"
+
+msgid "reachability.table.attempted"
+msgstr "Addresses requested"
+
+msgid "reachability.table.verified"
+msgstr "Verified retrievable"
+
+msgid "reachability.table.share"
+msgstr "Verified share of published"
+
+msgid "reachability.national.cohort"
+msgstr "Requested addresses were drawn from: {cohort}"
+
+msgid "reachability.national.caveat"
+msgstr ""
+"Everything between the addresses requested and the addresses published is unverified, and "
+"unverified is not the same as broken. A result is true on the day of the capture and no other "
+"day, no result here changes a grade, and no institution is marked down because this project "
+"could not reach a page."
