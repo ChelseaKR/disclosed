@@ -26,7 +26,8 @@ jobs:
   snapshot:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # commits data/snapshots/<date>.json
+      contents: write       # pushes the snapshot branch
+      pull-requests: write  # opens and auto-merges the snapshot PR
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -106,6 +107,7 @@ jobs:
       - name: Commit the snapshot
         env:
           TAKEN: ${{ steps.snap.outputs.taken }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           git add data/snapshots/
           if git diff --cached --quiet --exit-code -- data/snapshots/; then
@@ -114,23 +116,66 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "data: per-field disclosure snapshot ${TAKEN} [skip ci]"
-          git push
+          # `master` requires five status checks with strict:true and enforce_admins:true, so a
+          # direct push from this job is rejected outright -- and the old `[skip ci]` marker made
+          # it unsatisfiable in principle, because a commit that suppresses CI can never produce
+          # the checks its own branch protection demands. The snapshot therefore lands the same
+          # way a human's change does: on a branch, through a PR, once the gates it must satisfy
+          # have actually run against it.
+          branch="snapshot/${TAKEN}"
+          git checkout -b "${branch}"
+          git commit -m "data: per-field disclosure snapshot ${TAKEN}"
+          git push --set-upstream origin "${branch}"
+          gh pr create --base master --head "${branch}" \
+            --title "data: per-field disclosure snapshot ${TAKEN}" \
+            --body "Automated daily snapshot of the Scorecard walk. Auto-merges once the required checks pass."
+          gh pr merge "${branch}" --auto --squash --delete-branch
 
       # The post-condition, checked rather than assumed. A step that reports success without
-      # having done anything is the failure this repository exists to name, and the previous
-      # version of the step above was exactly that for ten consecutive runs. This one asserts the
-      # effect: today's snapshot is in the history, not merely on the runner's disk.
-      - name: Fail if the snapshot never reached the history
+      # having done anything is the failure this repository exists to name, and the original
+      # version of the commit step was exactly that for ten consecutive runs.
+      #
+      # It cannot assert today's snapshot is in master's history any more: the PR merges
+      # asynchronously, after this job ends. Asserting the file is tracked *here* would be the
+      # same empty check in a new costume -- it is tracked, on the branch this job just made.
+      # So it asserts the two things this run can actually know: that today's snapshot left the
+      # runner as a real PR, and that YESTERDAY's snapshot reached master. The second is the one
+      # that matters. It catches a queue that has silently stopped landing, one day later, which
+      # is the failure mode that went unnoticed for ten days.
+      - name: Fail if the snapshot never left the runner, or if the series has stopped landing
         env:
           TAKEN: ${{ steps.snap.outputs.taken }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          path="data/snapshots/scorecard/${TAKEN}.json"
-          if ! git ls-files --error-unmatch -- "${path}" >/dev/null 2>&1; then
-            echo "::error title=Snapshot not committed::${path} was written by this run but is \
-          not tracked. The daily series is the only evidence behind every drift claim this \
-          project makes, so a run that grades the country and commits nothing is a failed run, \
-          not a quiet one."
+          set -euo pipefail
+          branch="snapshot/${TAKEN}"
+          if ! gh pr view "${branch}" --json number,state >/dev/null 2>&1; then
+            echo "::error title=Snapshot PR was never opened::This run graded the country and \
+          produced no pull request. The daily series is the only evidence behind every drift \
+          claim this project makes, so a run that commits nothing is a failed run, not a quiet \
+          one."
             exit 1
           fi
-          echo "${path} is committed."
+          echo "Snapshot PR for ${TAKEN} is open and set to auto-merge."
+
+          previous=$(date -u -d "${TAKEN} -1 day" +%Y-%m-%d 2>/dev/null || true)
+          if [ -z "${previous}" ]; then
+            echo "Could not compute the previous date; skipping the landing check."
+            exit 0
+          fi
+          git fetch --quiet origin master
+          if git cat-file -e "origin/master:data/snapshots/scorecard/${previous}.json" 2>/dev/null; then
+            echo "Yesterday's snapshot (${previous}) is on master; the series is landing."
+            exit 0
+          fi
+          if [ "$(git ls-tree -r --name-only origin/master -- 'data/snapshots/scorecard/*.json' | wc -l)" -eq 0 ]; then
+            echo "::notice title=No prior snapshot::No snapshot has landed yet, so there is \
+          nothing to compare against. This is expected on the first run after the fix and is an \
+          error on the run after that."
+            exit 0
+          fi
+          echo "::error title=The snapshot series has stopped landing::${previous}.json is not on \
+          master, but earlier snapshots are. Today's PR opened, so the break is downstream: the \
+          required checks are failing on the snapshot branch, or auto-merge is disabled. Every \
+          drift claim rests on this series being continuous."
+          exit 1
