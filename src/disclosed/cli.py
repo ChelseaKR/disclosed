@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from . import (
+    correspondence,
     crosswalk,
     dataset,
     disputes,
@@ -1015,6 +1016,76 @@ def _cmd_census_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_disagreement(args: argparse.Namespace) -> int:
+    """Run the cited correspondence register over two committed federal captures.
+
+    Offline and keyless. Both captures are in the repository -- the College Scorecard census and
+    the two IPEDS archives -- so this measurement costs no network at all, which is why it can be
+    run over the population rather than over a sample.
+
+    What it publishes is a frame, not a number. Each register entry contributes either a set of
+    counts by kind, or a ``not_comparable`` verdict with the two definitions behind it; the
+    intersection the counts are out of is stated beside them, because an institution one
+    collection does not carry has not disagreed with anything.
+    """
+    try:
+        directory = ipeds.load_institutions(
+            year=args.year,
+            cache=Path(args.cache) if args.cache else None,
+            characteristics_cache=Path(args.characteristics) if args.characteristics else None,
+        )
+    except ipeds.IpedsError as exc:
+        print(f"IPEDS unreadable, nothing written: {exc}", file=sys.stderr)
+        return 1
+    raw = json.loads(Path(args.source).read_text(encoding="utf-8"))
+    try:
+        records, _ = college_scorecard.read_capture(raw)
+    except college_scorecard.ScorecardError as exc:
+        print(f"{args.source} is {exc}", file=sys.stderr)
+        return 1
+
+    frames, composition = crosswalk.frame(records, directory)
+    found = crosswalk.contradictions(records, directory)
+    register = correspondence.register_payload(Path(args.corpus))
+    scope = Scope(
+        kind=NATIONAL if args.national else SAMPLE,
+        source="College Scorecard and IPEDS directory",
+        institutions=composition["in_both"],
+        states=None,
+        universe=None,
+        note=(
+            "Institutions both federal collections carry, joined on the unit id they share. "
+            "Every count below has this intersection as its denominator; an institution only one "
+            "collection publishes has not disagreed with anything and is counted in the "
+            "composition instead."
+        ),
+    )
+    payload = {
+        "scope": scope.as_dict(),
+        "register_version": correspondence.REGISTER_VERSION,
+        "register": register,
+        "composition": composition,
+        "pairs": [reading.as_dict() for reading in frames],
+        "named": [asdict(item) for item in found],
+    }
+    Path(args.out).write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    print(f"disagreement frame over {composition['in_both']} institutions -> {args.out}")
+    print(
+        f"  register v{correspondence.REGISTER_VERSION}: "
+        f"{register['comparable']} comparable, "
+        f"{register['not_comparable']} not comparable"
+    )
+    for reading in frames:
+        if reading.verdict != correspondence.COMPARABLE:
+            print(f"  {reading.label:28} not comparable")
+            continue
+        kinds = ", ".join(
+            f"{kind} {count}" for kind, count in sorted(reading.counts.items()) if count
+        )
+        print(f"  {reading.label:28} {kinds}")
+    return 0
+
+
 def _receipt_source(path_text: str) -> receipts.ReceiptSource | None:
     """Read a Scorecard source file into the records receipts are issued from.
 
@@ -1179,6 +1250,11 @@ def _cmd_site(args: argparse.Namespace) -> int:
     package_payload = (
         json.loads(Path(args.package).read_text(encoding="utf-8")) if args.package else None
     )
+    disagreement_payload = (
+        json.loads(Path(args.disagreement).read_text(encoding="utf-8"))
+        if args.disagreement
+        else None
+    )
     out = Path(args.out)
     try:
         pages = site.build(
@@ -1194,6 +1270,7 @@ def _cmd_site(args: argparse.Namespace) -> int:
             histories=histories,
             package=package_payload,
             disputes=filed,
+            disagreement=disagreement_payload,
         )
     except site.ReceiptMismatch as exc:
         # The report and the receipt source disagree about a classification, so the page and the
@@ -1538,6 +1615,25 @@ def main(argv: list[str] | None = None) -> int:
     p_census.add_argument("--out", default="data/scorecard-census.json")
     p_census.set_defaults(func=_cmd_census_report)
 
+    p_disagree = sub.add_parser(
+        "disagreement",
+        help="run the cited correspondence register over two committed federal captures",
+    )
+    p_disagree.add_argument("--year", type=int, default=ipeds.DEFAULT_YEAR)
+    p_disagree.add_argument("--cache", default="data/HD2023.zip")
+    p_disagree.add_argument("--characteristics", default="data/IC2023.zip")
+    p_disagree.add_argument(
+        "--source", default="data/census/scorecard.json", help="a College Scorecard capture"
+    )
+    p_disagree.add_argument("--corpus", default="corpus", help="the committed definitions corpus")
+    p_disagree.add_argument(
+        "--national",
+        action="store_true",
+        help="declare the run national; omit for a sample, which is never inferred from row count",
+    )
+    p_disagree.add_argument("--out", default="data/disagreement.json")
+    p_disagree.set_defaults(func=_cmd_disagreement)
+
     p_site = sub.add_parser("site", help="render a report as static HTML")
     p_site.add_argument("--report", default="data/report.json")
     p_site.add_argument(
@@ -1625,6 +1721,14 @@ def main(argv: list[str] | None = None) -> int:
         help=(
             "run identifier shown in the footer, typically a date. Taken from the caller rather "
             "than the clock so that rebuilding the same report is byte-identical"
+        ),
+    )
+    p_site.add_argument(
+        "--disagreement",
+        default=None,
+        help=(
+            "a disagreement frame from `disagreement`; without it the site says nothing about "
+            "how often the two federal collections contradict each other"
         ),
     )
     p_site.set_defaults(func=_cmd_site)

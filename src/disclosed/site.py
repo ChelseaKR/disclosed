@@ -30,6 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
+from .crosswalk import KINDS
 from .disclosure import Disclosure
 from .disputes import SCHEMA_PATH as DISPUTE_SCHEMA_PATH
 from .disputes import Dispute, by_institution
@@ -52,6 +53,7 @@ __all__ = [
     "Page",
     "ReceiptMismatch",
     "build",
+    "disagreement_page",
     "history_page",
     "history_path",
     "peer_panels",
@@ -990,6 +992,151 @@ def national_page(payload: dict[str, Any], *, catalog: Catalog = ENGLISH) -> Pag
     )
 
 
+def disagreement_page(payload: dict[str, Any], *, catalog: Catalog = ENGLISH) -> Page:
+    """Where two federal collections describe the same institution differently, and where they
+    are not even asking the same question.
+
+    Two tables, and they are not two halves of one. The first counts, per compared pair, what the
+    two collections did about each institution -- and the kinds are printed side by side and never
+    added up, because two sources publishing different sectors, one publishing where the other
+    suppresses, and one publishing where the other says the question does not reach the
+    institution are three different facts. A single "disagreements" figure would be their sum and
+    would mean none of them.
+
+    The second is the register: every candidate pair, both publishers' own definitions quoted
+    verbatim, and the verdict. The ``not_comparable`` rows are the point of it. Before the
+    register they were absent from the site entirely, which reads exactly like pairs nobody
+    thought of, and "these two collections are not asking the same question about this
+    institution" is the more interesting of the two findings.
+
+    The register's version is printed beside the counts, so a reader meeting a larger number can
+    tell whether more institutions disagreed or more questions were asked.
+    """
+    scope = scope_from_payload(payload)
+    composition: dict[str, Any] = payload.get("composition", {}) or {}
+    register: dict[str, Any] = payload.get("register", {}) or {}
+
+    kind_labels = [(kind, catalog.text(f"disagreement.kind.{kind}")) for kind in KINDS]
+    headers = "".join(f'<th scope="col">{label}</th>' for _, label in kind_labels)
+    rows = []
+    for pair in payload.get("pairs", []):
+        counts = pair.get("counts")
+        label = html.escape(str(pair.get("label", "")))
+        if not isinstance(counts, dict):
+            cells = (
+                f'<td colspan="{len(kind_labels)}">{catalog.text("disagreement.not_compared")}</td>'
+            )
+        else:
+            cells = "".join(f"<td>{int(counts.get(kind, 0)):,}</td>" for kind, _ in kind_labels)
+        rows.append(f'<tr><th scope="row">{label}</th>{cells}</tr>')
+
+    entries = []
+    for entry in register.get("entries", []):
+        verdict = str(entry.get("verdict", ""))
+        sides = "".join(
+            _correspondence_side(entry.get(side), catalog) for side in ("scorecard", "ipeds")
+        )
+        entries.append(
+            f'<section class="correspondence">'
+            f"<h3>{html.escape(str(entry.get('label', '')))} "
+            f'<span class="tag tag-verdict-{html.escape(verdict)}">'
+            f"{catalog.text(f'disagreement.verdict.{verdict}')}</span></h3>"
+            f'<p class="why">{html.escape(str(entry.get("reason", "")))}</p>'
+            f'<dl class="definitions">{sides}</dl></section>'
+        )
+
+    named = "".join(
+        f"<li>{html.escape(str(item.get('name') or catalog.text('institution.unnamed')))}"
+        f" &mdash; {html.escape(str(item.get('field_label', '')))}: "
+        + catalog.text(
+            "disagreement.named.values",
+            scorecard=html.escape(str(item.get("scorecard_value", ""))),
+            ipeds=html.escape(str(item.get("ipeds_value", ""))),
+        )
+        + "</li>"
+        for item in payload.get("named", [])
+    )
+    lede = html.escape(scope.sentence) if scope else catalog.text("scope.not_stated")
+    body = f"""
+<nav aria-label="Breadcrumb"><a href="../">{catalog.text("nav.all_institutions")}</a></nav>
+<h1>{catalog.text("disagreement.heading")}</h1>
+<p class="lede">{lede}</p>
+<p>{
+        catalog.text(
+            "disagreement.intro", version=html.escape(str(payload.get("register_version", "")))
+        )
+    }</p>
+<p>{
+        catalog.text(
+            "disagreement.composition",
+            scorecard=f"{int(composition.get('scorecard_institutions', 0)):,}",
+            ipeds=f"{int(composition.get('ipeds_institutions', 0)):,}",
+            both=f"{int(composition.get('in_both', 0)):,}",
+            scorecard_only=f"{int(composition.get('scorecard_only', 0)):,}",
+            ipeds_only=f"{int(composition.get('ipeds_only', 0)):,}",
+        )
+    }</p>
+
+<h2>{catalog.text("disagreement.counts.heading")}</h2>
+<div class="scroll">
+<table>
+<caption>{catalog.text("disagreement.counts.caption")}</caption>
+<thead><tr><th scope="col">{catalog.text("disagreement.table.pair")}</th>{headers}</tr></thead>
+<tbody>{"".join(rows)}</tbody>
+</table>
+</div>
+<p class="caveat">{catalog.text("disagreement.never_summed")}</p>
+
+<h2>{catalog.text("disagreement.named.heading")}</h2>
+<ul class="gaps">{named or f"<li>{catalog.text('disagreement.named.none')}</li>"}</ul>
+
+<h2>{catalog.text("disagreement.register.heading")}</h2>
+<p>{
+        catalog.text(
+            "disagreement.register.intro",
+            comparable=f"{int(register.get('comparable', 0)):,}",
+            not_comparable=f"{int(register.get('not_comparable', 0)):,}",
+        )
+    }</p>
+{"".join(entries)}
+<p class="caveat">{catalog.text("disagreement.caveat")}</p>
+"""
+    return Page(
+        path="disagreement",
+        title=catalog.text("disagreement.title"),
+        description=catalog.text("disagreement.description"),
+        body=body,
+    )
+
+
+def _correspondence_side(side: Any, catalog: Catalog) -> str:
+    """One publisher's definition, quoted, with where it was quoted from.
+
+    A side with no definition says so in those words. It is the case the register exists to make
+    visible -- a collection that does not ask the question at all -- and rendering it as an empty
+    definition list entry would put it back where it was.
+    """
+    if not isinstance(side, Mapping):
+        return ""
+    publisher = html.escape(str(side.get("publisher", "")))
+    definition = side.get("definition")
+    citation = side.get("citation")
+    if not isinstance(definition, str) or not isinstance(citation, Mapping):
+        return f"<dt>{publisher}</dt><dd>{catalog.text('disagreement.no_definition')}</dd>"
+    source = catalog.text(
+        "disagreement.cited",
+        title=html.escape(str(citation.get("title", ""))),
+        locator=html.escape(str(citation.get("locator", ""))),
+        url=html.escape(str(citation.get("url", ""))),
+        retrieved=html.escape(str(citation.get("retrieved", ""))),
+    )
+    return (
+        f"<dt>{publisher} <code>{html.escape(str(side.get('key') or ''))}</code></dt>"
+        f"<dd><q>{html.escape(definition)}</q>"
+        f'<p class="bounds">{source}</p></dd>'
+    )
+
+
 def _share_of(count: int, total: int, catalog: Catalog = ENGLISH) -> str:
     return f"{count / total:.1%}" if total else catalog.text("share.no_institutions")
 
@@ -1518,6 +1665,10 @@ h2 { margin-top: 2rem; }
 .tag-reported { color: #14691f; } .tag-implausible { color: #96110f; }
 .tag-missing { color: #a8421f; } .tag-suppressed { color: #555; }
 .tag-not-applicable { color: #555; }
+/* The correspondence register's two verdicts. Deliberately not the classification palette: a
+   verdict is about a pair of columns, not about an institution, and borrowing the colour that
+   means "reported" would invite reading "comparable" as a good result. */
+.tag-verdict-comparable { color: #333; } .tag-verdict-not_comparable { color: #8a5a00; }
 table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
 /* A table that gains a column per run overflows eventually. width:auto is what lets it, since a
    table at width:100% shrinks to the container instead of scrolling inside it. */
@@ -1562,6 +1713,7 @@ footer { margin-top: 3rem; font-size: .9rem; color: #555; }
   .tag-reported { color: #6fbf73; } .tag-implausible { color: #ff8a80; }
   .tag-missing { color: #ffab7a; } .tag-suppressed { color: #bbb; }
   .tag-not-applicable { color: #bbb; }
+  .tag-verdict-comparable { color: #cfcfcf; } .tag-verdict-not_comparable { color: #ffab7a; }
 }
 """
 
@@ -1646,6 +1798,7 @@ def _corpus_pages(
     scorecard_census: dict[str, Any] | None,
     histories: Sequence[SnapshotSeries],
     dataset_jsonld: dict[str, Any] | None,
+    disagreement: dict[str, Any] | None,
     catalog: Catalog,
 ) -> list[Page]:
     """The pages that describe a corpus as a whole, rather than one institution or state.
@@ -1669,6 +1822,8 @@ def _corpus_pages(
         pages.append(scorecard_census_page(scorecard_census, catalog=catalog))
     if national is not None:
         pages.append(national_page(national, catalog=catalog))
+    if disagreement is not None:
+        pages.append(disagreement_page(disagreement, catalog=catalog))
     pages.extend(history_page(series, catalog=catalog) for series in histories)
     return pages
 
@@ -1766,6 +1921,7 @@ def build(
     histories: Sequence[SnapshotSeries] = (),
     package: dict[str, Any] | None = None,
     disputes: Sequence[Dispute] = (),
+    disagreement: dict[str, Any] | None = None,
 ) -> list[Page]:
     """Render the whole site from a graded report.
 
@@ -1802,6 +1958,11 @@ def build(
             a finding and never folded into one; a channel that silently changed a grade would be
             a scoring input wearing a comment's clothes, and the institution best at filing
             paperwork would score highest.
+        disagreement: A payload as written by ``disclosed disagreement``, or ``None``. With it
+            the site carries the two-source disagreement page: the counts by kind over the
+            institutions both collections carry, and the cited correspondence register behind
+            them. Without it no page says how often two federal collections contradict each
+            other, which is the same "absence over assertion" default as ``national``.
         histories: The committed snapshot series, as :func:`disclosed.history.load` returns them,
             or empty. Empty means no history page is written and the home page carries no link to
             one, which is the same "absence over assertion" default as ``national``: a build that
@@ -1832,6 +1993,7 @@ def build(
         scorecard_census=scorecard_census,
         histories=histories,
         dataset_jsonld=dataset_jsonld,
+        disagreement=disagreement,
         catalog=catalog,
     )
 

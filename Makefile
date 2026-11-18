@@ -3,7 +3,7 @@ PYTHON ?= .venv/bin/python
 .PHONY: verify lint typecheck test fetch grade site dataset crosscheck national census-report \
         snapshot replay census-replay scorecard-snapshot-replay ipeds-snapshots registry-fetch \
         registry-join registry-replay registry-properties registry-property-report \
-        registry-property-replay
+        registry-property-replay disagreement disagreement-replay
 
 verify: lint typecheck test
 
@@ -33,7 +33,7 @@ grade:
 	$(PYTHON) -m disclosed.cli grade --out data/report.json
 
 site:
-	$(PYTHON) -m disclosed.cli site --report data/report.json --national data/national.json --scorecard-census data/scorecard-census.json --receipts-from data/sample.json --snapshots-from data/snapshots --package datapackage.json --disputes-from disputes --out site --generated $(shell date -u +%F)
+	$(PYTHON) -m disclosed.cli site --report data/report.json --national data/national.json --scorecard-census data/scorecard-census.json --receipts-from data/sample.json --snapshots-from data/snapshots --package datapackage.json --disputes-from disputes --disagreement data/disagreement.json --out site --generated $(shell date -u +%F)
 
 dataset:
 	$(PYTHON) -m disclosed.cli dataset --report data/report.json --out data/dataset.csv --disputes-from disputes --package datapackage.json --root .
@@ -120,6 +120,19 @@ registry-property-report:
 registry-property-replay:
 	$(PYTHON) -m disclosed.cli registry-property-report --census data/registry/properties.json --out /tmp/registry-properties.json
 	diff -u data/registry-properties.json /tmp/registry-properties.json && echo "data/registry-properties.json replays exactly"
+
+# The two-source disagreement frame, over the census, from two committed captures. Offline and
+# keyless: the College Scorecard census and both IPEDS archives are in the repository, so this
+# measurement costs no network at all. --national is passed explicitly because a run's coverage is
+# declared by the caller and never inferred from a row count (docs/adr/0005).
+disagreement:
+	$(PYTHON) -m disclosed.cli disagreement --national --source data/census/scorecard.json --cache data/HD2023.zip --characteristics data/IC2023.zip --corpus corpus --out data/disagreement.json
+
+# Same contract as `replay`. `tests/test_correspondence.py::TestTheCommittedFrame` is the pytest
+# form and is what gates `make verify`; this is what you run to see the diff when it fails.
+disagreement-replay:
+	$(PYTHON) -m disclosed.cli disagreement --national --source data/census/scorecard.json --cache data/HD2023.zip --characteristics data/IC2023.zip --corpus corpus --out /tmp/disagreement.json
+	diff -u data/disagreement.json /tmp/disagreement.json && echo "data/disagreement.json replays exactly"
 
 # The three-year IPEDS history the systemic threshold is argued from. Same contract as `replay`.
 ipeds-snapshots:

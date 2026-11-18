@@ -64,6 +64,7 @@ _REPORT: Any = _load("report.json")
 _NATIONAL: Any = _load("national.json")
 _CENSUS: Any = _load("scorecard-census.json")
 _REGISTRY_JOIN: Any = _load("registry-join.json")
+_DISAGREEMENT: Any = _load("disagreement.json")
 _SNAPSHOTS = {
     year: drift.Snapshot(**_load(f"snapshots/ipeds/{year}.json")) for year in (2021, 2022, 2023)
 }
@@ -646,3 +647,72 @@ class TestTheCredentialRegistryPropertyFigures:
         for count, share in _stated(pattern):
             assert count == f"{row['organizations']:,}"
             assert share == f"{row['joined_rate'] * 100:.1f}"
+
+
+class TestTheDisagreementFigures:
+    """The census-scale two-source comparison, and the register behind it.
+
+    Every figure here comes out of ``data/disagreement.json``, which ``make disagreement-replay``
+    regenerates from two committed captures with no network and no key. A number in the prose that
+    the frame does not carry fails here rather than shipping.
+    """
+
+    def _pair(self, label: str) -> Any:
+        entry = next((p for p in _DISAGREEMENT["pairs"] if p["label"] == label), None)
+        assert entry is not None, f"{label!r} is no longer a pair in the register"
+        return entry
+
+    def test_the_headline_count_is_the_sum_of_the_named_disagreements(self) -> None:
+        named = _DISAGREEMENT["named"]
+        for count, institutions in _stated(
+            r"finds \*\*(" + _N + r") disagreements across (" + _N + r") institutions\*\*"
+        ):
+            assert count == f"{len(named):,}"
+            assert institutions == f"{_DISAGREEMENT['composition']['in_both']:,}"
+
+    def test_the_split_by_column_is_the_split_in_the_frame(self) -> None:
+        for sector, state in _stated(
+            r"\*\*(" + _N + r")\*\* about sector and \*\*(" + _N + r")\*\*\s*about state"
+        ):
+            assert sector == f"{self._pair('Sector')['counts']['value_disagreement']:,}"
+            assert state == f"{self._pair('State')['counts']['value_disagreement']:,}"
+
+    def test_the_overlap_the_counts_are_out_of_is_the_one_the_readme_states(self) -> None:
+        composition = _DISAGREEMENT["composition"]
+        pattern = (
+            r"carries (" + _N + r") institutions and the IPEDS directory (" + _N + r");\s*"
+            r"\*\*(" + _N + r")\*\* are in\s*both"
+        )
+        for scorecard, ipeds_rows, both in _stated(pattern):
+            assert scorecard == f"{composition['scorecard_institutions']:,}"
+            assert ipeds_rows == f"{composition['ipeds_institutions']:,}"
+            assert both == f"{composition['in_both']:,}"
+        for only_scorecard, only_ipeds in _stated(
+            r"\*\*(" + _N + r")\*\* are in the Scorecard alone and \*\*(" + _N + r")\*\* in"
+        ):
+            assert only_scorecard == f"{composition['scorecard_only']:,}"
+            assert only_ipeds == f"{composition['ipeds_only']:,}"
+
+    def test_the_registers_composition_is_the_registers_own(self) -> None:
+        register = _DISAGREEMENT["register"]
+        for comparable, not_comparable in _stated(
+            r"\*\*(" + _N + r")\*\* candidate pairs are comparable and \*\*(" + _N + r")\*\*"
+        ):
+            assert comparable == f"{register['comparable']:,}"
+            assert not_comparable == f"{register['not_comparable']:,}"
+        assert register["comparable"] + register["not_comparable"] == len(register["entries"])
+
+    def test_every_register_row_in_the_readme_table_carries_the_frames_verdict(self) -> None:
+        """The table in the prose and the register in the artifact, row for row."""
+        rows = re.findall(r"\| ([^|]+?) \((?:[^|]*?)\) \| (comparable|not comparable) \|", _PROSE)
+        assert rows, "the register table in the README no longer matches this pattern"
+        stated = {label.strip(): verdict.replace(" ", "_") for label, verdict in rows}
+        published = {p["label"]: p["verdict"] for p in _DISAGREEMENT["pairs"]}
+        assert stated == published
+
+    def test_the_grand_canyon_finding_still_reproduces_over_the_census(self) -> None:
+        """The sample-scale finding the README has always named, found again in the population."""
+        named = [row for row in _DISAGREEMENT["named"] if row["name"] == "Grand Canyon University"]
+        assert [row["field_label"] for row in named] == ["Sector"]
+        assert named[0]["scorecard_value"].startswith("private nonprofit")
+        assert named[0]["ipeds_value"].startswith("private for-profit")

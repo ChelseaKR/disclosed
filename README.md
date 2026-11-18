@@ -220,6 +220,57 @@ in most analyses of federal education data. The disagreement is reported and del
 resolved: deciding which federal source is correct is not something this project is in a position
 to do, and quietly preferring one would throw away the only interesting part of the observation.
 
+### The same question, over the whole census
+
+That finding was one university. Run over every institution both collections carry, the same
+comparison finds **15 disagreements across 5,688 institutions**: **10** about sector and **5**
+about state. Both captures are already in this repository, so the measurement costs no network at
+all.
+
+The Scorecard capture carries 6,273 institutions and the IPEDS directory 6,163; **5,688** are in
+both and are the denominator of every count. **585** are in the Scorecard alone and **475** in
+IPEDS alone, and an institution one collection does not carry has not disagreed with anything.
+
+Sector is the sharper of the two, because the Scorecard's own data dictionary names IPEDS as the
+source of that column. A disagreement there is a collection disagreeing with the collection it
+says it came from.
+
+**The counts are never added together and no total is published anywhere.** Two sources
+publishing different values, one publishing where the other suppresses, and one publishing where
+the other says the question does not apply are three different facts, and the third is not a
+disagreement about an answer at all — it is a disagreement about who is being asked. A single
+"disagreements" figure would be their sum and would mean none of them.
+
+### Which columns correspond, decided in public
+
+Comparing two columns assumes they are asking the same question, and that assumption used to live
+in a tuple with a comment beside it. It is now a cited register: **2** candidate pairs are
+comparable and **4** are not, each with **both publishers' own definitions quoted verbatim** from
+the hash-pinned corpus in `corpus/`, a verdict, and a reason written to be argued with. The
+register carries its own version, which the page states, so a bigger disagreement count can be
+told apart from a wider comparison.
+
+A `not_comparable` verdict is a finding and not a gap. Before the register those pairs were simply
+absent from the site, which reads exactly like pairs nobody thought of:
+
+| Pair | Verdict | Why |
+|---|---|---|
+| Sector (`school.ownership` / `CONTROL`) | comparable | Same three codes, same meanings, and the Scorecard cites IPEDS as its source. |
+| State (`school.state` / `STABBR`) | comparable | Both define it as the Postal Service abbreviation; the vocabulary belongs to neither publisher. |
+| Degree awarded (`PREDDEG` / `HDEGOFR1`) | not comparable | One is the degree predominantly *awarded*, the other the highest degree *offered*. A college can answer both correctly and differently. |
+| Undergraduate enrollment (`UGDS` / `INSTSIZE`) | not comparable | A headcount against a size band, over different populations. Making them agree would need a threshold of ours, and a numeric pair that needs one is evidence it is not comparable. |
+| Institution name (`INSTNM` / `INSTNM`) | not comparable | No controlled vocabulary on either side; a comparison would produce hundreds of findings about typography. |
+| Institutional level (— / `ICLEVEL`) | not comparable | The Scorecard capture publishes no counterpart at all. One side asking a question the other does not ask leaves no trace on a page, which is why it is published as a verdict. |
+
+The conservative answer was taken on the open question: a pair with no citable definition on one
+side is `not_comparable`, full stop. That excludes pairs a reader would say obviously correspond,
+and the cost is named here rather than traded away — the alternative is a maintainer's judgement
+recorded in the citation slot, which is a weaker kind of claim wearing the same word.
+
+```sh
+disclosed disagreement --national --out data/disagreement.json   # offline, no key
+```
+
 IPEDS also carries public disclosures the Scorecard does not. Among institutions that participate
 in Title IV and enrol first-time undergraduates, **the federal record carries no net price
 calculator for 34 of them**, a calculator that
@@ -628,10 +679,10 @@ Moving the counts out of that file fixed one line and left the rest of it in the
 file had been in. The `resourceSizes` lines went on being cited here, in the workflow and in the
 metrics ledger, and went on being enforced by nothing; the ledger said so in as many words, which
 is honest and is not the same as a gate. They are enforced now, in `make verify`, over the
-six-page fixture and again over all 619 published pages: **80 KiB** for the document and **80 KiB**
+six-page fixture and again over all 620 published pages: **80 KiB** for the document and **80 KiB**
 for the page in total, read out of `lighthouse-budget.json` rather than copied out of it, so
 widening the budget widens the test and has to be argued for here. The largest page the committed
-report renders is California's state page at **66.9 KiB**, and that figure is in this sentence
+report renders is California's state page at **67.3 KiB**, and that figure is in this sentence
 because a budget with a hundredfold of slack passes for the same reason a gate that cannot fail
 does; a test recomputes it from the build, so the day a template change eats the headroom this
 paragraph has to say so.

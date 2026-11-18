@@ -1114,3 +1114,111 @@ msgstr ""
 "The <a href=\"{census}\">Scorecard census page</a> asks the same questions of every institution "
 "the College Scorecard publishes, not this sample, and states both frames' composition side by "
 "side."
+
+#. The two-source disagreement page. The kind words are data (see disclosed.crosswalk.KINDS) and
+#. appear here only as labels for them; they are printed side by side and never summed.
+msgid "disagreement.title"
+msgstr "Where two federal collections disagree"
+
+msgid "disagreement.description"
+msgstr ""
+"How often the College Scorecard and IPEDS describe the same institution differently, by kind, "
+"and which of their columns are not asking the same question at all."
+
+msgid "disagreement.heading"
+msgstr "Two federal collections, one institution, two answers"
+
+msgid "disagreement.intro"
+msgstr ""
+"The College Scorecard and IPEDS are published by the same department and keyed on the same unit "
+"id. Where they describe the same institution differently, no threshold of this project's is "
+"involved: there is nothing to argue with except the records. Only pairs of columns the "
+"correspondence register below calls comparable are compared, and the register is at version "
+"{version}, so a larger count here can be told apart from a wider comparison."
+
+msgid "disagreement.composition"
+msgstr ""
+"The College Scorecard capture carries {scorecard} institutions and the IPEDS directory carries "
+"{ipeds}. Both carry {both}, and every count below is out of those. {scorecard_only} appear only "
+"in the Scorecard and {ipeds_only} only in IPEDS; an institution one collection does not publish "
+"has not disagreed with anything, so they are counted here and nowhere else."
+
+msgid "disagreement.counts.heading"
+msgstr "What the two collections did, pair by pair"
+
+msgid "disagreement.counts.caption"
+msgstr "Institutions both collections carry, by what each collection published for the pair."
+
+msgid "disagreement.table.pair"
+msgstr "Pair of columns"
+
+msgid "disagreement.not_compared"
+msgstr "Not compared: the register says these columns are not asking the same question."
+
+msgid "disagreement.kind.agreed"
+msgstr "Both published, and agree"
+
+msgid "disagreement.kind.value_disagreement"
+msgstr "Both published, and differ"
+
+msgid "disagreement.kind.one_side_suppressed"
+msgstr "One published, the other withheld"
+
+msgid "disagreement.kind.one_side_not_applicable"
+msgstr "One published, the other says it does not apply"
+
+msgid "disagreement.kind.one_side_missing"
+msgstr "One published, the other left it blank"
+
+msgid "disagreement.kind.one_side_implausible"
+msgstr "One published, the other's value is not credible"
+
+msgid "disagreement.kind.neither_reported"
+msgstr "Neither published"
+
+msgid "disagreement.never_summed"
+msgstr ""
+"These columns are never added together, and this page prints no total. Two collections "
+"publishing different values, one publishing where the other withholds, and one publishing "
+"where the other says the question does not reach the institution are three different facts; "
+"the third is a disagreement about who is asked, not about the answer."
+
+msgid "disagreement.named.heading"
+msgstr "Institutions the two collections describe differently"
+
+msgid "disagreement.named.values"
+msgstr "the College Scorecard says {scorecard}, IPEDS says {ipeds}"
+
+msgid "disagreement.named.none"
+msgstr "Where both collections published a value for a compared pair, they agreed."
+
+msgid "disagreement.register.heading"
+msgstr "The correspondence register"
+
+msgid "disagreement.register.intro"
+msgstr ""
+"Every pair of columns considered, with each publisher's own definition quoted from its own "
+"documentation. {comparable} are comparable and {not_comparable} are not. A pair that is not "
+"comparable is a finding, not a gap: it says two collections from the same department are not "
+"asking the same question about the same institution. A pair with no citable definition on one "
+"side is not comparable, even where a reader would say the two obviously mean the same thing, "
+"because the alternative is this project's judgement recorded where a citation should be."
+
+msgid "disagreement.verdict.comparable"
+msgstr "Comparable"
+
+msgid "disagreement.verdict.not_comparable"
+msgstr "Not comparable"
+
+msgid "disagreement.no_definition"
+msgstr "Publishes no column for this question."
+
+msgid "disagreement.cited"
+msgstr ""
+"Quoted from {title}, entry {locator}, <a href=\"{url}\">{url}</a>, retrieved {retrieved}."
+
+msgid "disagreement.caveat"
+msgstr ""
+"A disagreement is reported and never resolved. Deciding which federal collection is correct is "
+"not something this project is in a position to do, and quietly preferring one would throw away "
+"the only interesting part of the observation."

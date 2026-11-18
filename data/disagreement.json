@@ -1,0 +1,410 @@
+{
+  "composition": {
+    "in_both": 5688,
+    "ipeds_institutions": 6163,
+    "ipeds_only": 475,
+    "scorecard_institutions": 6273,
+    "scorecard_only": 585
+  },
+  "named": [
+    {
+      "field_label": "Sector",
+      "ipeds_value": "private for-profit (3)",
+      "name": "Grand Canyon University",
+      "note": "Sector decides which rules an institution answers to and which peer group it is compared against, here and in most other analyses of federal education data. Two arms of the Department of Education classifying the same school differently is a fact about the data, not a rounding difference.",
+      "scorecard_value": "private nonprofit (2)",
+      "unit_id": "104717"
+    },
+    {
+      "field_label": "Sector",
+      "ipeds_value": "private for-profit (3)",
+      "name": "Atlanta's John Marshall Law School",
+      "note": "Sector decides which rules an institution answers to and which peer group it is compared against, here and in most other analyses of federal education data. Two arms of the Department of Education classifying the same school differently is a fact about the data, not a rounding difference.",
+      "scorecard_value": "private nonprofit (2)",
+      "unit_id": "138929"
+    },
+    {
+      "field_label": "Sector",
+      "ipeds_value": "private for-profit (3)",
+      "name": "Ashford University",
+      "note": "Sector decides which rules an institution answers to and which peer group it is compared against, here and in most other analyses of federal education data. Two arms of the Department of Education classifying the same school differently is a fact about the data, not a rounding difference.",
+      "scorecard_value": "public (1)",
+      "unit_id": "154022"
+    },
+    {
+      "field_label": "State",
+      "ipeds_value": "CA",
+      "name": "Ashford University",
+      "note": "State is the coarsest grouping either source publishes and is used to build peer groups. A multi-campus institution can reasonably be filed under different states by different collections, so this is reported as a discrepancy to check rather than as an error by either source.",
+      "scorecard_value": "AZ",
+      "unit_id": "154022"
+    },
+    {
+      "field_label": "Sector",
+      "ipeds_value": "private for-profit (3)",
+      "name": "Waldorf University",
+      "note": "Sector decides which rules an institution answers to and which peer group it is compared against, here and in most other analyses of federal education data. Two arms of the Department of Education classifying the same school differently is a fact about the data, not a rounding difference.",
+      "scorecard_value": "private nonprofit (2)",
+      "unit_id": "154518"
+    },
+    {
+      "field_label": "State",
+      "ipeds_value": "MA",
+      "name": "Bard College at Simon's Rock",
+      "note": "State is the coarsest grouping either source publishes and is used to build peer groups. A multi-campus institution can reasonably be filed under different states by different collections, so this is reported as a discrepancy to check rather than as an error by either source.",
+      "scorecard_value": "NY",
+      "unit_id": "167792"
+    },
+    {
+      "field_label": "Sector",
+      "ipeds_value": "private nonprofit (2)",
+      "name": "Bloomfield College",
+      "note": "Sector decides which rules an institution answers to and which peer group it is compared against, here and in most other analyses of federal education data. Two arms of the Department of Education classifying the same school differently is a fact about the data, not a rounding difference.",
+      "scorecard_value": "public (1)",
+      "unit_id": "183822"
+    },
+    {
+      "field_label": "Sector",
+      "ipeds_value": "private for-profit (3)",
+      "name": "Apex Technical School",
+      "note": "Sector decides which rules an institution answers to and which peer group it is compared against, here and in most other analyses of federal education data. Two arms of the Department of Education classifying the same school differently is a fact about the data, not a rounding difference.",
+      "scorecard_value": "private nonprofit (2)",
+      "unit_id": "188890"
+    },
+    {
+      "field_label": "Sector",
+      "ipeds_value": "private for-profit (3)",
+      "name": "Valley College-Beckley",
+      "note": "Sector decides which rules an institution answers to and which peer group it is compared against, here and in most other analyses of federal education data. Two arms of the Department of Education classifying the same school differently is a fact about the data, not a rounding difference.",
+      "scorecard_value": "private nonprofit (2)",
+      "unit_id": "377652"
+    },
+    {
+      "field_label": "Sector",
+      "ipeds_value": "private for-profit (3)",
+      "name": "Valley College-Martinsburg",
+      "note": "Sector decides which rules an institution answers to and which peer group it is compared against, here and in most other analyses of federal education data. Two arms of the Department of Education classifying the same school differently is a fact about the data, not a rounding difference.",
+      "scorecard_value": "private nonprofit (2)",
+      "unit_id": "377661"
+    },
+    {
+      "field_label": "State",
+      "ipeds_value": "CA",
+      "name": "West Coast University-Los Angeles",
+      "note": "State is the coarsest grouping either source publishes and is used to build peer groups. A multi-campus institution can reasonably be filed under different states by different collections, so this is reported as a discrepancy to check rather than as an error by either source.",
+      "scorecard_value": "TX",
+      "unit_id": "443331"
+    },
+    {
+      "field_label": "Sector",
+      "ipeds_value": "private for-profit (3)",
+      "name": "Sutter County Career Training Center",
+      "note": "Sector decides which rules an institution answers to and which peer group it is compared against, here and in most other analyses of federal education data. Two arms of the Department of Education classifying the same school differently is a fact about the data, not a rounding difference.",
+      "scorecard_value": "public (1)",
+      "unit_id": "446093"
+    },
+    {
+      "field_label": "State",
+      "ipeds_value": "CA",
+      "name": "Community Christian College",
+      "note": "State is the coarsest grouping either source publishes and is used to build peer groups. A multi-campus institution can reasonably be filed under different states by different collections, so this is reported as a discrepancy to check rather than as an error by either source.",
+      "scorecard_value": "AZ",
+      "unit_id": "446163"
+    },
+    {
+      "field_label": "State",
+      "ipeds_value": "WV",
+      "name": "Martinsburg College",
+      "note": "State is the coarsest grouping either source publishes and is used to build peer groups. A multi-campus institution can reasonably be filed under different states by different collections, so this is reported as a discrepancy to check rather than as an error by either source.",
+      "scorecard_value": "WY",
+      "unit_id": "487977"
+    },
+    {
+      "field_label": "Sector",
+      "ipeds_value": "private for-profit (3)",
+      "name": "Valley College-Cleveland",
+      "note": "Sector decides which rules an institution answers to and which peer group it is compared against, here and in most other analyses of federal education data. Two arms of the Department of Education classifying the same school differently is a fact about the data, not a rounding difference.",
+      "scorecard_value": "private nonprofit (2)",
+      "unit_id": "494250"
+    }
+  ],
+  "pairs": [
+    {
+      "counts": {
+        "agreed": 5678,
+        "neither_reported": 0,
+        "one_side_implausible": 0,
+        "one_side_missing": 0,
+        "one_side_not_applicable": 0,
+        "one_side_suppressed": 0,
+        "value_disagreement": 10
+      },
+      "ipeds_key": "ipeds.CONTROL",
+      "label": "Sector",
+      "reason": "Both sides define the column as control of the institution and publish the same three codes with the same meanings: 1 public, 2 private nonprofit, 3 private for-profit. The Scorecard's own dictionary names IPEDS as its source for this column, which makes a disagreement here a disagreement between a collection and the collection it says it came from.",
+      "scorecard_key": "school.ownership",
+      "verdict": "comparable"
+    },
+    {
+      "counts": {
+        "agreed": 5683,
+        "neither_reported": 0,
+        "one_side_implausible": 0,
+        "one_side_missing": 0,
+        "one_side_not_applicable": 0,
+        "one_side_suppressed": 0,
+        "value_disagreement": 5
+      },
+      "ipeds_key": "ipeds.STABBR",
+      "label": "State",
+      "reason": "Both sides define the column as the US Postal Service state abbreviation. The vocabulary is the Postal Service's and belongs to neither publisher, which is the cleanest case a correspondence can have.",
+      "scorecard_key": "school.state",
+      "verdict": "comparable"
+    },
+    {
+      "counts": null,
+      "ipeds_key": "ipeds.HDEGOFR1",
+      "label": "Degree awarded",
+      "reason": "The nearest columns the two collections publish are answers to different questions. The Scorecard's is the degree an institution predominantly *awards*, derived from what it graduated; IPEDS's is the highest degree it *offers*, derived from what it teaches. A college that offers a doctorate and predominantly awards bachelor's degrees answers both correctly and differently, so every such institution would be published as a disagreement. The codes also enumerate different things, which is the visible half of the same problem.",
+      "scorecard_key": "school.degrees_awarded.predominant",
+      "verdict": "not_comparable"
+    },
+    {
+      "counts": null,
+      "ipeds_key": "ipeds.INSTSIZE",
+      "label": "Undergraduate enrollment",
+      "reason": "A count against a band, over different populations and different terms. The Scorecard publishes a headcount of undergraduate certificate- and degree-seeking students; IPEDS publishes a size category based on total students enrolled for credit in a stated fall. Making them agree would need a rule of this project's about which counts fall in which band, and a numeric pair that needs a tolerance of ours to agree is evidence that it is not comparable rather than an argument for the tolerance.",
+      "scorecard_key": "latest.student.size",
+      "verdict": "not_comparable"
+    },
+    {
+      "counts": null,
+      "ipeds_key": "ipeds.INSTNM",
+      "label": "Institution name",
+      "reason": "Both definitions say the column is the institution's name and neither publishes a controlled vocabulary for it. The two collections punctuate, abbreviate and order campus qualifiers differently, so a comparison would produce hundreds of findings that are all about typography. This is the oldest exclusion in the crosswalk and it is recorded here as a verdict rather than left as a sentence in a docstring.",
+      "scorecard_key": "school.name",
+      "verdict": "not_comparable"
+    },
+    {
+      "counts": null,
+      "ipeds_key": "ipeds.ICLEVEL",
+      "label": "Institutional level",
+      "reason": "IPEDS classifies every institution as four-year, two-year or less-than-two-year, and the College Scorecard capture this project holds publishes no counterpart at all. One side asking a question the other does not ask is the most common shape a non-correspondence takes, and it is the one most likely to be mistaken for agreement, because a column nobody compares leaves no trace on a page.",
+      "scorecard_key": null,
+      "verdict": "not_comparable"
+    }
+  ],
+  "register": {
+    "comparable": 2,
+    "entries": [
+      {
+        "ipeds": {
+          "citation": {
+            "document": "ipeds-hd2023-dictionary",
+            "locator": "CONTROL",
+            "publisher": "National Center for Education Statistics, IPEDS",
+            "retrieved": "2026-08-22",
+            "sha256": "131d8f2f56a71078ea453989384cce91985fa2a29a94f168a718dedc6a466e3b",
+            "title": "IPEDS Directory Information (HD2023) data dictionary",
+            "url": "https://nces.ed.gov/ipeds/datacenter/data/HD2023_Dict.zip"
+          },
+          "definition": "Control of institution. A classification of whether an institution is operated by publicly elected or appointed officials or by privately elected or appointed officials and derives its major source of funds from private sources. Public institution - An educational institution whose programs and activities are operated by publicly elected or appointed school officials and which is supported primarily by public funds. Private not-for-profit institution - A private institution in which the individual(s) or agency in control receives no compensation, other than wages, rent, or other expenses for the assumption of risk. These include both independent not-for-profit schools and those affiliated with a religious organization. Private for-profit institution - A private institution in which the individual(s) or agency in control receives compensation other than wages, rent, or other expenses for the assumption of risk.",
+          "key": "ipeds.CONTROL",
+          "publisher": "IPEDS"
+        },
+        "label": "Sector",
+        "note": "Sector decides which rules an institution answers to and which peer group it is compared against, here and in most other analyses of federal education data. Two arms of the Department of Education classifying the same school differently is a fact about the data, not a rounding difference.",
+        "reason": "Both sides define the column as control of the institution and publish the same three codes with the same meanings: 1 public, 2 private nonprofit, 3 private for-profit. The Scorecard's own dictionary names IPEDS as its source for this column, which makes a disagreement here a disagreement between a collection and the collection it says it came from.",
+        "scorecard": {
+          "citation": {
+            "document": "scorecard-data-dictionary",
+            "locator": "CONTROL (school.ownership)",
+            "publisher": "U.S. Department of Education, College Scorecard",
+            "retrieved": "2026-08-22",
+            "sha256": "e3738fe328c81820de38da2149fa22a5698f257226e7e9ca44deba0c67cc7d92",
+            "title": "College Scorecard Data Dictionary (Institution_Data_Dictionary sheet)",
+            "url": "https://collegescorecard.ed.gov/assets/CollegeScorecardDataDictionary.xlsx"
+          },
+          "definition": "Control of institution (IPEDS). Source: IPEDS.",
+          "key": "school.ownership",
+          "publisher": "College Scorecard"
+        },
+        "verdict": "comparable"
+      },
+      {
+        "ipeds": {
+          "citation": {
+            "document": "ipeds-hd2023-dictionary",
+            "locator": "STABBR",
+            "publisher": "National Center for Education Statistics, IPEDS",
+            "retrieved": "2026-08-22",
+            "sha256": "131d8f2f56a71078ea453989384cce91985fa2a29a94f168a718dedc6a466e3b",
+            "title": "IPEDS Directory Information (HD2023) data dictionary",
+            "url": "https://nces.ed.gov/ipeds/datacenter/data/HD2023_Dict.zip"
+          },
+          "definition": "State abbreviation. US Postal Service state abbreviation. See also FIPS STATE CODE (FIPS).",
+          "key": "ipeds.STABBR",
+          "publisher": "IPEDS"
+        },
+        "label": "State",
+        "note": "State is the coarsest grouping either source publishes and is used to build peer groups. A multi-campus institution can reasonably be filed under different states by different collections, so this is reported as a discrepancy to check rather than as an error by either source.",
+        "reason": "Both sides define the column as the US Postal Service state abbreviation. The vocabulary is the Postal Service's and belongs to neither publisher, which is the cleanest case a correspondence can have.",
+        "scorecard": {
+          "citation": {
+            "document": "scorecard-data-dictionary",
+            "locator": "STABBR (school.state)",
+            "publisher": "U.S. Department of Education, College Scorecard",
+            "retrieved": "2026-08-22",
+            "sha256": "e3738fe328c81820de38da2149fa22a5698f257226e7e9ca44deba0c67cc7d92",
+            "title": "College Scorecard Data Dictionary (Institution_Data_Dictionary sheet)",
+            "url": "https://collegescorecard.ed.gov/assets/CollegeScorecardDataDictionary.xlsx"
+          },
+          "definition": "State postcode. Source: IPEDS.",
+          "key": "school.state",
+          "publisher": "College Scorecard"
+        },
+        "verdict": "comparable"
+      },
+      {
+        "ipeds": {
+          "citation": {
+            "document": "ipeds-hd2023-dictionary",
+            "locator": "HDEGOFR1",
+            "publisher": "National Center for Education Statistics, IPEDS",
+            "retrieved": "2026-08-22",
+            "sha256": "131d8f2f56a71078ea453989384cce91985fa2a29a94f168a718dedc6a466e3b",
+            "title": "IPEDS Directory Information (HD2023) data dictionary",
+            "url": "https://nces.ed.gov/ipeds/datacenter/data/HD2023_Dict.zip"
+          },
+          "definition": "Highest degree offered. A code for highest degree offered at the institution - This variable was revised in 2009 because the first professional category is no longer an award level and the Doctoral award level category has expanded to 3 categories, Doctor's degree - Research/scholarships, Doctor's degree - professional practice and Doctor's degree-other. This variable is derived from the level of offering variables (LEVEL1-LEVEL8 LEVEL12 and LEVEL17-LEVEL19) from the Institutional Characteristics component as follows: IF LEVEL17=1 and LEVEL18=1 then HDEGOFR1=11 else if LEVEL17=1 and LEVEL18 ne 1 then HDEGOFR1=12 else if LEVEL17 ne 1 and LEVEL18=1 then HDEGOFR1=13 else if LEVEL17 ne 1 and LEVEL18 ne 1 and LEVEL19=1 then HDEGOFR1=14 else if LEVEL7=1 HDEGOFR1=20 else if LEVEL5=1 HDEGOFR1=30 else if LEVEL3=1 HDEGOFR1=40 else if LEVEL1=1 or LEVEL2=1 or LEVEL4=1 or LEVEL6=1 or LEVEL8=1 or LEVEL12=1 then HDEGOFR1=0 else HDEGOFR1=-3; For more information see descriptions of LEVEL1-LEVEL12",
+          "key": "ipeds.HDEGOFR1",
+          "publisher": "IPEDS"
+        },
+        "label": "Degree awarded",
+        "note": null,
+        "reason": "The nearest columns the two collections publish are answers to different questions. The Scorecard's is the degree an institution predominantly *awards*, derived from what it graduated; IPEDS's is the highest degree it *offers*, derived from what it teaches. A college that offers a doctorate and predominantly awards bachelor's degrees answers both correctly and differently, so every such institution would be published as a disagreement. The codes also enumerate different things, which is the visible half of the same problem.",
+        "scorecard": {
+          "citation": {
+            "document": "scorecard-data-dictionary",
+            "locator": "PREDDEG (school.degrees_awarded.predominant)",
+            "publisher": "U.S. Department of Education, College Scorecard",
+            "retrieved": "2026-08-22",
+            "sha256": "e3738fe328c81820de38da2149fa22a5698f257226e7e9ca44deba0c67cc7d92",
+            "title": "College Scorecard Data Dictionary (Institution_Data_Dictionary sheet)",
+            "url": "https://collegescorecard.ed.gov/assets/CollegeScorecardDataDictionary.xlsx"
+          },
+          "definition": "Predominant undergraduate degree awarded 0 Not classified 1 Predominantly certificate-degree granting 2 Predominantly associate's-degree granting 3 Predominantly bachelor's-degree granting 4 Entirely graduate-degree granting. Source: IPEDS.",
+          "key": "school.degrees_awarded.predominant",
+          "publisher": "College Scorecard"
+        },
+        "verdict": "not_comparable"
+      },
+      {
+        "ipeds": {
+          "citation": {
+            "document": "ipeds-hd2023-dictionary",
+            "locator": "INSTSIZE",
+            "publisher": "National Center for Education Statistics, IPEDS",
+            "retrieved": "2026-08-22",
+            "sha256": "131d8f2f56a71078ea453989384cce91985fa2a29a94f168a718dedc6a466e3b",
+            "title": "IPEDS Directory Information (HD2023) data dictionary",
+            "url": "https://nces.ed.gov/ipeds/datacenter/data/HD2023_Dict.zip"
+          },
+          "definition": "Institution size category. Institution size category based on total students enrolled for credit, Fall 2019",
+          "key": "ipeds.INSTSIZE",
+          "publisher": "IPEDS"
+        },
+        "label": "Undergraduate enrollment",
+        "note": null,
+        "reason": "A count against a band, over different populations and different terms. The Scorecard publishes a headcount of undergraduate certificate- and degree-seeking students; IPEDS publishes a size category based on total students enrolled for credit in a stated fall. Making them agree would need a rule of this project's about which counts fall in which band, and a numeric pair that needs a tolerance of ours to agree is evidence that it is not comparable rather than an argument for the tolerance.",
+        "scorecard": {
+          "citation": {
+            "document": "scorecard-data-dictionary",
+            "locator": "UGDS (student.size)",
+            "publisher": "U.S. Department of Education, College Scorecard",
+            "retrieved": "2026-08-22",
+            "sha256": "e3738fe328c81820de38da2149fa22a5698f257226e7e9ca44deba0c67cc7d92",
+            "title": "College Scorecard Data Dictionary (Institution_Data_Dictionary sheet)",
+            "url": "https://collegescorecard.ed.gov/assets/CollegeScorecardDataDictionary.xlsx"
+          },
+          "definition": "Enrollment of undergraduate certificate/degree-seeking students. Source: IPEDS. Not available in 2000-2001 datafile",
+          "key": "latest.student.size",
+          "publisher": "College Scorecard"
+        },
+        "verdict": "not_comparable"
+      },
+      {
+        "ipeds": {
+          "citation": {
+            "document": "ipeds-hd2023-dictionary",
+            "locator": "INSTNM",
+            "publisher": "National Center for Education Statistics, IPEDS",
+            "retrieved": "2026-08-22",
+            "sha256": "131d8f2f56a71078ea453989384cce91985fa2a29a94f168a718dedc6a466e3b",
+            "title": "IPEDS Directory Information (HD2023) data dictionary",
+            "url": "https://nces.ed.gov/ipeds/datacenter/data/HD2023_Dict.zip"
+          },
+          "definition": "Institution (entity) name",
+          "key": "ipeds.INSTNM",
+          "publisher": "IPEDS"
+        },
+        "label": "Institution name",
+        "note": null,
+        "reason": "Both definitions say the column is the institution's name and neither publishes a controlled vocabulary for it. The two collections punctuate, abbreviate and order campus qualifiers differently, so a comparison would produce hundreds of findings that are all about typography. This is the oldest exclusion in the crosswalk and it is recorded here as a verdict rather than left as a sentence in a docstring.",
+        "scorecard": {
+          "citation": {
+            "document": "scorecard-data-dictionary",
+            "locator": "INSTNM (school.name)",
+            "publisher": "U.S. Department of Education, College Scorecard",
+            "retrieved": "2026-08-22",
+            "sha256": "e3738fe328c81820de38da2149fa22a5698f257226e7e9ca44deba0c67cc7d92",
+            "title": "College Scorecard Data Dictionary (Institution_Data_Dictionary sheet)",
+            "url": "https://collegescorecard.ed.gov/assets/CollegeScorecardDataDictionary.xlsx"
+          },
+          "definition": "Institution name. Source: IPEDS.",
+          "key": "school.name",
+          "publisher": "College Scorecard"
+        },
+        "verdict": "not_comparable"
+      },
+      {
+        "ipeds": {
+          "citation": {
+            "document": "ipeds-hd2023-dictionary",
+            "locator": "ICLEVEL",
+            "publisher": "National Center for Education Statistics, IPEDS",
+            "retrieved": "2026-08-22",
+            "sha256": "131d8f2f56a71078ea453989384cce91985fa2a29a94f168a718dedc6a466e3b",
+            "title": "IPEDS Directory Information (HD2023) data dictionary",
+            "url": "https://nces.ed.gov/ipeds/datacenter/data/HD2023_Dict.zip"
+          },
+          "definition": "Level of institution. A classification of whether an institution\u2019s programs are 4-year or higher (4 year), 2-but-less-than 4-year (2 year), or less than 2-year.",
+          "key": "ipeds.ICLEVEL",
+          "publisher": "IPEDS"
+        },
+        "label": "Institutional level",
+        "note": null,
+        "reason": "IPEDS classifies every institution as four-year, two-year or less-than-two-year, and the College Scorecard capture this project holds publishes no counterpart at all. One side asking a question the other does not ask is the most common shape a non-correspondence takes, and it is the one most likely to be mistaken for agreement, because a column nobody compares leaves no trace on a page.",
+        "scorecard": {
+          "citation": null,
+          "definition": null,
+          "key": null,
+          "publisher": "College Scorecard"
+        },
+        "verdict": "not_comparable"
+      }
+    ],
+    "not_comparable": 4,
+    "register_version": "1"
+  },
+  "register_version": "1",
+  "scope": {
+    "coverage": null,
+    "institutions": 5688,
+    "kind": "national",
+    "note": "Institutions both federal collections carry, joined on the unit id they share. Every count below has this intersection as its denominator; an institution only one collection publishes has not disagreed with anything and is counted in the composition instead.",
+    "source": "College Scorecard and IPEDS directory",
+    "states": null,
+    "universe": null
+  }
+}
